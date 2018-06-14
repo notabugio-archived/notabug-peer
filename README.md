@@ -1,67 +1,22 @@
-ES6 library starter
-===========
 
-[![Version](http://img.shields.io/npm/v/es6-library-minimal.svg)](https://www.npmjs.org/package/es6-library-minimal)
-[![Build Status](https://travis-ci.org/liady/es6-library-minimal.svg?branch=master)](https://travis-ci.org/liady/es6-library-minimal)
-[![Code style: airbnb](https://img.shields.io/badge/code%20style-airbnb-blue.svg?style=flat)](https://github.com/airbnb/javascript)
+> I think all censorship should be deplored.  My position is that bits are **not a bug**.
+>
+> — Aaron Swartz (1986 - 2013)
 
-> A boilerplate for a universal (Node, web, UMD) ES6 library.
+**notabug** is a p2p link aggregator app that is:
 
-## Quick usage
- 1. Clone this repo.
- 2. Change all relevant entries in `package.json` and `README.md`, so they match your new shiny library.
- 3. Run `npm install` to install dev dependencies.
- 4. Write your ES6 code in `src` folder.
- 5. Write your ES6 tests in `test` folder.
- 6. Run `npm run build` to build for node. This will compile to ES5, minify, and output the result to `lib` folder.
- 7. Run `npm run build-web` to build and pack the files for the web. This will output the result to `dist` folder.
- 8. Run `npm publish` to pulish to the world.
- 
-(Or, if you don't need Webpack bundling, you can use the [even lighter ES6 starter](https://github.com/liady/es6-lib-starter-light)).
+ * distributed: peers backup/serve content
+ * anonymous: but don't trust it to be
+ * immutable: edits are not supported
+ * PoW-based: **voting is slow/CPU heavy**
 
-## Detailed overview
+This repo is where the network communications code lives
 
-### Installation
-After cloning this repository, make sure to change all the relevant entries in `package.json` so they match your library.
-```sh
-npm install
-```
+---
 
-### Build for npm
-```sh
-npm run build
-```
-This will:
- 1. Run Webpack starting from the entry point file (`src/library.js`, can be configured)
- 2. Convert all files in `src` folder from ES6 to ES5
- 3. According to the `bundle-node` flag in `package.json`, it will either:
-   1. Leave them as separate files, or -
-   2. Minify and bundle them using Webpack, **without their** `node_modules` **dependencies**
- 4. Output the result to the `lib` folder
+    BCH 1KtRnC9swwXbCTc8WFGBUT9pobYiizj1Ez
+    BTC 13XvsLbkaiUud82sh9gh86vJB3neZRD2CK
+    DCR DsYQVTvjyepvangZEy9CaJN16n1Zk97tejW
+    LTC LPvfg2marjf7H16iDoa4xj7tmt5sVqw4mZ
+    ETH 0x67857ED6e8834FE9f2ee8367DEc0AA0C7101B4Ab
 
-### Build for web
-```sh
-npm run build-web
-```
-This will:
- 1. Run Webpack starting from the entry point file (`src/library.js`, can be configured)
- 2. Convert all files from ES6 to ES5
- 3. Minify them, **including all of their module dependencies**, as a UMD module (so the file will be self-contained)
- 4. Output the file to the `dist` folder
-
-### Test
-```sh
-npm run test
-```
-
-### Configuration
-In `package.json`, change all the relevant entries so they match your library.<br/>
-Under the section `library`, you can configure:
- 1. Library name (defaults to `"Library"`)
- 2. Webpack entry point (defaults to `library.js`)
- 3. Dist folder for Node (defaults to `lib`)
- 4. Dist folder for Web (defaults to `dist`)
- 5. Choose whether to bundle for Node (defaults to `true`)
-
-## License
-MIT

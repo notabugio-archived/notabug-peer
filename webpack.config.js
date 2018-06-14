@@ -72,7 +72,7 @@ function getBaseConfig(isProd) {
 
   // generate webpack base config
   return {
-    entry: path.join(__dirname, libraryEntryPoint),
+    entry: ["babel-polyfill", path.join(__dirname, libraryEntryPoint)],
     output: {
       // ommitted - will be filled according to target env
     },
@@ -81,7 +81,7 @@ function getBaseConfig(isProd) {
         {test: /\.js$/, exclude: /(node_modules|bower_components)/, loader: "eslint-loader"}
       ],
       loaders: [
-        {test: /\.js$/, exclude: /(node_modules|bower_components)/, loader: "babel-loader"},
+        {test: /\.js$/, exclude: /(bower_components)/, loader: "babel-loader"},
       ]
     },
     eslint: {
