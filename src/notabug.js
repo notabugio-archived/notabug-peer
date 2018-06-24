@@ -32,7 +32,7 @@ const notabug = (config={}) => {
   if (persist) {
     gunConfig.localStorage = false;
     gunConfig.radisk = true;
-    gunConfig.until = gunConfig.until || 60000;
+    gunConfig.until = gunConfig.until || 1000;
   } else {
     gunConfig.radisk = false;
   }

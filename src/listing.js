@@ -1,9 +1,4 @@
-import compose from "ramda/src/compose";
-import filter from "ramda/src/filter";
-import identity from "ramda/src/identity";
-import lte from "ramda/src/lte";
-import slice from "ramda/src/slice";
-
+import { compose, filter, identity, lte, slice, pathOr } from "ramda";
 import { PREFIX } from "./etc";
 
 export const getListingSouls = peer => params => {
@@ -11,7 +6,7 @@ export const getListingSouls = peer => params => {
   let dayStrings;
 
   if (replyToId) {
-    return [`${PREFIX}/things/${replyToId}/comments`];
+    return [`${PREFIX}/things/${peer.getOpId(replyToId)}/allcomments`];
   } else if (url) {
     return [`${PREFIX}/urls/${url}`];
   } else if (domain) {
@@ -40,9 +35,22 @@ export const getListingSouls = peer => params => {
   ));
 };
 
+const getReplies = (peer, params) => {
+  const { limit, sort="hot", replyToId, count=0, threshold=null } = (params || {});
+  return compose(
+    limit ? slice(count, count+limit) : identity,
+    peer.sorts[sort],
+    threshold === null ? identity : filter(compose(lte(threshold), peer.getScore)),
+    Object.keys,
+    pathOr({}, ["things", replyToId, "replies"])
+  )(peer.getState());
+}
+
 export const getListingIds = peer => params => {
   const { limit, sort="hot", count=0, threshold=null } = (params || {});
   if (!peer.sorts[sort]) throw new Error(`Unknown sort: ${sort}`);
+
+  if (params.replyToId) return getReplies(peer, params);
 
   return compose(
     limit ? slice(count, count+limit) : identity,

@@ -1,8 +1,4 @@
-import curry from "ramda/src/curry";
-import assocPath from "ramda/src/assocPath";
-import path from "ramda/src/path";
-import pathOr from "ramda/src/pathOr";
-import propOr from "ramda/src/propOr";
+import { curry, assocPath, path, pathOr, propOr, merge } from "ramda";
 import debounce from "lodash/debounce";
 
 export const getDayStr = curry((peer, timestamp) => {
@@ -26,7 +22,8 @@ export const countVote = curry((peer, id, kind, vote) => {
 });
 
 export const watchThing = curry((peer, { id, timestamp, ...thing }) => {
-  const state = peer.getState();
+  let state = peer.getState();
+  let updatedActive = false;
   const chain = peer.souls.thing.get({ thingid: id });
   const replyToSoul = path(["replyTo", "#"], thing);
   const opSoul = path(["op", "#"], thing);
@@ -34,9 +31,9 @@ export const watchThing = curry((peer, { id, timestamp, ...thing }) => {
   const opId = opSoul ? peer.souls.thing.isMatch(opSoul).thingid : null;
   const votes = pathOr({}, ["things", id, "votes"], state);
   const existingTimestamp = peer.getTimestamp(id);
+  const lastActive = thing.lastActive || timestamp;
 
   if (existingTimestamp && peer.config.countVotes) return;
-
 
   if (!peer.config.countVotes) {
     ["up", "down", "comment"].forEach(kind => {
@@ -45,11 +42,42 @@ export const watchThing = curry((peer, { id, timestamp, ...thing }) => {
     });
   }
 
-  peer.setState(assocPath(["things", id], { id, timestamp, chain, replyToId, opId, votes }, state));
+  state = assocPath(
+    ["things", id],
+    merge(
+      pathOr({}, ["things", id], state),
+      { id, timestamp, lastActive, chain, replyToId, opId, votes },
+    ),
+    state
+  );
+
+  if (replyToId) {
+    state = assocPath(["things", replyToId, "replies", id], true, state);
+  }
+
+  if (opId && peer.getLastActive(opId) < timestamp) {
+    state = assocPath(["things", opId, "lastActive"], timestamp, state);
+    updatedActive = true;
+  }
+
+  peer.setState(state);
   peer.sendChangeNotifications(peer.souls.thing.soul({ thingid: id }));
 
+  if (updatedActive) {
+    peer.sendVoteNotifications(opId);
+  }
+
   if (peer.config.countVotes && timestamp) {
-    chain.get("allcomments").map().once(peer.countVote(id, "comment"));
+    chain.get("allcomments").map().once(comment => {
+      if (peer.getLastActive(id) < comment.timestamp) {
+        peer.setState(assocPath(
+          ["things", id, "lastActive"],
+          comment.timestamp,
+          peer.getState()
+        ));
+      }
+      peer.countVote(id, "comment")(comment);
+    });
     chain.get("votesup").map().once(peer.countVote(id, "up"));
     chain.get("votesdown").map().once(peer.countVote(id, "down"));
   } else {
@@ -164,6 +192,7 @@ export const scoreThingsForPeers = peer => () => {
         }
       });
       if (Object.keys(counts).length) {
+        counts.lastActive = peer.getLastActive(id);
         thing.put(counts);
       }
     },
@@ -180,7 +209,7 @@ export const scoreThingsForPeers = peer => () => {
           peer.souls.topicDay.isMatch(soul) ||
           peer.souls.domain.isMatch(soul) ||
           peer.souls.url.isMatch(soul) ||
-          peer.souls.thingComments.isMatch(soul)
+          peer.souls.thingAllComments.isMatch(soul)
         ) {
           peer.watchCollection(soul);
         }

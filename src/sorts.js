@@ -3,6 +3,7 @@ import sortBy from "ramda/src/sortBy";
 export const sorts = peer => ({
   new: sortBy(id => -1 * peer.getTimestamp(id)),
   old: sortBy(id => peer.getTimestamp(id)),
+  active: sortBy(id => -1 * peer.getLastActive(id)),
   top: sortBy(id => -1 * peer.getScore(id)),
   comments: sortBy(id => -1 * peer.getVoteCount(id, "comment")),
   hot: sortBy(id => {
