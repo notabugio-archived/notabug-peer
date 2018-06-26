@@ -1,6 +1,6 @@
 {
   "name": "notabug-peer",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "notabug network peer",
   "main": "./index.js",
   "scripts": {

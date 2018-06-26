@@ -19,6 +19,8 @@ export const getListingSouls = peer => params => {
     for (let i = 0; i <= (days + 1); i++) {
       dayStrings.push(peer.getDayStr(start + (i * oneDay)));
     }
+
+    dayStrings.reverse();
   }
 
   return Object.keys(topics.reduce(
