@@ -21,9 +21,11 @@ export const countVote = curry((peer, id, kind, vote) => {
   peer.sendChangeNotifications(soul);
 });
 
-export const watchThing = curry((peer, { id, timestamp, ...thing }) => {
+export const watchThing = curry((peer, { id, ...thing }) => {
   let state = peer.getState();
   let updatedActive = false;
+  thing = merge(pathOr({}, ["things", id], state), thing); // eslint-disable-line
+  const { timestamp } = thing;
   const chain = peer.souls.thing.get({ thingid: id });
   const replyToSoul = path(["replyTo", "#"], thing);
   const opSoul = path(["op", "#"], thing);
@@ -52,7 +54,7 @@ export const watchThing = curry((peer, { id, timestamp, ...thing }) => {
   );
 
   if (replyToId) {
-    state = assocPath(["things", replyToId, "replies", id], true, state);
+    state = assocPath(["things", replyToId, "replies", id], 1, state);
   }
 
   if (opId && peer.getLastActive(opId) < timestamp) {
@@ -94,12 +96,12 @@ export const unwatchThing = curry((peer, id) => {
 
 export const watchCollection = curry((peer, soul) => {
   const state = peer.getState();
-  if (path(["collections", soul], state)) return null;
+  if (path(["collections", soul, "chain"], state)) return null;
   const chain = peer.gun.get(soul);
   peer.setState(assocPath(["collections", soul, "chain"], chain, state));
   const onThing = thing => {
     if (!thing || !thing.id) return null;
-    peer.setState(assocPath(["collections", soul, "things", thing.id], true, peer.getState()));
+    peer.setState(assocPath(["collections", soul, "things", thing.id], 1, peer.getState()));
     return peer.watchThing(thing);
   };
 

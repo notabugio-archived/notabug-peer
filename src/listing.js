@@ -2,10 +2,12 @@ import { compose, filter, identity, lte, slice, pathOr } from "ramda";
 import { PREFIX } from "./etc";
 
 export const getListingSouls = peer => params => {
-  const { days, topics=["all"], replyToId, domain, url } = (params || {});
+  const { days, topics=["all"], opId, replyToId, domain, url } = (params || {});
   let dayStrings;
 
-  if (replyToId) {
+  if (opId) {
+    return [`${PREFIX}/things/${opId}/allcomments`];
+  } else if (replyToId) {
     return [`${PREFIX}/things/${peer.getOpId(replyToId)}/allcomments`];
   } else if (url) {
     return [`${PREFIX}/urls/${url}`];

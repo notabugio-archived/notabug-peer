@@ -1,10 +1,11 @@
 /* globals Gun */
-import assoc from "ramda/src/assoc";
+import { assoc, mergeDeepRight } from "ramda";
 import { sorts } from "./sorts";
 import * as watch from "./watch";
 import * as write from "./write";
 import * as souls from "./souls";
 import * as schema from "./schema";
+import * as serialized from "./serialized";
 import * as auth from "./auth";
 import * as accessors from "./accessors";
 import * as listing from "./listing";
@@ -27,6 +28,7 @@ const notabug = (config={}) => {
     isBlocked: soul => !!blockedMap[soul],
     getState: () => state,
     setState: (newState) => state = ({ ...state, ...newState }),
+    mergeState: (newState) => state = mergeDeepRight(state, newState),
   };
   const gunConfig = { peers, localStorage, ...rest };
   if (persist) {
@@ -63,7 +65,7 @@ const notabug = (config={}) => {
   // Nuke gun's localStorage if it fills up, kinda lame but less lame than total failure
   if (!persist && localStorage) peer.gun.on("localStorage:error", ack => ack.retry({}));
 
-  const fns = { ...watch, ...accessors, ...listing, ...write, ...auth };
+  const fns = { ...watch, ...accessors, ...listing, ...write, ...serialized, ...auth };
   Object.keys(fns).map(key => peer[key] = fns[key](peer));
   if (config.scoreThingsForPeers) peer.scoreThingsForPeers();
 
