@@ -1,36 +1,50 @@
-import { pathOr, assocPath } from "ramda";
+import { pathOr, assocPath, mergeDeepRight } from "ramda";
 
 export const getListingJson = peer => params => {
   peer.watchListing(params);
-  const things = peer.getListingIds(params).map(id => {
+  const things = peer.getListingIds(params).reduce((result, id) => {
+    const thing = { };
     const {
       opId, replyToId, timestamp, lastActive, votes={},
     } = pathOr({}, ["things", id], peer.getState());
 
-    const result = { id };
-
-    if (Object.keys(votes || {}).length) result.votes = votes;
-    if (opId) result.opId = opId;
-    if (replyToId) result.replyToId = replyToId;
-    if (timestamp) result.timestamp = timestamp;
-    if (lastActive && lastActive !== timestamp) result.lastActive = lastActive; return result;
-  }).reduce((res, thing) => ({ ...res, [thing.id]: thing }), {});
-
-  const collections = peer.getListingSouls(params).reduce(
-    (result, soul) => {
-      const ids = peer.getCollection(soul);
-      return Object.keys(ids).length ? { ...result, [soul]: { things:ids } } : result;
-    },
-    {}
-  );
-
-  return { things, collections }
+    if (Object.keys(votes || {}).length) thing.votes = votes;
+    if (opId) thing.opId = opId;
+    if (replyToId) thing.replyToId = replyToId;
+    if (timestamp) thing.timestamp = timestamp;
+    if (lastActive && lastActive !== timestamp) thing.lastActive = lastActive;
+    return { ...result, [id]: thing };
+  }, {});
+  return { things }
 };
 
 export const reconstituteState = peer => state => {
-  let result = state;
-  const { things } = state;
-  Object.values(things).forEach(({ id, replyToId }) =>
-    result = assocPath(["things", replyToId, "replies", id], 1, result));
-  return result;
+  const { things, topic, collectionSoul } = state;
+  let collections = {};
+
+  return mergeDeepRight(
+    Object.keys(things).reduce(
+      (result, id) => {
+        const { replyToId, timestamp } = things[id];
+
+        result = assocPath(["things", id, "id"], id, result); // eslint-disable-line
+        result = assocPath(["things", replyToId, "replies", id], 1, result); // eslint-disable-line
+
+        if (topic) {
+          const topicSoul = peer.souls.topic.soul({ topicname: topic });
+          const topicDaySoul = `${topicSoul}/days/${peer.getDayStr(timestamp)}`;
+          collections = assocPath([topicSoul, "things", id], 1, collections);
+          collections = assocPath([topicDaySoul, "things", id], 1, collections);
+        }
+
+        if (collectionSoul) {
+          collections = assocPath([collectionSoul, "things", id], 1, collections);
+        }
+
+        return result;
+      },
+      state
+    ),
+    { collections }
+  );
 };
