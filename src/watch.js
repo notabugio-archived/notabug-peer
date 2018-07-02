@@ -23,7 +23,7 @@ export const countVote = curry((peer, id, kind, vote) => {
 
 export const watchThing = curry((peer, data) => {
   if (!data) return;
-  const { id, ...thing } = data;
+  let { id, ...thing } = data; // eslint-disable-line
   let state = peer.getState();
   let updatedActive = false;
   thing = merge(pathOr({}, ["things", id], state), thing); // eslint-disable-line
