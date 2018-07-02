@@ -1,50 +1,51 @@
-import { pathOr, assocPath, mergeDeepRight } from "ramda";
+import { pathOr } from "ramda";
 
 export const getListingJson = peer => params => {
+  const things = {};
+  const state = peer.getState();
   peer.watchListing(params);
-  const things = peer.getListingIds(params).reduce((result, id) => {
+  peer.getListingIds(params).forEach((id) => {
     const thing = { };
     const {
       opId, replyToId, timestamp, lastActive, votes={},
-    } = pathOr({}, ["things", id], peer.getState());
+    } = pathOr({}, ["things", id], state);
 
     if (Object.keys(votes || {}).length) thing.votes = votes;
     if (opId) thing.opId = opId;
     if (replyToId) thing.replyToId = replyToId;
     if (timestamp) thing.timestamp = timestamp;
     if (lastActive && lastActive !== timestamp) thing.lastActive = lastActive;
-    return { ...result, [id]: thing };
-  }, {});
+    things[id] = thing;
+  });
   return { things }
 };
 
 export const reconstituteState = peer => state => {
   const { things, topic, collectionSoul } = state;
-  let collections = {};
+  const collections = state.collections = state.collections || {}; // eslint-disable-line
+  const topicSoul = topic ? peer.souls.topic.soul({ topicname: topic }) : null;
 
-  return mergeDeepRight(
-    Object.keys(things).reduce(
-      (result, id) => {
-        const { replyToId, timestamp } = things[id];
+  const setInCollection = (soul, id) => {
+    const collection = collections[soul] = collections[soul] || { things: {} }; // eslint-disable-line
+    collection.things[id] = 1;
+  };
 
-        result = assocPath(["things", id, "id"], id, result); // eslint-disable-line
-        result = assocPath(["things", replyToId, "replies", id], 1, result); // eslint-disable-line
+  Object.keys(things).forEach(id => {
+    const { replyToId, timestamp } = things[id];
+    const replyTo = things[replyToId] = things[replyToId] || {};
+    replyTo[id] = 1;
+    things[id].id = id;
 
-        if (topic) {
-          const topicSoul = peer.souls.topic.soul({ topicname: topic });
-          const topicDaySoul = `${topicSoul}/days/${peer.getDayStr(timestamp)}`;
-          collections = assocPath([topicSoul, "things", id], 1, collections);
-          collections = assocPath([topicDaySoul, "things", id], 1, collections);
-        }
+    if (topic) {
+      const topicDaySoul = `${topicSoul}/days/${peer.getDayStr(timestamp)}`;
+      setInCollection(topicSoul, id);
+      setInCollection(topicDaySoul, id);
+    }
 
-        if (collectionSoul) {
-          collections = assocPath([collectionSoul, "things", id], 1, collections);
-        }
+    if (collectionSoul) {
+      setInCollection(collectionSoul, id);
+    }
+  });
 
-        return result;
-      },
-      state
-    ),
-    { collections }
-  );
+  return state;
 };
