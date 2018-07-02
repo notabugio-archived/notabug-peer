@@ -21,7 +21,9 @@ export const countVote = curry((peer, id, kind, vote) => {
   peer.sendChangeNotifications(soul);
 });
 
-export const watchThing = curry((peer, { id, ...thing }) => {
+export const watchThing = curry((peer, data) => {
+  if (!data) return;
+  const { id, ...thing } = data;
   let state = peer.getState();
   let updatedActive = false;
   thing = merge(pathOr({}, ["things", id], state), thing); // eslint-disable-line
