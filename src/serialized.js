@@ -31,9 +31,10 @@ export const reconstituteState = peer => state => {
   };
 
   Object.keys(things).forEach(id => {
-    const { replyToId, timestamp } = things[id];
-    const replyTo = things[replyToId] = things[replyToId] || {};
-    replyTo[id] = 1;
+    const { replyToId, timestamp, opId } = things[id];
+    const replyTo = things[replyToId || opId] = things[replyToId || opId] || {};
+    const replies = replyTo.replies = replyTo.replies || {};
+    replies[id] = 1;
     things[id].id = id;
 
     if (topic) {

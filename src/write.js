@@ -52,9 +52,13 @@ export const submit = curry((peer, data) => {
     peer.gun.user().get("submissions").set(thing);
   }
 
-  thing.once(peer.watchThing);
-
-  return thing;
+  return new Promise((resolve, reject) => {
+    thing.on(result => {
+      if (!result) return;
+      thing.off();
+      resolve(result);
+    });
+  });
 });
 
 export const comment = curry((peer, data) => {
