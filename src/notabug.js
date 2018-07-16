@@ -2,6 +2,7 @@
 import { assoc, mergeDeepRight } from "ramda";
 import { sorts } from "./sorts";
 import * as watch from "./watch";
+import * as fetch from "./fetch";
 import * as write from "./write";
 import * as souls from "./souls";
 import * as schema from "./schema";
@@ -16,8 +17,8 @@ const DEFAULT_PEERS = [
   "https://notabug.io/gun",
 ];
 
-const notabug = (config={}) => {
-  let state = {};
+const notabug = (config={}, initialState={}) => {
+  let state = mergeDeepRight({}, initialState);
   const {
     peers=DEFAULT_PEERS, disableValidation, blocked=[], localStorage=false, persist=false, ...rest,
   } = config || {};
@@ -65,7 +66,7 @@ const notabug = (config={}) => {
   // Nuke gun's localStorage if it fills up, kinda lame but less lame than total failure
   if (!persist && localStorage) peer.gun.on("localStorage:error", ack => ack.retry({}));
 
-  const fns = { ...watch, ...accessors, ...listing, ...write, ...serialized, ...auth };
+  const fns = { ...watch, ...fetch, ...accessors, ...listing, ...write, ...serialized, ...auth };
   Object.keys(fns).map(key => peer[key] = fns[key](peer));
   if (config.scoreThingsForPeers) peer.scoreThingsForPeers();
 

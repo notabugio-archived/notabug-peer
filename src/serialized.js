@@ -1,10 +1,10 @@
-import { pathOr } from "ramda";
+import { pathOr, compose } from "ramda";
 
 export const getListingJson = peer => params => {
   const things = {};
   const state = peer.getState();
   peer.watchListing(params);
-  peer.getListingIds(params).forEach((id) => {
+  peer.getListingIds(params).forEach(id => {
     const thing = { };
     const {
       opId, replyToId, timestamp, lastActive, votes={},
@@ -50,3 +50,5 @@ export const reconstituteState = peer => state => {
 
   return state;
 };
+
+export const loadState = peer => compose(peer.mergeState, peer.reconstituteState);

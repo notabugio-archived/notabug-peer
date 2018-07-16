@@ -12,6 +12,9 @@ export const getVoteCount = peer => (id, type) =>
 
 export const getOpId = peer => id =>
   pathOr(id, ["things", id, "opId"], peer.getState());
+  
+export const getThingData = peer => id =>
+  pathOr(null, ["data", id], peer.getState());
 
 export const getScore = peer => id =>
   peer.getVoteCount(id, "up") - peer.getVoteCount(id, "down");
