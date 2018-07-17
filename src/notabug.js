@@ -20,7 +20,8 @@ const DEFAULT_PEERS = [
 const notabug = (config={}, initialState={}) => {
   let state = mergeDeepRight({}, initialState);
   const {
-    peers=DEFAULT_PEERS, disableValidation, blocked=[], localStorage=false, persist=false, ...rest,
+    peers=DEFAULT_PEERS, disableValidation, blocked=[], noGun=false, localStorage=false,
+    persist=false, ...rest,
   } = config || {};
   const blockedMap = blocked.reduce((res, soul) => ({ ...res, [soul]: true }), {});
   const peer = {
@@ -43,25 +44,27 @@ const notabug = (config={}, initialState={}) => {
   peer.sorts = sorts(peer);
   peer.souls = Object.keys(souls).reduce((res, key) => assoc(key, souls[key](peer), res), {});
 
-  Gun.on("opt", context => {
-    context.on("in", function wireInput(msg) {
-      Promise.all(Object.keys(msg).map(key => {
-        if (key === "put" && msg.mesh) {
-          if (!disableValidation) {
-            return Promise.resolve(peer.schema.types(key, msg[key], msg, null, msg, peer));
+  if (!noGun) {
+    Gun.on("opt", context => {
+      context.on("in", function wireInput(msg) {
+        Promise.all(Object.keys(msg).map(key => {
+          if (key === "put" && msg.mesh) {
+            if (!disableValidation) {
+              return Promise.resolve(peer.schema.types(key, msg[key], msg, null, msg, peer));
+            }
           }
-        }
-        return Promise.resolve(msg);
-      }))
-        .then(() => {
-          this.to.next(msg);
-          peer.sendMsgNotifications(msg);
-        })
-        .catch(e => console.error("Message rejected", e.stack || e, msg)); // eslint-disable-line
+          return Promise.resolve(msg);
+        }))
+          .then(() => {
+            this.to.next(msg);
+            peer.sendMsgNotifications(msg);
+          })
+          .catch(e => console.error("Message rejected", e.stack || e, msg)); // eslint-disable-line
+      });
     });
-  });
+  }
 
-  peer.gun = Gun(gunConfig);
+  peer.gun = noGun ? null : Gun(gunConfig);
 
   // Nuke gun's localStorage if it fills up, kinda lame but less lame than total failure
   if (!persist && localStorage) peer.gun.on("localStorage:error", ack => ack.retry({}));
@@ -70,8 +73,7 @@ const notabug = (config={}, initialState={}) => {
   Object.keys(fns).map(key => peer[key] = fns[key](peer));
   if (config.scoreThingsForPeers) peer.scoreThingsForPeers();
 
-  blocked.forEach(soul => peer.gun.get(soul).put({ url: null, body: "[removed]" }));
-
+  if (peer.gun) blocked.forEach(soul => peer.gun.get(soul).put({ url: null, body: "[removed]" }));
   return peer;
 };
 

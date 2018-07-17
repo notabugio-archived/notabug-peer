@@ -53,9 +53,7 @@ const getReplies = (peer, params) => {
 export const getListingIds = peer => params => {
   const { limit, sort="hot", count=0, threshold=null } = (params || {});
   if (!peer.sorts[sort]) throw new Error(`Unknown sort: ${sort}`);
-
   if (params.replyToId) return getReplies(peer, params);
-
   return compose(
     limit ? slice(count, count+limit) : identity,
     peer.sorts[sort],
