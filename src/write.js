@@ -143,6 +143,10 @@ export const indexThing = curry((peer, thingid, data) => {
     replyTo.get("comments").put(comments);
   }
 
+  thing.get("votesup").once(() => null);
+  thing.get("votesdown").once(() => null);
+  thing.get("allcomments").once(() => null);
+  thing.get("comments").once(() => null);
   topic.set(thing)
   topicDay.set(thing);
   thing.get("topic").set(topic);

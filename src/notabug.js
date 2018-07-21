@@ -72,7 +72,6 @@ const notabug = (config={}, initialState={}) => {
   const fns = { ...watch, ...fetch, ...accessors, ...listing, ...write, ...serialized, ...auth };
   Object.keys(fns).map(key => peer[key] = fns[key](peer));
   if (config.scoreThingsForPeers) peer.scoreThingsForPeers();
-
   if (peer.gun) blocked.forEach(soul => peer.gun.get(soul).put({ url: null, body: "[removed]" }));
   return peer;
 };

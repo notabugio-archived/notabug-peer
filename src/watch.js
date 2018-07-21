@@ -1,5 +1,4 @@
 import { curry, assocPath, path, pathOr, propOr, merge } from "ramda";
-import debounce from "lodash/debounce";
 
 export const getDayStr = curry((peer, timestamp) => {
   const d = new Date(timestamp || (new Date()).getTime());
@@ -7,18 +6,6 @@ export const getDayStr = curry((peer, timestamp) => {
   const month = d.getUTCMonth() + 1;
   const dayNum = d.getUTCDate();
   return `${year}/${month}/${dayNum}`;
-});
-
-export const countVote = curry((peer, id, kind, vote) => {
-  if (!vote) return;
-  const soul = peer.souls.thing.soul({ thingid: id });
-  peer.setState(assocPath(
-    ["things", id, "votes", kind],
-    peer.getVoteCount(id, kind) + 1,
-    peer.getState()
-  ))
-  peer.sendVoteNotifications(id);
-  peer.sendChangeNotifications(soul);
 });
 
 export const watchThing = curry((peer, data) => {
@@ -34,17 +21,12 @@ export const watchThing = curry((peer, data) => {
   const replyToId = replyToSoul ? peer.souls.thing.isMatch(replyToSoul).thingid : null;
   const opId = opSoul ? peer.souls.thing.isMatch(opSoul).thingid : null;
   const votes = pathOr({}, ["things", id, "votes"], state);
-  const existingTimestamp = peer.getTimestamp(id);
   const lastActive = thing.lastActive || timestamp;
 
-  if (existingTimestamp && peer.config.countVotes) return;
-
-  if (!peer.config.countVotes) {
-    ["up", "down", "comment"].forEach(kind => {
-      const voteCount = propOr(votes[kind] || 0, `votes${kind}count`, thing);
-      if (voteCount) votes[kind] = voteCount;
-    });
-  }
+  ["up", "down", "comment"].forEach(kind => {
+    const voteCount = propOr(votes[kind] || 0, `votes${kind}count`, thing);
+    if (voteCount && voteCount > votes[kind]) votes[kind] = voteCount;
+  });
 
   state = assocPath(
     ["things", id],
@@ -71,21 +53,13 @@ export const watchThing = curry((peer, data) => {
     peer.sendVoteNotifications(opId);
   }
 
-  if (peer.config.countVotes && timestamp) {
-    chain.get("allcomments").map().once(comment => {
-      if (peer.getLastActive(id) < comment.timestamp) {
-        peer.setState(assocPath(
-          ["things", id, "lastActive"],
-          comment.timestamp,
-          peer.getState()
-        ));
-      }
-      peer.countVote(id, "comment")(comment);
-    });
-    chain.get("votesup").map().once(peer.countVote(id, "up"));
-    chain.get("votesdown").map().once(peer.countVote(id, "down"));
-  } else {
-    peer.sendVoteNotifications(id);
+  peer.sendVoteNotifications(id);
+
+  if (peer.config.scoreThingsForPeers) {
+    peer.souls.thingVotes.get({ thingid: id, votekind: "up" }).once(() => null);
+    peer.souls.thingVotes.get({ thingid: id, votekind: "down" }).once(() => null);
+    peer.souls.thingAllComments.get({ thingid: id }).once(() => null);
+    peer.souls.thingComments.get({ thingid: id }).once(() => null);
   }
 });
 
@@ -107,11 +81,6 @@ export const watchCollection = curry((peer, soul) => {
     return peer.watchThing(thing);
   };
 
-  /*
-  if (peer.config.countVotes) {
-    return chain.map().once(onThing);
-  }
-  */
   return chain.map().on(onThing);
 });
 
@@ -183,43 +152,29 @@ export const onChangeListing = curry((peer, params, fn) =>
 export const onChangeListingOff = curry((peer, params, fn) =>
   peer.getListingSouls(params).map(soul => peer.onChangeOff(soul, fn)));
 
-export const scoreThingsForPeers = peer => () => {
-  const updaters = {};
-  const updateScores = id => debounce(
-    () => {
-      const thing = peer.souls.thing.get({ thingid: id });
-      const counts = {};
-      ["up", "down", "comment"].forEach(kind => {
-        const voteCount = peer.getVoteCount(id, kind);
-        if (voteCount) {
-          counts[`votes${kind}count`] = voteCount;
+export const scoreThingsForPeers = peer => () => peer.onMsg(msg =>
+  Object.keys(msg).forEach(key => {
+    if (key === "put" && msg.mesh && msg.how !== "mem") {
+      Object.keys(msg.put).forEach((soul) => {
+        const votesMatch = (
+          peer.souls.thingVotes.isMatch(soul) ||
+          peer.souls.thingAllComments.isMatch(soul)
+        );
+        const thingDataMatch = peer.souls.thingData.isMatch(soul);
+
+        if (votesMatch) {
+          setTimeout(() => {
+            const thingSoul = peer.souls.thing.soul({ thingid: votesMatch.thingid });
+            peer.get(soul).then(votes => {
+              if (!votes) return;
+              const votecount = Object.keys(votes || { _: null }).length - 1;
+              const chain = peer.gun.get(thingSoul);
+              chain.get(`votes${votesMatch.votekind || "comment"}count`).put(votecount);
+            });
+          }, 200);
+        } else if (thingDataMatch) {
+          setTimeout(() => peer.indexThing(thingDataMatch.thingid, msg.put[soul]), 200);
         }
       });
-      if (Object.keys(counts).length) {
-        counts.lastActive = peer.getLastActive(id);
-        thing.put(counts);
-      }
-    },
-    100,
-    { trailing: true }
-  );
-
-  peer.onMsg(msg => {
-    Object.keys(msg).forEach(key => {
-      if (key === "get" && msg.mesh && msg.how !== "mem") {
-        const soul = path([key, "#"], msg);
-        if (
-          peer.souls.topic.isMatch(soul) ||
-          peer.souls.topicDay.isMatch(soul) ||
-          peer.souls.domain.isMatch(soul) ||
-          peer.souls.url.isMatch(soul) ||
-          peer.souls.thingAllComments.isMatch(soul)
-        ) {
-          peer.watchCollection(soul);
-        }
-      }
-    });
-  });
-
-  peer.onVote(null, id => (updaters[id] || (updaters[id] = updateScores(id)))());
-};
+    }
+  }));

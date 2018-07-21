@@ -2,7 +2,7 @@ import prop from "ramda/src/prop";
 import identity from "ramda/src/identity";
 
 export const PREFIX = "nab";
-export const DEFAULT_POW_COMPLEXITY=22;
+export const DEFAULT_POW_COMPLEXITY=18;
 export const COMMENT_BODY_MAX = 10000;
 export const SUBMISSION_TITLE_MAX = 300;
 export const SUBMISSION_BODY_MAX = 40000;
