@@ -1,4 +1,4 @@
-const RECORD_TIMEOUT = 1000;
+const RECORD_TIMEOUT = 10000;
 
 export const get = peer => (soul, timeout=RECORD_TIMEOUT, wait=1) =>
   (new Promise((resolve, reject) => {
