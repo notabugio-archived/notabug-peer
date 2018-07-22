@@ -13,9 +13,7 @@ import * as listing from "./listing";
 export * from "./etc";
 export { default as pow } from "proof-of-work";
 
-const DEFAULT_PEERS = [
-  "https://notabug.io/gun",
-];
+const DEFAULT_PEERS = [];
 
 const notabug = (config={}, initialState={}) => {
   let state = mergeDeepRight({}, initialState);

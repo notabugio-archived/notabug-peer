@@ -19,14 +19,14 @@ export const countVotes = curry((peer, id, kind, data) => {
   peer.sendChangeNotifications(peer.souls.thing.soul({ thingid: id }));
 });
 
-export const watchThing = curry((peer, data, existingChain) => {
+export const watchThing = curry((peer, data) => {
   if (!data) return;
   let { id, ...thing } = data; // eslint-disable-line
   let state = peer.getState();
   if (path(["things", id, "chain"], state)) return;
   thing = merge(pathOr({}, ["things", id], state), thing); // eslint-disable-line
   const { timestamp } = thing;
-  const chain = existingChain || peer.souls.thing.get({ thingid: id });
+  const chain = peer.souls.thing.get({ thingid: id });
   const replyToSoul = path(["replyTo", "#"], thing);
   const opSoul = path(["op", "#"], thing);
   const replyToId = replyToSoul ? peer.souls.thing.isMatch(replyToSoul).thingid : null;
@@ -68,7 +68,8 @@ export const watchCollection = curry((peer, soul) => {
   peer.setState(assocPath(["collections", soul, "chain"], chain, state));
   const onThing = thing => {
     if (!thing || !thing.id) return null;
-    peer.setState(assocPath(["collections", soul, "things", thing.id], 1, peer.getState()));
+    const state2 = peer.getState();
+    peer.setState(assocPath(["collections", soul, "things", thing.id], 1, state2));
     return peer.watchThing(thing);
   };
 
@@ -107,7 +108,7 @@ export const onChangeThing = curry((peer, id, fn) => {
   peer.onChange(soul, fn);
   if (path(["things", id, "chain"], peer.getState())) return;
   const chain = peer.gun.get(soul);
-  chain.on(data => peer.watchThing(data, chain));
+  chain.on(data => peer.watchThing(data));
 });
 
 export const onChangeThingOff = curry((peer, id, fn) =>
