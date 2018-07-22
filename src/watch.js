@@ -165,9 +165,10 @@ export const scoreThingsForPeers = peer => () => peer.onMsg(msg =>
         if (votesMatch) {
           setTimeout(() => {
             const thingSoul = peer.souls.thing.soul({ thingid: votesMatch.thingid });
-            peer.get(soul).then(votes => {
+            peer.gun.get(soul).then(votes => {
               if (!votes) return;
               const votecount = Object.keys(votes || { _: null }).length - 1;
+              if (!votecount) return;
               const chain = peer.gun.get(thingSoul);
               chain.get(`votes${votesMatch.votekind || "comment"}count`).put(votecount);
             });
