@@ -40,7 +40,6 @@ const notabug = (config={}, initialState={}) => {
   } else {
     gunConfig.radisk = false;
   }
-  if (config.scoreThingsForPeers) config.countVotes = true; // eslint-disable-line
   peer.sorts = sorts(peer);
   peer.souls = Object.keys(souls).reduce((res, key) => assoc(key, souls[key](peer), res), {});
 
@@ -58,7 +57,6 @@ const notabug = (config={}, initialState={}) => {
           .then(() => {
             if (msg && msg.put && !Object.keys(msg.put).length) return; // Rejected all writes
             this.to.next(msg);
-            peer.sendMsgNotifications(msg);
           })
           .catch(e => console.error("Message rejected", e.stack || e, msg)); // eslint-disable-line
       });
@@ -72,7 +70,6 @@ const notabug = (config={}, initialState={}) => {
 
   const fns = { ...watch, ...fetch, ...accessors, ...listing, ...write, ...serialized, ...auth };
   Object.keys(fns).map(key => peer[key] = fns[key](peer));
-  if (config.scoreThingsForPeers) peer.scoreThingsForPeers();
   if (peer.gun) blocked.forEach(soul => peer.gun.get(soul).put({ url: null, body: "[removed]" }));
   return peer;
 };

@@ -77,7 +77,9 @@ export const vote = curry((peer, id, kind, nonce) => {
   const thing = peer.souls.thing.get({ thingid: id });
   const votes = peer.souls.thingVotes.get({ thingid: id, votekind: kind });
   thing.get(`votes${kind}`).put(votes);
-  return votes.set(nonce);
+  const chain =  votes.set(nonce);
+  votes.once(peer.countVotes(id, kind)) // XXX This shouldn't be necessary GUN bug workaround
+  return chain;
 });
 
 const topicPrefixes = {
