@@ -56,6 +56,7 @@ const notabug = (config={}, initialState={}) => {
           return Promise.resolve(msg);
         }))
           .then(() => {
+            if (msg && msg.put && !Object.keys(msg.put).length) return; // Rejected all writes
             this.to.next(msg);
             peer.sendMsgNotifications(msg);
           })

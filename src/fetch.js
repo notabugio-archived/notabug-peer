@@ -12,7 +12,7 @@ export const get = peer => (soul, timeout=RECORD_TIMEOUT, wait=1) =>
     return null;
   });
 
-export const fetchThingData = peer => thingid => new Promise((resolve, reject) => {
+export const fetchThingData = peer => (thingid, opts) => new Promise((resolve, reject) => {
   const existing = peer.getThingData(thingid);
 
   if (existing) {
@@ -26,5 +26,5 @@ export const fetchThingData = peer => thingid => new Promise((resolve, reject) =
     peer.mergeState({ data: { [thingid]: data } });
     resolve(data);
     chain.off();
-  });
+  }, opts);
 });
