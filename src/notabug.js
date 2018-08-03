@@ -46,8 +46,17 @@ const notabug = (config={}, initialState={}) => {
       context.on("in", function wireInput(msg) {
         Promise.all(Object.keys(msg).map(key => {
           if (key === "put" && msg.mesh) {
+            const validated = msg;
+
+            Object.keys(validated.put || {}).forEach(putKey => {
+              validated.put[putKey] = config.putMutate
+                ? config.putMutate(msg.put[putKey], putKey)
+                : validated.put[putKey];
+            });
+
             if (!disableValidation) {
-              return Promise.resolve(peer.schema.types(key, msg[key], msg, null, msg, peer));
+              return Promise
+                .resolve(peer.schema.types(key, validated[key], validated, null, validated, peer));
             }
           }
           return Promise.resolve(msg);

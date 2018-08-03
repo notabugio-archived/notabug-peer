@@ -66,15 +66,32 @@ export const unwatchThing = curry((peer, id) => {
 
 export const watchCollection = curry((peer, soul) => {
   const state = peer.getState();
+  let hasPreloaded = false;
+
   if (path(["collections", soul, "chain"], state)) return null;
   const chain = peer.gun.get(soul);
   peer.setState(assocPath(["collections", soul, "chain"], chain, state));
+
   const onThing = thing => {
     if (!thing || !thing.id) return null;
     const state2 = peer.getState();
     peer.setState(assocPath(["collections", soul, "things", thing.id], 1, state2));
     return peer.watchThing(thing);
   };
+
+
+  if (!hasPreloaded) {
+    chain.on(souls => {
+      if (!souls) return;
+
+      Object.keys(souls).map(thingSoul => {
+        if (!peer.souls.thing.isMatch(thingSoul)) return;
+        chain.get(thingSoul).on(onThing);
+      });
+
+      hasPreloaded = true;
+    });
+  }
 
   return chain.map().on(onThing);
 });
