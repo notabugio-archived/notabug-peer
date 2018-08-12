@@ -9,20 +9,28 @@ export const getDayStr = curry((peer, timestamp) => {
 });
 
 export const countVotes = curry((peer, id, kind, data) => {
-  const state = peer.getState();
+  const state = { ...peer.getState() };
   const existing = pathOr(0, ["things", id, "votes", kind], state);
   let count = Object.keys(data || { _: null }).length - 1;
   if (!count) return;
   if (count < existing && count === 1) count = existing + 1; // GUN loses votes
   if (count < existing) return;
-  peer.setState(assocPath(["things", id, "votes", kind], count, state));
+
+  const thingState = state.things[id] = pathOr({}, ["things", id], state);
+  const thingVotes = thingState.votes || pathOr({}, ["things", id, "votes"], state);
+  thingVotes[kind] = count;
+  peer.setState(state);
+
+  // peer.setState(assocPath(["things", id, "votes", kind], count, state));
   peer.sendChangeNotifications(peer.souls.thing.soul({ thingid: id }));
 });
 
 export const watchThing = curry((peer, data) => {
   if (!data) return;
   let { id, ...thing } = data; // eslint-disable-line
-  let state = peer.getState();
+  // let state = peer.getState();
+  const state = { ...peer.getState() };
+
   const existingChain = path(["things", id, "chain"], state);
   thing = merge(pathOr({}, ["things", id], state), thing); // eslint-disable-line
   const { timestamp } = thing;
@@ -34,6 +42,15 @@ export const watchThing = curry((peer, data) => {
 
   const chain = existingChain || peer.souls.thing.get({ thingid: id });
 
+  const thingState = state.things[id] = pathOr({}, ["things", id], state);
+  thingState.id = id;
+  thingState.timestamp = timestamp;
+  thingState.lastActive = lastActive;
+  thingState.chain = chain;
+  thingState.replyToId = replyToId;
+  thingState.opId = opId;
+
+  /*
   state = assocPath(
     ["things", id],
     merge(
@@ -42,9 +59,13 @@ export const watchThing = curry((peer, data) => {
     ),
     state
   );
+  */
 
   if (replyToId) {
-    state = assocPath(["things", replyToId, "replies", id], 1, state);
+    const replyToState = state.things[replyToId] = pathOr({}, ["things", replyToId], state);
+    const replies = replyToState.replies = pathOr({}, ["things", replyToId, "replies"], state);
+    replies[id] = 1;
+    // state = assocPath(["things", replyToId, "replies", id], 1, state);
   }
 
   peer.setState(state);
@@ -74,8 +95,13 @@ export const watchCollection = curry((peer, soul) => {
 
   const onThing = thing => {
     if (!thing || !thing.id) return null;
-    const state2 = peer.getState();
-    peer.setState(assocPath(["collections", soul, "things", thing.id], 1, state2));
+    const state2 = { ...peer.getState() };
+    const collectionState = path(["collections", soul], state2);
+    const collectionThings = collectionState.things = collectionState.things || {};
+    collectionThings[thing.id] = 1;
+    peer.setState(state2);
+
+    // peer.setState(assocPath(["collections", soul, "things", thing.id], 1, state2));
     return peer.watchThing(thing);
   };
 
