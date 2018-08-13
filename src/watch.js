@@ -17,7 +17,7 @@ export const countVotes = curry((peer, id, kind, data) => {
   if (count < existing) return;
 
   const thingState = state.things[id] = pathOr({}, ["things", id], state);
-  const thingVotes = thingState.votes || pathOr({}, ["things", id, "votes"], state);
+  const thingVotes = thingState.votes = pathOr({}, ["things", id, "votes"], state);
   thingVotes[kind] = count;
   peer.setState(state);
 

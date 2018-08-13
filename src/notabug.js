@@ -63,6 +63,7 @@ const notabug = (config={}, initialState={}) => {
         }))
           .then(() => {
             if (msg && msg.put && !Object.keys(msg.put).length) return; // Rejected all writes
+            if (config.leech && msg.mesh && msg.get) return; // ignore gets
             this.to.next(msg);
           })
           .catch(e => console.error("Message rejected", e.stack || e, msg)); // eslint-disable-line
