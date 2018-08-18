@@ -1,7 +1,7 @@
-import prop from "ramda/src/prop";
+import { prop } from "ramda";
 import {
   allowFields, keyIs, valFromSoul, isSoul, soulMatchesKey, and, DEFAULT_POW_COMPLEXITY,
-} from "./etc";
+} from "./util";
 import objHash from "object-hash";
 import pow from "proof-of-work";
 
