@@ -1,30 +1,23 @@
-import always from "ramda/src/always";
+import { always, keysIn } from "ramda";
 import Route from "route-parser";
 import urllite from "urllite";
-import { PREFIX } from "./etc";
+import { PREFIX, getDayStr } from "./util";
 
 const objectType = (path, checkMatch, options) => {
   const routeMatcher = new Route(path);
-
-  return peer => {
-    const type = {
-      checkMatch,
-      isMatch(pathToCheck) {
-        const didMatch = routeMatcher.match(pathToCheck);
-        return (didMatch && checkMatch(didMatch, peer)) ? didMatch : null;
-      },
-
-      soul(params) {
-        return routeMatcher.reverse(params || {});
-      },
-
-      get(params) {
-        return peer.gun.get(routeMatcher.reverse(params || {}));
-      },
-    };
-
-    return type;
+  const methods = {
+    checkMatch,
+    isMatch(pathToCheck) {
+      const didMatch = routeMatcher.match(pathToCheck);
+      return (didMatch && checkMatch(didMatch)) ? didMatch : null;
+    },
+    soul: params => routeMatcher.reverse(params || {}),
   };
+  const init = peer => ({
+    ...methods, get: params => peer.gun.get(routeMatcher.reverse(params || {})),
+  });
+  keysIn(methods).forEach(key => init[key] = methods[key]);
+  return init;
 };
 
 const checkTopicMatch = ({ topicname }) => {
@@ -41,13 +34,13 @@ const checkThingMatch = ({ thingid }) => {
 
 export const topicDay = objectType(
   `${PREFIX}/topics/:topicname/days/:year/:month/:day`,
-  ({ topicname, year, month, day }, peer) =>  {
+  ({ topicname, year, month, day }) =>  {
     const iyear = parseInt(year, 10);
     const imonth = parseInt(month, 10);
     const iday = parseInt(day, 10);
     if (!iyear || !imonth || !iday || !topicname) return false;
     const d = new Date(year, month - 1, day);
-    if (peer.getDayStr(d) !== `${year}/${month}/${day}`) return false;
+    if (getDayStr(d) !== `${year}/${month}/${day}`) return false;
     return checkTopicMatch({ topicname });
   }
 );
@@ -88,6 +81,11 @@ export const thingData = objectType(
 
 export const thingVotes = objectType(
   `${PREFIX}/things/:thingid/votes:votekind`,
+  checkThingMatch,
+);
+
+export const thingVoteCounts = objectType(
+  `${PREFIX}/things/:thingid/votecounts`,
   checkThingMatch,
 );
 

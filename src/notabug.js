@@ -1,22 +1,19 @@
 /* globals Gun */
-import { assoc, mergeDeepRight } from "ramda";
-import { sorts } from "./sorts";
-import * as watch from "./watch";
-import * as fetch from "./fetch";
+import { assoc, path } from "ramda";
+import { ZalgoPromise as Promise } from "zalgo-promise";
 import * as write from "./write";
 import * as souls from "./souls";
 import * as schema from "./schema";
-import * as serialized from "./serialized";
 import * as auth from "./auth";
-import * as accessors from "./accessors";
-import * as listing from "./listing";
-export * from "./etc";
+import * as listings from "./listings";
+import * as computed from "./computed";
+export * from "./util";
 export { default as pow } from "proof-of-work";
+export { nowOr, now } from "./scope";
 
 const DEFAULT_PEERS = [];
 
 const notabug = (config={}, initialState={}) => {
-  let state = mergeDeepRight({}, initialState);
   const {
     peers=DEFAULT_PEERS, disableValidation, blocked=[], noGun=false, localStorage=false,
     persist=false, ...rest,
@@ -26,9 +23,6 @@ const notabug = (config={}, initialState={}) => {
     config,
     schema,
     isBlocked: soul => !!blockedMap[soul],
-    getState: () => state,
-    setState: (newState) => state = ({ ...state, ...newState }),
-    mergeState: (newState) => state = mergeDeepRight(state, newState),
   };
   const gunConfig = { peers, localStorage, ...rest };
   if (persist) {
@@ -38,11 +32,16 @@ const notabug = (config={}, initialState={}) => {
   } else {
     gunConfig.radisk = false;
   }
-  peer.sorts = sorts(peer);
   peer.souls = Object.keys(souls).reduce((res, key) => assoc(key, souls[key](peer), res), {});
+
+  const onInFns = config.computed
+    ? Object.keys(computed).map(key => path([key, "onIn"], computed)) : [];
 
   if (!noGun) {
     Gun.on("opt", context => {
+      context.on("out", function wireOutput(msg) {
+        this.to.next(msg);
+      });
       context.on("in", function wireInput(msg) {
         Promise.all(Object.keys(msg).map(key => {
           if (key === "put" && msg.mesh) {
@@ -65,6 +64,7 @@ const notabug = (config={}, initialState={}) => {
             if (msg && msg.put && !Object.keys(msg.put).length) return; // Rejected all writes
             if (config.leech && msg.mesh && msg.get) return; // ignore gets
             this.to.next(msg);
+            if (!config.leech) onInFns.map(fn => fn(peer, msg));
           })
           .catch(e => console.error("Message rejected", e.stack || e, msg)); // eslint-disable-line
       });
@@ -75,8 +75,7 @@ const notabug = (config={}, initialState={}) => {
 
   // Nuke gun's localStorage if it fills up, kinda lame but less lame than total failure
   if (!persist && localStorage) peer.gun.on("localStorage:error", ack => ack.retry({}));
-
-  const fns = { ...watch, ...fetch, ...accessors, ...listing, ...write, ...serialized, ...auth };
+  const fns = { ...listings, ...write, ...auth };
   Object.keys(fns).map(key => peer[key] = fns[key](peer));
   if (peer.gun) blocked.forEach(soul => peer.gun.get(soul).put({ url: null, body: "[removed]" }));
   return peer;

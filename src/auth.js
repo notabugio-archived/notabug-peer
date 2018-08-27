@@ -1,5 +1,6 @@
 /* globals Gun */
-import curry from "ramda/src/curry";
+import { curry } from "ramda";
+import { ZalgoPromise as Promise } from "zalgo-promise";
 
 export const signup = curry((peer, username, password) => new Promise((ok, fail) => {
   if (peer && peer.gun && peer.gun.user) {

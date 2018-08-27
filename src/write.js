@@ -1,6 +1,8 @@
-import curry from "ramda/src/curry";
+import { curry } from "ramda";
+import { ZalgoPromise as Promise } from "zalgo-promise";
 import objHash from "object-hash";
 import urllite from "urllite";
+import { getDayStr } from "./util";
 
 export const putThing = curry((peer, data) => {
   data.timestamp = data.timestamp || (new Date()).getTime(); // eslint-disable-line
@@ -55,7 +57,6 @@ export const comment = curry((peer, data) => {
     peer.gun.user().get("comments").set(thing);
   }
 
-  thing.once(peer.watchThing);
   return thing;
 });
 
@@ -69,7 +70,6 @@ export const chat = curry((peer, data) => {
   const thing = peer.putThing({ ...data, kind: "chatmsg" });
 
   if (user) peer.gun.user().get("things").set(thing);
-  thing.once(peer.watchThing);
   return thing;
 });
 
@@ -77,9 +77,7 @@ export const vote = curry((peer, id, kind, nonce) => {
   const thing = peer.souls.thing.get({ thingid: id });
   const votes = peer.souls.thingVotes.get({ thingid: id, votekind: kind });
   thing.get(`votes${kind}`).put(votes);
-  const chain =  votes.set(nonce);
-  votes.once(peer.countVotes(id, kind)) // XXX This shouldn't be necessary GUN bug workaround
-  return chain;
+  return votes.set(nonce);
 });
 
 const topicPrefixes = {
@@ -101,7 +99,7 @@ export const indexThing = curry((peer, thingid, data) => {
   }
 
   const thing = peer.souls.thing.get({ thingid });
-  const dayStr = peer.getDayStr(data.timestamp);
+  const dayStr = getDayStr(data.timestamp);
   const [year, month, day] = dayStr.split("/");
   const topicPrefix = topicPrefixes[data.kind] || "";
   const topicname = topicPrefix + data.topic;
