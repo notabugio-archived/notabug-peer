@@ -1,39 +1,37 @@
 {
-  "name": "webpack-library-starter",
-  "version": "1.0.2",
-  "description": "Produce universal library with webpack and es6",
-  "main": "lib/webpack-library-starter.js",
+  "name": "notabug-peer",
+  "version": "0.11.0",
+  "description": "Peer/client library for notabug network",
+  "main": "lib/notabug-peer.js",
   "scripts": {
     "build": "webpack --env dev && webpack --env build && npm run test",
     "dev": "webpack --progress --colors --watch --env dev",
     "test": "mocha --require babel-register --colors ./test/*.spec.js",
     "test:watch": "mocha --require babel-register --colors -w ./test/*.spec.js",
     "test:cover": "cross-env NODE_ENV=test nyc mocha --require babel-register --colors test/*.js",
-    "repl": "node -i -e \"$(< ./lib/webpack-library-starter.js)\""
+    "repl": "node -i -e \"$(< ./lib/notabug-peer.js)\""
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/krasimir/webpack-library-starter.git"
+    "url": "https://github.com/notabugio/notabug-peer.git"
   },
   "keywords": [
-    "webpack",
-    "es6",
-    "starter",
     "library",
-    "universal",
-    "umd",
-    "commonjs"
+    "notabug",
+    "gundb"
   ],
-  "author": "Krasimir Tsonev",
+  "author": "go1dfish",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/krasimir/webpack-library-starter/issues"
+    "url": "https://github.com/notabugio/notabug-peer/issues"
   },
-  "homepage": "https://github.com/krasimir/webpack-library-starter",
+  "homepage": "https://github.com/notabugio/notabug-peer",
   "devDependencies": {
     "@babel/cli": "^7.0.0-beta.51",
     "@babel/core": "^7.0.0-beta.51",
     "@babel/preset-env": "^7.0.0-beta.51",
+    "@trust/webcrypto": "^0.9.2",
+    "argon2": "0.20.1",
     "babel-eslint": "^8.0.3",
     "babel-loader": "^8.0.0-beta.4",
     "babel-plugin-add-module-exports": "^0.2.1",
@@ -44,17 +42,42 @@
     "cross-env": "^5.2.0",
     "eslint": "^5.0.1",
     "eslint-loader": "^2.0.0",
+    "gun": "^0.9.9999991",
+    "gun-scope": "https://github.com/notabugio/gun-scope.git",
+    "gun-suppressor": "https://github.com/notabugio/gun-suppressor.git",
+    "gun-suppressor-sear": "https://github.com/notabugio/gun-suppressor-sear.git",
     "jsdom": "11.11.0",
     "jsdom-global": "3.0.2",
     "mocha": "^4.0.1",
+    "node-webcrypto-ossl": "^1.0.42",
+    "nyc": "^13.1.0",
+    "object-hash": "^1.1.4",
+    "ramda": "^0.26.1",
+    "route-parser": "^0.0.5",
     "uglifyjs-webpack-plugin": "^1.2.7",
+    "uri-js": "^4.2.2",
+    "vorpal": "^1.12.0",
     "webpack": "^4.12.2",
     "webpack-cli": "^3.0.8",
     "yargs": "^10.0.3",
-    "nyc": "^13.1.0"
+    "zalgo-promise": "1.0.28"
   },
   "nyc": {
     "sourceMap": false,
     "instrument": false
+  },
+  "peerDependencies": {
+    "argon2": "0.20.1",
+    "gun-scope": "https://github.com/notabugio/gun-scope.git",
+    "gun-suppressor": "https://github.com/notabugio/gun-suppressor.git",
+    "gun-suppressor-sear": "https://github.com/notabugio/gun-suppressor-sear.git",
+    "object-hash": "^1.1.4",
+    "ramda": "^0.26.1",
+    "route-parser": "^0.0.5",
+    "uri-js": "^4.2.2",
+    "zalgo-promise": "1.0.28"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.0.0-beta.51"
   }
 }
