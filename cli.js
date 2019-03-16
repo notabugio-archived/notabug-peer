@@ -1,7 +1,7 @@
 require("@babel/polyfill");
 const Gun = require("gun");
 
-const { Peer } = require("./lib/notabug-peer");
+const { Peer, Listing } = require("./lib/notabug-peer");
 
 const vorpal = require("vorpal")();
 const DEFAULT_PEER = "https://notabug.io/gun";
@@ -33,11 +33,17 @@ vorpal.command("get [soul]").action(function(args) {
   });
 });
 
-vorpal.command("ls <path>", "output a listing").action(function(args, cb) {
-  const { path } = args;
+vorpal
+  .command("ls <path>", "output a listing")
+  .action(async function(args, cb) {
+    const { path } = args;
 
-  this.log(path);
-  cb();
-});
+    if (!activePeer) vorpal.execSync("connect");
+    const scope = activePeer.newScope({});
+    const ids = await Listing.fromPath(scope, path);
+
+    this.log(ids);
+    cb();
+  });
 
 vorpal.delimiter("nab$").show();

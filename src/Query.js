@@ -160,8 +160,9 @@ const computeThingScores = query((scope, thingSoul) =>
 );
 
 const thingMeta = query(
-  (scope, { thingSoul, tabulator, data = false, scores = false }) =>
-    all([
+  (scope, { thingSoul, tabulator, data = false, scores = false }) => {
+    if (!thingSoul) return resolve(null);
+    return all([
       thing(scope, thingSoul),
       scores
         ? tabulator
@@ -177,7 +178,8 @@ const thingMeta = query(
     ]).then(([meta, votes, data]) => {
       if (!meta || !meta.id) return null;
       return { ...meta, votes, data };
-    })
+    });
+  }
 );
 
 const multiThingMeta = query((scope, params) =>

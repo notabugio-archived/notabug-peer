@@ -185,14 +185,14 @@ const unionRows = R.compose(
 );
 
 const rowsFromSouls = query((scope, souls) =>
-  Promise.all(R.map(soul => scope.get(soul))).then(unionRows)
+  Promise.all(R.map(scope.get, souls)).then(unionRows)
 );
 
 const read = query((scope, path, opts) => {
   const { indexer = Config.indexer } = opts || {};
 
   return rowsFromSouls(scope, [soulFromPath(indexer, path)]).then(rowsToIds);
-}, "listingIds");
+}, "listingRows");
 
 export const ListingNode = {
   POS_IDX,
@@ -208,6 +208,7 @@ export const ListingNode = {
   sortRows,
   sortedIds,
   soulFromPath,
+  rowsFromSouls,
   read,
   diff,
   categorizeDiff,

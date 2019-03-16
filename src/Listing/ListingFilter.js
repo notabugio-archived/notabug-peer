@@ -13,7 +13,7 @@ const intPath = p =>
   );
 
 const fromDefinition = definition => {
-  const { filters, voteFilters, isPresent, itemSource } = definition;
+  const { filters, voteFilters, isPresent } = definition;
   const filterFunctions = [];
   const voteFilterFunctions = [];
 
@@ -26,8 +26,6 @@ const fromDefinition = definition => {
     addFilter(t => !!isPresent(["author", t]), R.path(["data", "authorId"]));
   if (filters.allow.domains.length)
     addFilter(t => !!isPresent(["domain", t]), ThingDataNode.domain);
-  if (filters.allow.topics.length && itemSource !== "topic")
-    addFilter(t => !!isPresent(["topic", t]), R.path(["data", "topic"]));
 
   if (
     filters.allow.topics.length &&
@@ -105,7 +103,7 @@ const fromDefinition = definition => {
 
   const contentFilter = thing => !filterFunctions.find(fn => !fn(thing));
   const voteFilter = thing => !voteFilterFunctions.find(fn => !fn(thing));
-  const thingFilter = thing => contentFilter(thing) && voteFilter(thing);
+  const thingFilter = thing => (contentFilter(thing) && voteFilter(thing));
 
   return { thingFilter, contentFilter, voteFilter };
 };
@@ -117,14 +115,14 @@ const getFilteredIds = async (
 ) => {
   const rows = sortedRows.slice();
   const filtered = [];
-  const fetchBatch = (size = 25) =>
+  const fetchBatch = (size = 30) =>
     Promise.all(
       R.map(async row => {
         let inListing = true;
 
         if (filterFn) inListing = await filterFn(row[ListingNode.POS_ID]);
         if (inListing) filtered.push(row);
-      }, rows.splice(count, count + size))
+      }, rows.splice(count, size))
     );
 
   while (rows.length) {

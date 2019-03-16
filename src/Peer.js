@@ -24,7 +24,7 @@ function init(Gun, config = {}) {
     }
   }
 
-  peer.newScope = Query.createScope(peer);
+  peer.newScope = opts => Query.createScope(peer, opts);
   peer.onLogin = Authentication.onLogin(peer);
   peer.signup = Authentication.signup(peer);
   peer.login = Authentication.login(peer);

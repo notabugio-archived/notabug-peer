@@ -1,10 +1,10 @@
 import * as R from "ramda";
 import { query } from "gun-scope";
-import { ListingNode } from "./ListingNode";
+import { Query } from "../Query";
+import { ThingDataNode } from "../Thing";
 import { ListingDefinition } from "./ListingDefinition";
 import { ListingDataSource } from "./ListingDataSource";
 import { ListingFilter } from "./ListingFilter";
-import { Query } from "../Query";
 
 const fromSource = R.compose(
   R.apply(R.mergeLeft),
@@ -17,14 +17,14 @@ const fromSource = R.compose(
 );
 
 const getSource = query((scope, authorId, name, extra = "") =>
-  Query.getWikiPage(scope, authorId, name)
+  Query.wikiPage(scope, authorId, name)
     .then(R.compose(
       body => `${body}
 # added by indexer
 ${extra || ""}
 sourced from page ${authorId} ${name}
 `,
-      ListingNode.body
+      ThingDataNode.body
     ))
 );
 

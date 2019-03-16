@@ -155,8 +155,11 @@ const sources = {
 
 const sourceNames = R.keys(sources);
 const sourceName = def => R.find(def.isPresent, sourceNames) || "topic";
-const fromDefinition = definition =>
-  R.mergeLeft({ name: sourceName(definition) }, sources[name](definition));
+const fromDefinition = definition => {
+  const name = sourceName(definition);
+
+  return R.mergeLeft({ name }, sources[name](definition));
+};
 
 export const ListingDataSource = {
   fromDefinition,
