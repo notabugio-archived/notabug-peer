@@ -1,5 +1,5 @@
 import * as R from "ramda";
-import { query } from "gun-scope";
+import { query, resolve } from "gun-scope";
 import { Constants } from "../Constants";
 import { Config } from "../Config";
 
@@ -7,7 +7,9 @@ const [POS_IDX, POS_ID, POS_VAL] = [0, 1, 2, 3]; // eslint-disable-line no-unuse
 const rowsToIds = R.map(R.prop(POS_ID));
 const rowsToItems = R.map(R.slice(1, 3));
 const source = R.propOr("", "source");
-const soulFromPath = R.curry((indexer, path) => `${Constants.PREFIX}${path}@~${indexer}.`);
+const soulFromPath = R.curry(
+  (indexer, path) => `${Constants.PREFIX}${path}@~${indexer}.`
+);
 
 const getRow = R.curry((node, idx) =>
   R.compose(
@@ -38,15 +40,15 @@ const rows = node =>
     itemKeys
   )(node);
 
-const ids = R.compose(rowsToIds, rows);
+const ids = R.compose(
+  rowsToIds,
+  rows
+);
 
 const sortRows = R.sortWith([
   R.ascend(
     R.compose(
-      R.cond([
-        [R.isNil, R.always(Infinity)],
-        [R.T, parseFloat]
-      ]),
+      R.cond([[R.isNil, R.always(Infinity)], [R.T, parseFloat]]),
       R.prop(POS_VAL)
     )
   )
@@ -191,14 +193,22 @@ const rowsFromSouls = query((scope, souls) =>
 const read = query((scope, path, opts) => {
   const { indexer = Config.indexer } = opts || {};
 
+  console.log("ListingNode.read", path);
+
   return rowsFromSouls(scope, [soulFromPath(indexer, path)]).then(rowsToIds);
 }, "listingRows");
+
+const get = query(
+  (scope, soul) => (soul ? scope.get(soul) : resolve(null)),
+  "listing"
+);
 
 export const ListingNode = {
   POS_IDX,
   POS_ID,
   POS_VAL,
   source,
+  get,
   getRow,
   itemKeys,
   rows,

@@ -1,9 +1,11 @@
 import { Peer } from "./Peer";
+export { Config } from "./Config";
 export { Constants } from "./Constants";
-export { Listing } from "./Listing";
+export { Listing, SpaceSpec } from "./Listing";
 export { Peer } from "./Peer";
 export { Query } from "./Query";
 export { Schema } from "./Schema";
 export { Thing, ThingSet, ThingDataNode } from "./Thing";
 export { Validation } from "./Validation";
+export { Promise } from "gun-scope";
 export default Peer.init;

@@ -291,14 +291,13 @@ const wikiPage = query((scope, authorId, name) =>
   wikiPageId(scope, authorId, name).then(id => id && thingData(scope, id))
 );
 
-const userMeta = query(
-  (scope, id) =>
-    scope.get(id).then(meta => ({
-      userAlias: R.prop("alias", meta),
-      createdAt: R.path(["_", ">", "pub"], meta)
-    })),
-  "userMeta"
-);
+const userMeta = query((scope, id) => {
+  if (!id) return resolve(null);
+  return scope.get(`~${id}`).then(meta => ({
+    userAlias: R.prop("alias", meta),
+    createdAt: R.path(["_", ">", "pub"], meta)
+  }));
+}, "userMeta");
 
 const createScope = R.curry((nab, opts) =>
   makeScope(R.assoc("gun", nab.gun, opts || {}))

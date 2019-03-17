@@ -1,7 +1,7 @@
 require("@babel/polyfill");
 const Gun = require("gun");
 
-const { Peer, Listing } = require("./lib/notabug-peer");
+const { Config, Peer, Listing, Schema, Query } = require("./lib/notabug-peer");
 
 const vorpal = require("vorpal")();
 const DEFAULT_PEER = "https://notabug.io/gun";
@@ -35,7 +35,7 @@ vorpal.command("get [soul]").action(function(args) {
 
 vorpal
   .command("ls <path>", "output a listing")
-  .action(async function(args, cb) {
+  .action(async function(args) {
     const { path } = args;
 
     if (!activePeer) vorpal.execSync("connect");
@@ -43,6 +43,23 @@ vorpal
     const ids = await Listing.fromPath(scope, path);
 
     this.log(ids);
+  });
+
+vorpal
+  .command("thing <thingId>", "output thing data")
+  .action(async function(args, cb) {
+    const { thingId } = args;
+
+    if (!activePeer) vorpal.execSync("connect");
+    const scope = activePeer.newScope({});
+    const thing = await Query.thingMeta(scope, {
+      thingSoul: Schema.Thing.route.reverse({ thingId }),
+      tabulator: Config.tabulator,
+      scores: true,
+      data: true
+    });
+
+    this.log(thing);
     cb();
   });
 

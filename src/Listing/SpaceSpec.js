@@ -2,7 +2,7 @@ import * as R from "ramda";
 import { query } from "gun-scope";
 import { Config } from "../Config";
 import { Tokenizer } from "../Tokenizer";
-import { ThingDataNode } from "../Thing";
+import { Query } from "../Query";
 import { ListingSpec } from "./ListingSpec";
 
 const tabs = ["hot", "new", "discussed", "controversial", "top"];
@@ -32,17 +32,31 @@ const sourceWithDefaults = R.curry((ownerId, name, source) => {
   return result.join("\n");
 });
 
-const getConfig = query((scope, authorId, name) =>
-  ListingSpec.getSource(scope, authorId, spaceConfigPageName(name))
-);
-
-const getSource = query((scope, authorId, name) =>
-  getConfig.then(
-    R.compose(
-      sourceWithDefaults(authorId, name),
-      ThingDataNode.body
-    )
+const getSource = query((scope, authorId, name, extra) =>
+  ListingSpec.getSource(scope, authorId, spaceConfigPageName(name), extra).then(
+    sourceWithDefaults(authorId, name)
   )
 );
 
-export const SpaceSpec = { tabs, getSource };
+const getSpec = query((scope, authorId, name, extra) =>
+  getSource(scope, authorId, name, extra).then(source =>
+    ListingSpec.fromSource(source, authorId, name)
+  )
+);
+
+const nodeToSpaceNames = R.compose(
+  R.sortBy(R.identity),
+  R.map(R.replace(/^space:/, "")),
+  R.filter(
+    R.compose(
+      R.prop("length"),
+      R.match(/^space:[^:]*$/)
+    )
+  ),
+  R.keys
+);
+
+const userSpaceNames = query((scope, authorId) =>
+  Query.userPages(scope, authorId).then(nodeToSpaceNames));
+
+export const SpaceSpec = { nodeToSpaceNames, userSpaceNames, tabs, getSource, getSpec };

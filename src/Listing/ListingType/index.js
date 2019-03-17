@@ -20,12 +20,6 @@ const fromPath = path => {
 
   for (let i = 0; i < types.length; i++) {
     match = types[i].route.match(path);
-    console.log("wtf", path, match);
-    if (match) {
-      console.log("match", match);
-    } else {
-      console.log("no match", types[i].route);
-    }
     if (match) return R.assoc("match", match, types[i]);
   }
   return null;

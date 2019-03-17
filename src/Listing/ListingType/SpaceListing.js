@@ -6,7 +6,6 @@ import { GunNode } from "../../GunNode";
 import { Path } from "../Path";
 import { ListingNode } from "../ListingNode";
 import { ListingFilter } from "../ListingFilter";
-import { ListingSpec } from "../ListingSpec";
 import { ListingOracle } from "../ListingOracle";
 import { SpaceSpec } from "../SpaceSpec";
 
@@ -16,10 +15,8 @@ const getSource = query((scope, { authorId, name, sort }) =>
   SpaceSpec.getSource(scope, authorId, name, `sort ${sort}`)
 );
 
-const getSpec = query((scope, match) =>
-  getSource(scope, match).then(source =>
-    ListingSpec.fromSource(source, match.authorId, match.name)
-  )
+const getSpec = query((scope, { authorId, name, sort }) =>
+  SpaceSpec.getSpec(scope, authorId, name, `sort ${sort}`)
 );
 
 const calculate = query((scope, match, opts) => {

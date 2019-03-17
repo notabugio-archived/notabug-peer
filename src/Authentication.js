@@ -5,7 +5,7 @@ const signup = R.curry(
   (peer, username, password, opts = {}) =>
     new Promise((ok, fail) => {
       if (peer && peer.gun && peer.gun.user) {
-        const user = peer.user();
+        const user = peer.gun.user();
 
         Promise.resolve(
           user.create(
