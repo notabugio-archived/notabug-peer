@@ -1,5 +1,6 @@
 import { query } from "gun-scope";
 import { Config } from "../../Config";
+import { Query } from "../../Query";
 import { GunNode } from "../../GunNode";
 import { Schema } from "../../Schema";
 import { ThingSet } from "../../Thing";
@@ -9,6 +10,10 @@ import { ListingNode } from "../ListingNode";
 import { ListingOracle } from "../ListingOracle";
 
 const path = "/user/:authorId/replied/:type/:sort";
+
+const getSidebar = query(scope =>
+  Query.wikiPage(scope, Config.indexer, "listing:topic:sidebar")
+);
 
 const getSource = query((scope, { authorId, type, sort = "new" }) =>
   ListingSpec.getSource(
@@ -48,4 +53,4 @@ const onPut = async (
   for (const key in scope.getAccesses()) orc.listen(key, route.soul);
 };
 
-export const InboxListing = Path.withRoute({ path, getSource, getSpec, onPut });
+export const InboxListing = Path.withRoute({ path, getSidebar, getSource, getSpec, onPut });

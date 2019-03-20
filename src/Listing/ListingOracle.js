@@ -22,8 +22,9 @@ const updateListing = async (
   if (changes) route.write(changes);
 };
 
-const onPut = async (orc, route, { sort, updatedSoul, diff }) => {
+const onPut = async (orc, route, { updatedSoul, diff }) => {
   let updatedIds = [];
+  const sort = R.pathOr("new", ["match", "sort"], route);
   const scope = orc.newScope();
   const { thingId } = Schema.ThingVoteCounts.route.match(updatedSoul) || {};
   const isSticky = R.equals(route.match.thingId || null);

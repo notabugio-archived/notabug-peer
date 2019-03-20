@@ -1,6 +1,7 @@
 import { Peer } from "./Peer";
 export { Config } from "./Config";
 export { Constants } from "./Constants";
+export { CommentCommand } from "./CommentCommand";
 export { Listing, SpaceSpec } from "./Listing";
 export { Peer } from "./Peer";
 export { Query } from "./Query";
@@ -8,4 +9,5 @@ export { Schema } from "./Schema";
 export { Thing, ThingSet, ThingDataNode } from "./Thing";
 export { Validation } from "./Validation";
 export { Promise } from "gun-scope";
+export { Tabulator } from "./Tabulator";
 export default Peer.init;

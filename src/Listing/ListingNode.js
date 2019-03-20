@@ -61,6 +61,10 @@ const sortedIds = R.compose(
   rows
 );
 
+const itemsToRows = R.addIndex(R.map)(
+  (item, idx) => [idx, ...item]
+);
+
 const diff = async (
   node,
   updatedItems = [],
@@ -215,6 +219,7 @@ export const ListingNode = {
   ids,
   rowsToIds,
   rowsToItems,
+  itemsToRows,
   sortRows,
   sortedIds,
   soulFromPath,

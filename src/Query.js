@@ -320,6 +320,7 @@ export const Query = {
   thingScores,
   thingReplies,
   thingData,
+  thingDataFromSouls,
   topicSouls,
   userPages,
   wikiPageId,

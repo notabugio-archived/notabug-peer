@@ -1,6 +1,8 @@
 import { ListingQuery } from "./ListingQuery";
 import { ListingNode } from "./ListingNode";
 import { ListingSpec } from "./ListingSpec";
+import { ListingSort } from "./ListingSort";
+import { ListingType } from "./ListingType";
 
 export { ListingDataSource } from "./ListingDataSource";
 export { ListingDefinition } from "./ListingDefinition";
@@ -16,7 +18,11 @@ export { SpaceSpec } from "./SpaceSpec";
 export const Listing = {
   ListingNode,
   ListingSpec,
+  isValidSort: ListingSort.isValidSort,
   get: ListingNode.get,
   fromSpec: ListingQuery.fromSpec,
-  fromPath: ListingQuery.fromPath
+  fromPath: ListingQuery.fromPath,
+  typeFromPath: ListingType.fromPath,
+  sidebarFromPath: ListingQuery.sidebarFromPath,
+  nodeFromPath: ListingQuery.nodeFromPath
 };

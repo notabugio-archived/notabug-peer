@@ -8,6 +8,13 @@ import { ThingSet } from "./ThingSet";
 export { ThingSet } from "./ThingSet";
 export { ThingDataNode } from "./ThingDataNode";
 
+const soulToId = R.compose(
+  R.prop("thingId"),
+  Schema.Thing.route.match.bind(Schema.Thing.route)
+);
+
+const soulsToIds = R.map(soulToId);
+
 const put = R.curry((peer, data) => {
   data.timestamp = data.timestamp || new Date().getTime(); // eslint-disable-line
   const originalHash = objHash(data);
@@ -289,6 +296,8 @@ const index = R.curry((peer, thingId, data) => {
 });
 
 export const Thing = {
+  soulToId,
+  soulsToIds,
   put,
   submit,
   comment,

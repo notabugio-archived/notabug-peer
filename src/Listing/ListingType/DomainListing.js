@@ -1,11 +1,16 @@
 import * as R from "ramda";
 import { query } from "gun-scope";
 import { Config } from "../../Config";
+import { Query } from "../../Query";
 import { Path } from "../Path";
 import { ListingSpec } from "../ListingSpec";
 
 const path = "/domain/:domain/:sort";
 const tabs = ["hot", "new", "discussed", "controversial", "top"];
+
+const getSidebar = query(scope =>
+  Query.wikiPage(scope, Config.indexer, "listing:domain:sidebar")
+);
 
 const getSource = query((scope, { domain, sort }) => {
   const domains = Path.splitTopics(domain);
@@ -29,4 +34,4 @@ const getSpec = query((scope, match) =>
   getSource(scope, match).then(ListingSpec.fromSource)
 );
 
-export const DomainListing = Path.withRoute({ path, tabs, getSource, getSpec });
+export const DomainListing = Path.withRoute({ path, tabs, getSidebar, getSource, getSpec });

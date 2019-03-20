@@ -4,24 +4,30 @@ import { Config } from "../../Config";
 import { Query } from "../../Query";
 import { Path } from "../Path";
 import { ListingSpec } from "../ListingSpec";
+import { TopicListing } from "./TopicListing";
 
-const path = "/t/:topic/:sort";
-const tabs = ["hot", "new", "discussed", "controversial", "top", "firehose"];
+const path = "/t/:topic/chat";
+const tabs = TopicListing.tabs;
 
-const getSidebar = query(scope =>
-  Query.wikiPage(scope, Config.indexer, "listing:topic:sidebar")
+const getSidebar = query((scope, { topic, sort }) =>
+  Query.wikiPage(scope, Config.indexer, "listing:chat:sidebar")
 );
 
 const getSource = query((scope, { topic, sort }) => {
-  const topics = Path.splitTopics(topic);
-  const submitTo = topics[0] === "all" ? "whatever" : topics[0];
+  const normalTopics = Path.splitTopics(topic);
+  const submitTo =
+    topic === "all" ? "whatever" : normalTopics[0] || "whatever";
+  const topics = normalTopics.reduce(
+    (res, topic) => [...res, `chat:${topic}`],
+    []
+  );
 
   return ListingSpec.getSource(
     scope,
     Config.indexer,
-    "listing:topic",
+    "listing:chat",
     [
-      `name ${topic}`,
+      "sort new",
       `submit to ${submitTo}`,
       `sort ${sort}`,
       topic.indexOf(":") === -1 ? "kind submission" : "",
@@ -35,9 +41,5 @@ const getSpec = query((scope, match) =>
   getSource(scope, match).then(ListingSpec.fromSource)
 );
 
-export const TopicListing = Path.withRoute({
-  path,
-  getSidebar,
-  getSource,
-  getSpec
-});
+export const ChatListing = Path.withRoute({ path, getSidebar, getSource, getSpec });
+

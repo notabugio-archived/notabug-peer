@@ -6,7 +6,8 @@ import { Query } from "../Query";
 import { ListingSpec } from "./ListingSpec";
 
 const tabs = ["hot", "new", "discussed", "controversial", "top"];
-const spaceConfigPageName = name => `space:${name}`;
+const configPageName = name => `space:${name}`;
+const sidebarPageName = name => `space:${name}:sidebar`;
 
 const sourceWithDefaults = R.curry((ownerId, name, source) => {
   let result = [source || ""];
@@ -33,7 +34,7 @@ const sourceWithDefaults = R.curry((ownerId, name, source) => {
 });
 
 const getSource = query((scope, authorId, name, extra) =>
-  ListingSpec.getSource(scope, authorId, spaceConfigPageName(name), extra).then(
+  ListingSpec.getSource(scope, authorId, configPageName(name), extra).then(
     sourceWithDefaults(authorId, name)
   )
 );
@@ -57,6 +58,15 @@ const nodeToSpaceNames = R.compose(
 );
 
 const userSpaceNames = query((scope, authorId) =>
-  Query.userPages(scope, authorId).then(nodeToSpaceNames));
+  Query.userPages(scope, authorId).then(nodeToSpaceNames)
+);
 
-export const SpaceSpec = { nodeToSpaceNames, userSpaceNames, tabs, getSource, getSpec };
+export const SpaceSpec = {
+  configPageName,
+  sidebarPageName,
+  nodeToSpaceNames,
+  userSpaceNames,
+  tabs,
+  getSource,
+  getSpec
+};

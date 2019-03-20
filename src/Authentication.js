@@ -32,10 +32,10 @@ const signup = R.curry(
 const login = R.curry((peer, username, password) =>
   new Promise((ok, fail) => {
     if (peer && peer.gun && peer.gun.user) {
-      const user = peer.user();
+      const user = peer.gun.user();
 
       user.auth(username, password, ack =>
-        ack.err ? fail(ack.err) : ok(peer.user().is)
+        ack.err ? fail(ack.err) : ok(peer.gun.user().is)
       );
     } else {
       fail("SEA is not loaded");

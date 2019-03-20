@@ -1,11 +1,16 @@
 import * as R from "ramda";
 import { query } from "gun-scope";
 import { Config } from "../../Config";
+import { Query } from "../../Query";
 import { Path } from "../Path";
 import { ListingSpec } from "../ListingSpec";
 
 const path = "/user/:authorId/:type/:sort";
 const tabs = ["overview", "comments", "submitted", "commands"];
+
+const getSidebar = query(scope =>
+  Query.wikiPage(scope, Config.indexer, "listing:profile:sidebar")
+);
 
 const getSource = query((scope, { authorId, type, sort }) =>
   ListingSpec.getSource(
@@ -26,4 +31,4 @@ const getSpec = query((scope, match) =>
   getSource(scope, match).then(ListingSpec.fromSource)
 );
 
-export const ProfileListing = Path.withRoute({ path, tabs, getSource, getSpec });
+export const ProfileListing = Path.withRoute({ path, tabs, getSidebar, getSource, getSpec });

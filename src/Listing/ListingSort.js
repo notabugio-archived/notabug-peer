@@ -99,6 +99,8 @@ const sorts = {
   })
 };
 
+const isValidSort = sort => !!sorts[sort];
+
 const toItem = query(
   (scope, id, spec) =>
     (sorts[spec.sort] || sorts.new)(id, spec).then(val => [id, val])
@@ -126,6 +128,7 @@ export const ListingSort = {
   POS_ID,
   POS_VAL,
   sorts,
+  isValidSort,
   toItem,
   toItems,
   toIds,

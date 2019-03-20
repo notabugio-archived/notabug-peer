@@ -3,6 +3,7 @@ import { all, query } from "gun-scope";
 import { Config } from "../../Config";
 import { Schema } from "../../Schema";
 import { GunNode } from "../../GunNode";
+import { Query } from "../../Query";
 import { Path } from "../Path";
 import { ListingNode } from "../ListingNode";
 import { ListingFilter } from "../ListingFilter";
@@ -18,6 +19,9 @@ const getSource = query((scope, { authorId, name, sort }) =>
 const getSpec = query((scope, { authorId, name, sort }) =>
   SpaceSpec.getSpec(scope, authorId, name, `sort ${sort}`)
 );
+
+const getSidebar = query((scope, { authorId, name, sort }) =>
+  Query.wikiPage(scope, authorId, SpaceSpec.sidebarPageName(name)));
 
 const calculate = query((scope, match, opts) => {
   const { authorId, name, sort } = match;
@@ -100,6 +104,7 @@ export const SpaceListing = Path.withRoute({
   path,
   calculate,
   getSource,
+  getSidebar,
   getSpec,
   onPut
 });

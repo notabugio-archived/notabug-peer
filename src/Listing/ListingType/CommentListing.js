@@ -1,9 +1,14 @@
 import { query } from "gun-scope";
 import { Config } from "../../Config";
+import { Query } from "../../Query";
 import { Path } from "../Path";
 import { ListingSpec } from "../ListingSpec";
 
 const path = "/things/:thingId/comments/:sort";
+
+const getSidebar = query(scope =>
+  Query.wikiPage(scope, Config.indexer, "listing:comments:sidebar")
+);
 
 const getSpec = query((scope, { thingId, sort }) =>
   ListingSpec.getSource(
@@ -14,4 +19,4 @@ const getSpec = query((scope, { thingId, sort }) =>
   )
 );
 
-export const CommentListing = Path.withRoute({ path, getSpec });
+export const CommentListing = Path.withRoute({ path, getSidebar, getSpec });

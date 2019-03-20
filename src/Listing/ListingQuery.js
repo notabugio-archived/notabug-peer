@@ -1,10 +1,27 @@
 import * as R from "ramda";
-import { query } from "gun-scope";
+import { query, resolve } from "gun-scope";
 import { ListingNode } from "./ListingNode";
 import { ListingFilter } from "./ListingFilter";
 import { ListingType } from "./ListingType";
 
-const fromSpec = query((scope, spec, opts = {}) => {
+const calculateRows = query((scope, spec, opts = {}) => {
+  const filterFn = ListingFilter.thingFilter(scope, spec);
+
+  if (!spec.dataSource.query) return resolve([]);
+  return spec.dataSource.query(scope).then(items => {
+    const rows = ListingNode.itemsToRows(items);
+
+    return ListingFilter.getFilteredIds(scope, rows, { ...opts, filterFn });
+  });
+});
+
+const calculate = query((scope, spec, opts = {}) => {});
+
+const toNode = query((scope, spec, opts) =>
+  calculateRows(scope, spec, opts).then(ListingNode.serialize(spec))
+);
+
+const read = query((scope, spec, opts = {}) => {
   const filterFn = ListingFilter.thingFilter(scope, spec);
   const paths = R.pathOr([], ["dataSource", "listingPaths"], spec);
   const souls = R.map(
@@ -16,6 +33,10 @@ const fromSpec = query((scope, spec, opts = {}) => {
     ListingFilter.getFilteredIds(scope, rows, { ...opts, filterFn })
   );
 });
+
+const fromSpec = query((scope, spec, opts = {}) =>
+  (opts.calculate ? calculate : read)(scope, spec, opts)
+);
 
 const fromPath = query((scope, path, opts) => {
   const type = ListingType.fromPath(path);
@@ -30,4 +51,27 @@ const fromPath = query((scope, path, opts) => {
   });
 });
 
-export const ListingQuery = { fromSpec, fromPath };
+const sidebarFromPath = query((scope, path, opts) => {
+  const type = ListingType.fromPath(path);
+
+  if (!type || !type.getSidebar) return resolve("");
+  return type.getSidebar(scope, type.match);
+});
+
+const nodeFromPath = query((scope, path, opts) => {
+  const type = ListingType.fromPath(path);
+
+  if (!type) return resolve([]);
+  return type
+    .getSpec(scope, type.match)
+    .then(spec => toNode(scope, spec, opts));
+});
+
+export const ListingQuery = {
+  fromSpec,
+  fromPath,
+  sidebarFromPath,
+  calculateRows,
+  toNode,
+  nodeFromPath
+};
