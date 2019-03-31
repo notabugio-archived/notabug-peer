@@ -5,6 +5,7 @@ const { Config, Peer, Listing, Schema, Query } = require("./lib/notabug-peer");
 
 const vorpal = require("vorpal")();
 const DEFAULT_PEER = "https://notabug.io/gun";
+// const DEFAULT_PEER = "http://localhost:3333/gun";
 
 let activePeer;
 

@@ -16,12 +16,17 @@ const fromSource = (source, ownerId = null, spaceName = null) => {
   obj.tabulator = getValue("tabulator") || obj.indexer;
   obj.tabs = getPairs("tab");
   obj.sort = getValue("sort");
+
+  // TODO: breaks with custom names
+  if (obj.sort === "default") obj.sort = getValue("tab");
+
   obj.uniqueByContent = !!isPresent("unique by content");
   obj.curators = getValues("curator");
   obj.moderators = getValues("mod");
   obj.includeRanks = !!isPresent("show ranks");
   obj.stickyIds = getValues("sticky");
   obj.isIdSticky = id => !!tokenized.isPresent(["sticky", id]);
+  obj.isChat = !!isPresent("display as chat");
   obj.submitTopics = getValues("submit to");
   obj.submitTopic = getValue("submit to");
   obj.chatTopic = getValue("chat in");
@@ -30,7 +35,8 @@ const fromSource = (source, ownerId = null, spaceName = null) => {
     obj.spaceName = spaceName;
     obj.owner = ownerId;
     obj.useForComments = !tokenized.isPresent("comments leave space");
-    obj.path = `/user/${ownerId}/spaces/${spaceName}`;
+    obj.basePath = `/user/${ownerId}/spaces/${spaceName}`;
+    if (obj.submitTopic) obj.submitPath = `${obj.basePath}/submit`;
     obj.defaultTab = tokenized.getValue("tab");
     obj.defaultTabPath = obj.defaultTab
       ? tokenized.getValue(["tab", obj.defaultTab])

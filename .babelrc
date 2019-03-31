@@ -1,5 +1,13 @@
 {
-  "presets": ["env"],
+  "presets": [
+    [
+      "env", {
+        "targets": {
+          "node": "current"
+        }
+      }
+    ]
+  ],
   "plugins": ["babel-plugin-add-module-exports"],
   "env": {
     "test": {

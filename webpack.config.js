@@ -53,6 +53,7 @@ const config = {
     "gun-suppressor": "gun-suppressor",
     "gun-suppressor-sear": "gun-suppressor-sear",
     "object-hash": "object-hash",
+    "fast-memoize": "fast-memoize",
     ramda: "ramda",
     "route-parser": "route-parser",
     "uri-js": "uri-js"

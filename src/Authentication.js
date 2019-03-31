@@ -47,7 +47,7 @@ const login = R.curry((peer, username, password) =>
 );
 
 const logout = peer => peer.gun.user().leave();
-const isLoggedIn = peer => peer.gun && peer.gun.user && peer.user().is;
+const isLoggedIn = peer => peer.gun && peer.gun.user && peer.gun.user().is;
 const onLogin = R.curry((peer, fn) => (peer._onLogin = fn)); // eslint-disable-line
 
 export const Authentication = {

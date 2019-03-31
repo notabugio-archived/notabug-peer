@@ -15,8 +15,7 @@ const getSidebar = query(scope =>
 
 const getSource = query((scope, { topic, sort }) => {
   const normalTopics = Path.splitTopics(topic);
-  const submitTo =
-    topic === "all" ? "whatever" : normalTopics[0] || "whatever";
+  const submitTo = topic === "all" ? "whatever" : normalTopics[0] || "whatever";
   const topics = normalTopics.reduce(
     (res, topic) => [...res, topic, `chat:${topic}`, `comments:${topic}`],
     []
@@ -28,9 +27,9 @@ const getSource = query((scope, { topic, sort }) => {
     "listing:firehose",
     [
       "sort new",
+      "display as chat",
       `submit to ${submitTo}`,
       `sort ${sort}`,
-      topic.indexOf(":") === -1 ? "kind submission" : "",
       ...R.map(topic => `topic ${topic}`, topics),
       ...R.map(tab => `tab ${tab} /t/${topic}/${tab}`, tabs)
     ].join("\n")
@@ -41,4 +40,10 @@ const getSpec = query((scope, match) =>
   getSource(scope, match).then(ListingSpec.fromSource)
 );
 
-export const FirehoseListing = Path.withRoute({ tabs, path, getSidebar, getSource, getSpec });
+export const FirehoseListing = Path.withRoute({
+  tabs,
+  path,
+  getSidebar,
+  getSource,
+  getSpec
+});

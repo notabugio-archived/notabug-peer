@@ -20,7 +20,6 @@ const getSource = query((scope, { authorId, type, sort }) =>
     [
       `author ${authorId}`,
       `type ${type}`,
-      "submit to whatever",
       `sort ${sort}`,
       ...R.map(tab => `tab ${tab} /user/${authorId}/${tab}`, tabs)
     ].join("\n")
@@ -28,7 +27,20 @@ const getSource = query((scope, { authorId, type, sort }) =>
 );
 
 const getSpec = query((scope, match) =>
-  getSource(scope, match).then(ListingSpec.fromSource)
-);
+  Query.userMeta(scope, match.authorId).then(meta =>
+    getSource(scope, match).then(R.pipe(
+      ListingSpec.fromSource,
+      R.mergeLeft({
+        profileId: match.authorId,
+        displayName: R.propOr("", "alias", meta)
+      })
+    ))
+));
 
-export const ProfileListing = Path.withRoute({ path, tabs, getSidebar, getSource, getSpec });
+export const ProfileListing = Path.withRoute({
+  path,
+  tabs,
+  getSidebar,
+  getSource,
+  getSpec
+});

@@ -1,7 +1,11 @@
 import * as R from "ramda";
 import { query, resolve } from "gun-scope";
+// import memoize from "fast-memoize";
 import { Constants } from "../Constants";
 import { Config } from "../Config";
+import { Schema } from "../Schema";
+
+const memoize = R.compose;
 
 const [POS_IDX, POS_ID, POS_VAL] = [0, 1, 2, 3]; // eslint-disable-line no-unused-vars
 const rowsToIds = R.map(R.prop(POS_ID));
@@ -10,6 +14,15 @@ const source = R.propOr("", "source");
 const soulFromPath = R.curry(
   (indexer, path) => `${Constants.PREFIX}${path}@~${indexer}.`
 );
+const pathFromSoul = R.compose(
+  R.replace(new RegExp(`^${Constants.PREFIX}`), ""),
+  R.replace(/@~.*\./, "")
+);
+
+const idToSoul = thingId => Schema.Thing.route.reverse({ thingId });
+const idsToSouls = R.map(idToSoul);
+const soulToId = soul => R.prop("thingId", Schema.Thing.route.match(soul));
+const soulsToIds = R.map(soulToId);
 
 const getRow = R.curry((node, idx) =>
   R.compose(
@@ -24,7 +37,7 @@ const getRow = R.curry((node, idx) =>
   )(node)
 );
 
-const itemKeys = R.compose(
+const itemKeys = memoize(R.compose(
   R.filter(
     R.compose(
       val => !!(val === 0 || val),
@@ -32,6 +45,16 @@ const itemKeys = R.compose(
     )
   ),
   R.keys
+));
+
+const serialize = R.curry((spec, items) =>
+  R.compose(
+    R.addIndex(R.reduce)(
+      (res, row, idx) => R.assoc(`${idx}`, row.join(","), res),
+      {}
+    ),
+    R.defaultTo([])
+  )(items)
 );
 
 const rows = node =>
@@ -54,16 +77,14 @@ const sortRows = R.sortWith([
   )
 ]);
 
-const sortedIds = R.compose(
+const sortedIds = memoize(R.compose(
   R.map(R.prop(POS_ID)),
   sortRows,
   R.filter(R.identity),
   rows
-);
+));
 
-const itemsToRows = R.addIndex(R.map)(
-  (item, idx) => [idx, ...item]
-);
+const itemsToRows = R.addIndex(R.map)((item, idx) => [idx, ...item]);
 
 const diff = async (
   node,
@@ -215,14 +236,20 @@ export const ListingNode = {
   get,
   getRow,
   itemKeys,
+  serialize,
   rows,
   ids,
+  idToSoul,
+  idsToSouls,
+  soulToId,
+  soulsToIds,
   rowsToIds,
   rowsToItems,
   itemsToRows,
   sortRows,
   sortedIds,
   soulFromPath,
+  pathFromSoul,
   rowsFromSouls,
   read,
   diff,

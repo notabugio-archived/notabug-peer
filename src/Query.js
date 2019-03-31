@@ -1,5 +1,6 @@
 import * as R from "ramda";
 import { scope as makeScope, query, all, resolve } from "gun-scope";
+import { Config } from "./Config";
 import { Constants } from "./Constants";
 import { Schema } from "./Schema";
 import { ThingSet } from "./Thing";
@@ -137,65 +138,6 @@ const thing = query((scope, thingSoul) =>
   })
 );
 
-const thingVoteCount = voteType =>
-  query((scope, thingSoul) =>
-    scope
-      .get(thingSoul)
-      .get(voteType)
-      .count()
-  );
-
-const thingVotesUp = thingVoteCount("votesup");
-const thingVotesDown = thingVoteCount("votesdown");
-const thingAllCommentsCount = query((scope, thingSoul) =>
-  scope.get(`${thingSoul}/allcomments`).count()
-);
-
-const computeThingScores = query((scope, thingSoul) =>
-  all([
-    thingVotesUp(scope, thingSoul),
-    thingVotesDown(scope, thingSoul),
-    thingAllCommentsCount(scope, thingSoul)
-  ]).then(([up, down, comment]) => ({ up, down, comment, score: up - down }))
-);
-
-const thingMeta = query(
-  (scope, { thingSoul, tabulator, data = false, scores = false }) => {
-    if (!thingSoul) return resolve(null);
-    return all([
-      thing(scope, thingSoul),
-      scores
-        ? tabulator
-          ? scope.get(`${thingSoul}/votecounts@~${tabulator}.`).then() // eslint-disable-line
-          : computeThingScores(scope, thingSoul).then()
-        : resolve(),
-      data
-        ? scope
-            .get(thingSoul)
-            .get("data")
-            .then()
-        : resolve()
-    ]).then(([meta, votes, data]) => {
-      if (!meta || !meta.id) return null;
-      return { ...meta, votes, data };
-    });
-  }
-);
-
-const multiThingMeta = query((scope, params) =>
-  all(
-    R.reduce(
-      (promises, thingSoul) => {
-        if (!thingSoul) return promises;
-        promises.push(thingMeta(scope, { ...params, thingSoul }));
-        return promises;
-      },
-      [],
-      R.propOr([], "thingSouls", params)
-    )
-  )
-);
-
 const multiQuery = (singleQuery, plural, single, collate = unionArrays) =>
   query((scope, params) => {
     const items = R.prop(plural, params);
@@ -260,16 +202,42 @@ const thingScores = query(
   "thingScores"
 );
 
-const thingReplies = query((scope, thingId) =>
-  scope.get(Schema.ThingComments.route.reverse({ thingId })).then()
+const thingData = query((scope, thingId) => {
+  return thingId
+    ? scope.get(Schema.Thing.route.reverse({ thingId })).get("data")
+    : resolve(null);
+}, "thingData");
+
+const thingMeta = query(
+  (scope, { thingSoul, tabulator, data = false, scores = false }) => {
+    if (!thingSoul) return resolve(null);
+    const id = ListingNode.soulToId(thingSoul);
+
+    return all([
+      thing(scope, thingSoul),
+      scores
+        ? thingScores(scope, tabulator || Config.tabulator, id)
+        : resolve(),
+      data ? thingData(scope, id) : resolve()
+    ]).then(([meta, votes, data]) => {
+      if (!meta || !meta.id) return null;
+      return { ...meta, votes, data };
+    });
+  }
 );
 
-const thingData = query(
-  (scope, thingId) =>
-    thingId
-      ? scope.get(Schema.Thing.route.reverse({ thingId })).get("data")
-      : resolve(null),
-  "thingData"
+const multiThingMeta = query((scope, params) =>
+  all(
+    R.reduce(
+      (promises, thingSoul) => {
+        if (!thingSoul) return promises;
+        promises.push(thingMeta(scope, { ...params, thingSoul }));
+        return promises;
+      },
+      [],
+      R.propOr([], "thingSouls", params)
+    )
+  )
 );
 
 const userPages = query(
@@ -278,14 +246,13 @@ const userPages = query(
   "userPages"
 );
 
-const wikiPageId = query(
-  (scope, authorId, name) =>
-    scope
-      .get(Schema.AuthorPages.route.reverse({ authorId }))
-      .get(name)
-      .get("id"),
-  "wikiPageId"
-);
+const wikiPageId = query((scope, authorId, name) => {
+  if (!authorId || !name) return resolve(null);
+  return scope
+    .get(Schema.AuthorPages.route.reverse({ authorId }))
+    .get(name)
+    .get("id");
+}, "wikiPageId");
 
 const wikiPage = query((scope, authorId, name) =>
   wikiPageId(scope, authorId, name).then(id => id && thingData(scope, id))
@@ -294,7 +261,7 @@ const wikiPage = query((scope, authorId, name) =>
 const userMeta = query((scope, id) => {
   if (!id) return resolve(null);
   return scope.get(`~${id}`).then(meta => ({
-    userAlias: R.prop("alias", meta),
+    alias: R.prop("alias", meta),
     createdAt: R.path(["_", ">", "pub"], meta)
   }));
 }, "userMeta");
@@ -310,7 +277,6 @@ export const Query = {
   singleListing,
   repliesToAuthor,
   singleSubmission,
-  computeThingScores,
   thingMeta,
   multiThingMeta,
   multiTopic,
@@ -318,7 +284,6 @@ export const Query = {
   multiAuthor,
   multiSubmission,
   thingScores,
-  thingReplies,
   thingData,
   thingDataFromSouls,
   topicSouls,

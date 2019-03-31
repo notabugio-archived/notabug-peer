@@ -13,7 +13,7 @@ const isLegacyThing = (schema, data) => {
     .map(key => R.path(["_", ">", key], data))
     .sort()
     .pop();
-  const { thingId } = schema.ThingData.route.match(dataSoul) || {};
+  const { thingId } = Schema.ThingData.route.match(dataSoul) || {};
   const id = R.prop("id", data);
 
   return id && id === thingId && newest && newest < 1543102814945;

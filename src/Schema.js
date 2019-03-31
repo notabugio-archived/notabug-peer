@@ -348,14 +348,13 @@ const definitions = {
     description: "Shared description of listing properties",
     type: "object",
     properties: {
+      // XXX: these are all deprecated
       ids: {
         sea: { type: "string", maxLength: Constants.MAX_LISTING_IDS_SIZE }
       },
       source: {
         sea: { type: "string", maxLength: Constants.MAX_LISTING_SOURCE_SIZE }
       },
-
-      // XXX: rest are deprecated in favor of source
       name: {
         sea: { type: ["string", "null"], maxLength: Constants.MAX_TOPIC_SIZE }
       },

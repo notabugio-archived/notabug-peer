@@ -28,11 +28,7 @@ const getSpec = query((scope, match) =>
   getSource(scope, match).then(ListingSpec.fromSource)
 );
 
-const onPut = async (
-  orc,
-  route,
-  { updatedSoul, diff }
-) => {
+const onPut = async (orc, route, { updatedSoul, diff }) => {
   const scope = orc.newScope();
   const diffData = GunNode.decodeSEA(diff);
   const [updatedAuthored] = ListingNode.categorizeDiff(diffData);
@@ -42,7 +38,9 @@ const onPut = async (
   for (let i = 0; i < updatedAuthored.length; i++) {
     const opId = updatedAuthored[i];
     const replyIds = ThingSet.ids(
-      await scope.get(Schema.ThingComments.route.reverse({ thingId: opId })).then()
+      await scope
+        .get(Schema.ThingComments.route.reverse({ thingId: opId }))
+        .then()
     );
 
     updatedIds = updatedIds.concat(replyIds);
@@ -53,4 +51,10 @@ const onPut = async (
   for (const key in scope.getAccesses()) orc.listen(key, route.soul);
 };
 
-export const InboxListing = Path.withRoute({ path, getSidebar, getSource, getSpec, onPut });
+export const InboxListing = Path.withRoute({
+  path,
+  getSidebar,
+  getSource,
+  getSpec,
+  onPut
+});

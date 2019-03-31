@@ -34,4 +34,10 @@ const getSpec = query((scope, match) =>
   getSource(scope, match).then(ListingSpec.fromSource)
 );
 
-export const DomainListing = Path.withRoute({ path, tabs, getSidebar, getSource, getSpec });
+export const DomainListing = Path.withRoute({
+  path,
+  tabs,
+  getSidebar,
+  getSource,
+  getSpec
+});

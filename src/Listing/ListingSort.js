@@ -3,10 +3,11 @@ import { query, all, resolve } from "gun-scope";
 import { Schema } from "../Schema";
 import { ThingSet } from "../Thing";
 import { Query } from "../Query";
+import { ListingNode } from "./ListingNode";
 
 const [POS_ID, POS_VAL] = [0, 1];
 const toIds = R.map(R.prop(POS_ID));
-const sortItems = R.sortWith(R.prop(POS_VAL));
+const sortItems = R.sortBy(R.prop(POS_VAL));
 
 const voteSort = fn => query((scope, thingId, spec) => {
   if (spec.isIdSticky(thingId)) return resolve(-Infinity);
@@ -103,8 +104,10 @@ const isValidSort = sort => !!sorts[sort];
 
 const toItem = query(
   (scope, id, spec) =>
-    (sorts[spec.sort] || sorts.new)(id, spec).then(val => [id, val])
+    (sorts[spec.sort] || sorts.new)(scope, id, spec).then(val => [id, val])
 );
+
+const itemFromSoul = (scope, soul, spec) => toItem(scope, ListingNode.soulToId(soul), spec);
 
 const toItems = query(
   (scope, ids, spec) => all(R.map(
@@ -132,6 +135,7 @@ export const ListingSort = {
   toItem,
   toItems,
   toIds,
+  itemFromSoul,
   sortItems,
   fromThingSets
 };

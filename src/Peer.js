@@ -18,9 +18,11 @@ function init(Gun, config = {}) {
     peer.gun = Gun(cfg);
     if (cfg.localStorage) peer.gun.on("localStorage:error", a => a.retry({}));
     if (leech) {
+      /*
       const sendLeech = () => peer.gun._.on("out", { leech: true });
 
       sendLeech();
+      */
     }
   }
 

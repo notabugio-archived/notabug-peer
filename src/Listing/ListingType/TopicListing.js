@@ -32,10 +32,16 @@ const getSource = query((scope, { topic, sort }) => {
 });
 
 const getSpec = query((scope, match) =>
-  getSource(scope, match).then(ListingSpec.fromSource)
+  getSource(scope, match).then(
+    R.pipe(
+      ListingSpec.fromSource,
+      R.assoc("basePath", `/t/${match.topic}`)
+    )
+  )
 );
 
 export const TopicListing = Path.withRoute({
+  tabs,
   path,
   getSidebar,
   getSource,

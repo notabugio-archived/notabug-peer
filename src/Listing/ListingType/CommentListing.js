@@ -10,7 +10,7 @@ const getSidebar = query(scope =>
   Query.wikiPage(scope, Config.indexer, "listing:comments:sidebar")
 );
 
-const getSpec = query((scope, { thingId, sort }) =>
+const getSource = query((scope, { thingId, sort }) =>
   ListingSpec.getSource(
     scope,
     Config.indexer,
@@ -19,4 +19,13 @@ const getSpec = query((scope, { thingId, sort }) =>
   )
 );
 
-export const CommentListing = Path.withRoute({ path, getSidebar, getSpec });
+const getSpec = query((scope, match) =>
+  getSource(scope, match).then(ListingSpec.fromSource)
+);
+
+export const CommentListing = Path.withRoute({
+  path,
+  getSidebar,
+  getSource,
+  getSpec
+});

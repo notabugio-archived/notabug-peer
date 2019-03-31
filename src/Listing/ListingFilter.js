@@ -25,7 +25,11 @@ const fromDefinition = definition => {
   if (filters.allow.authors.length)
     addFilter(t => !!isPresent(["author", t]), R.path(["data", "authorId"]));
   if (filters.allow.domains.length)
-    addFilter(t => !!isPresent(["domain", t]), ThingDataNode.domain);
+    addFilter(
+      t => !!isPresent(["domain", t]),
+      ThingDataNode.domain,
+      R.prop("data")
+    );
 
   if (
     filters.allow.topics.length &&
@@ -38,7 +42,14 @@ const fromDefinition = definition => {
       filters.allow.topics
     )
   )
-    addFilter(t => !!isPresent(["topic", t]), R.path(["data", "topic"]));
+    addFilter(item => {
+      let topic = R.path(["data", "topic"], item);
+      const kind = R.path(["data", "kind"], item);
+
+      if (kind === "chatmsg") topic = `chat:${topic}`;
+      if (kind === "comment") topic = `comments:${topic}`;
+      return !!isPresent(["topic", topic]);
+    });
 
   if (filters.allow.kinds.length)
     addFilter(kind => !!isPresent(["kind", kind]), R.path(["data", "kind"]));
@@ -103,16 +114,21 @@ const fromDefinition = definition => {
 
   const contentFilter = thing => !filterFunctions.find(fn => !fn(thing));
   const voteFilter = thing => !voteFilterFunctions.find(fn => !fn(thing));
-  const thingFilter = thing => (contentFilter(thing) && voteFilter(thing));
+  const thingFilter = thing =>
+    definition.isIdSticky(R.prop("id", thing)) ||
+    (contentFilter(thing) && voteFilter(thing));
 
   return { thingFilter, contentFilter, voteFilter };
 };
 
-const getFilteredIds = async (
+const getFilteredRows = async (
   scope,
+  spec,
   sortedRows,
-  { limit = 25, count = 0, after = null, filterFn } = {}
+  { limit: limitProp = 25, count: countProp = 0, after = null, filterFn } = {}
 ) => {
+  const limit = parseInt(limitProp, 10);
+  const count = parseInt(countProp, 10) || 0;
   const rows = sortedRows.slice();
   const filtered = [];
   const fetchBatch = (size = 30) =>
@@ -125,17 +141,21 @@ const getFilteredIds = async (
       }, rows.splice(count, size))
     );
 
-  while (rows.length) {
+  while (rows.length > count) {
     await fetchBatch();
     if (limit && filtered.length >= limit) break;
   }
 
   return R.compose(
-    R.map(R.prop(ListingNode.POS_ID)),
     limit ? R.slice(0, limit) : R.identity,
     R.sortBy(R.prop(ListingNode.POS_VAL))
   )(filtered);
 };
+
+const getFilteredIds = R.compose(
+  x => x.then(R.map(R.prop(ListingNode.POS_ID))),
+  getFilteredRows
+);
 
 const thingFilter = R.curry((scope, spec, thingId) =>
   Query.thingMeta(scope, {
@@ -146,4 +166,9 @@ const thingFilter = R.curry((scope, spec, thingId) =>
   }).then(spec.thingFilter)
 );
 
-export const ListingFilter = { fromDefinition, getFilteredIds, thingFilter };
+export const ListingFilter = {
+  fromDefinition,
+  getFilteredRows,
+  getFilteredIds,
+  thingFilter
+};

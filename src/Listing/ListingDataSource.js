@@ -59,6 +59,8 @@ const topicSource = definition => {
   const { sort } = definition;
   const topics = R.path(["filters", "allow", "topics"], definition) || [];
   const listingPaths = R.map(t => `/t/${t}/${sort}`, topics);
+  // const listingPaths = [`/t/${topics.sort().join("+")}/${sort}`];
+
   const query = scope =>
     Query.multiTopic(scope, { topics, sort }).then(souls =>
       itemsFromThingSouls(scope, souls, definition)

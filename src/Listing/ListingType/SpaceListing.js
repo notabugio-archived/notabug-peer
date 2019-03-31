@@ -1,12 +1,10 @@
 import * as R from "ramda";
-import { all, query } from "gun-scope";
-import { Config } from "../../Config";
+import { query } from "gun-scope";
 import { Schema } from "../../Schema";
 import { GunNode } from "../../GunNode";
 import { Query } from "../../Query";
 import { Path } from "../Path";
 import { ListingNode } from "../ListingNode";
-import { ListingFilter } from "../ListingFilter";
 import { ListingOracle } from "../ListingOracle";
 import { SpaceSpec } from "../SpaceSpec";
 
@@ -21,22 +19,8 @@ const getSpec = query((scope, { authorId, name, sort }) =>
 );
 
 const getSidebar = query((scope, { authorId, name, sort }) =>
-  Query.wikiPage(scope, authorId, SpaceSpec.sidebarPageName(name)));
-
-const calculate = query((scope, match, opts) => {
-  const { authorId, name, sort } = match;
-  const routeProps = { authorId, name, sort, indexer: Config.indexer };
-  const souls = [Schema.SpaceListing.route.reverse(routeProps)];
-
-  return all([
-    getSpec(scope, match),
-    ListingNode.getRowsFromSouls(scope, souls)
-  ]).then(([spec, rows]) => {
-    const filterFn = ListingFilter.thingFilter(scope, spec);
-
-    return ListingFilter.getFilteredIds(scope, rows, { ...opts, filterFn });
-  });
-});
+  Query.wikiPage(scope, authorId, SpaceSpec.sidebarPageName(name))
+);
 
 const onPut = async (
   orc,
@@ -66,7 +50,7 @@ const onPut = async (
     scope,
     spec,
     updatedIds,
-    removedIds,
+    removedIds
   );
   for (const key in scope.getAccesses()) orc.listen(key, route.soul);
   if (
@@ -102,7 +86,6 @@ const onPut = async (
 
 export const SpaceListing = Path.withRoute({
   path,
-  calculate,
   getSource,
   getSidebar,
   getSpec,
