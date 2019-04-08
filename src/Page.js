@@ -1,5 +1,4 @@
 import * as R from "ramda";
-import qs from "query-string";
 import { query, resolve } from "gun-scope";
 import { Config } from "./Config";
 import { Query } from "./Query";
@@ -21,6 +20,11 @@ const withListingMatch = (path, params) => {
     };
   }
 
+  const realQuery = query(
+    (scope, opts = {}) => Listing.fromPath(scope, path, opts),
+    `ids:${path}`
+  );
+
   return {
     // eslint-disable-next-line no-use-before-define
     preload: scope => preloadListing(scope, path, params),
@@ -28,14 +32,9 @@ const withListingMatch = (path, params) => {
       scope => Listing.sidebarFromPath(scope, path),
       `sidebar:${path}`
     ),
-    space: query(
-      scope => Listing.specFromPath(scope, path, params),
-      `spec:${path}`
-    ),
-    ids: query(
-      (scope, opts = {}) =>
-        Listing.fromPath(scope, path, R.mergeLeft(opts, params)),
-      `ids:${path}:${qs.stringify(params)}`
+    space: query(scope => Listing.specFromPath(scope, path)),
+    ids: query((scope, opts = {}) =>
+      realQuery(scope, R.mergeLeft(opts, params))
     )
   };
 };
