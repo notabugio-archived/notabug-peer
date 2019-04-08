@@ -108,7 +108,7 @@ const curatorSource = definition => {
   if (!curators.length) return topicSource(definition);
   const listingPaths = R.map(id => `/user/${id}/commented/${sort}`, curators);
   const query = scope =>
-    Query.curate(scope, curators, true)
+    Query.curated(scope, curators, true)
       .then(ids => ids.map(thingId => Schema.Thing.route.reverse({ thingId })))
       .then(souls => itemsFromThingSouls(scope, souls, definition));
 
