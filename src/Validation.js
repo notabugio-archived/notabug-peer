@@ -157,11 +157,7 @@ const deleteMetaForMissing = (
   const metaKeys = R.keys(meta);
   const missing = R.difference(metaKeys, keys);
 
-  if (missing.length) {
-    console.log("omiting", missing);
-    data["_"][">"] = R.omit(missing, meta);
-  }
-
+  if (missing.length) data["_"][">"] = R.omit(missing, meta);
   return true;
 };
 

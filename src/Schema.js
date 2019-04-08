@@ -348,6 +348,11 @@ const definitions = {
     description: "Shared description of listing properties",
     type: "object",
     additionalProperties: false,
+    properties: {
+      _: {
+        additionalProperties: true
+      }
+    },
     patternProperties: {
       "^d+$": { sea: { type: ["string", "null", "undefined"] } }
     },
@@ -383,7 +388,9 @@ const definitions = {
         indexer: { $ref: "schema.json#/definitions/seaAuthorId" }
       }
     },
-    allOf: [{ $ref: "#/definitions/ListingData" }]
+    allOf: [
+      { $ref: "#/definitions/ListingData" }
+    ]
   },
 
   DomainListing: {
