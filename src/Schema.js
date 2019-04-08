@@ -357,6 +357,7 @@ const definitions = {
       "^d+$": { sea: { type: ["string", "null", "undefined"] } }
     },
 
+    deleteNonNumericKeys: true,
     deleteMetaForMissing: true
   },
 

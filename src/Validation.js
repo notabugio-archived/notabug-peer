@@ -144,6 +144,28 @@ const keysAreProofsOfWork = (schema, data) => {
   return true;
 };
 
+const deleteNonNumericKeys = (
+  schema,
+  data,
+  pSchema,
+  cPath,
+  parentData,
+  keyInParent
+) => {
+  const keys = R.without(["_"], R.keys(data));
+  const meta = R.pathOr({}, ["_", ">"], data);
+
+  keys.forEach(key => {
+    const val = parseInt(key, 10);
+
+    if (!val && val !== 0) {
+      delete meta[key];
+      delete data[key];
+    }
+  });
+  return true;
+};
+
 const deleteMetaForMissing = (
   schema,
   data,
@@ -185,6 +207,10 @@ const initAjv = R.compose(
       validate: keysAreProofsOfWork,
       modifying: true
     });
+    ajv.addKeyword("deleteNonNumericKeys", {
+      validate: deleteNonNumericKeys,
+      modifying: true
+    });
     ajv.addKeyword("deleteMetaForMissing", {
       validate: deleteMetaForMissing,
       modifying: true
@@ -198,7 +224,7 @@ export const suppressor = createSuppressor({
   definitions: Schema.definitions,
   init: R.compose(
     initAjv,
-    R.always({ removeAdditional: true })
+    R.always({ removeAdditional: false })
   )
 });
 
