@@ -70,8 +70,6 @@ const preloadListing = async (scope, path, params) => {
     R.map(R.pathOr(null, ["data", "opId"]))
   )(things);
 
-  console.log("opIds", opIds);
-
   if (opIds.length) {
     const opSouls = Listing.idsToSouls(opIds);
 

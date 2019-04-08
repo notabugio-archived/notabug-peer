@@ -350,29 +350,32 @@ const definitions = {
     properties: {
       // XXX: these are all deprecated
       ids: {
-        sea: { maxLength: Constants.MAX_LISTING_IDS_SIZE }
+        deleteLegacy: true
       },
       source: {
-        sea: { maxLength: Constants.MAX_LISTING_SOURCE_SIZE }
+        deleteLegacy: true
       },
       name: {
-        sea: { maxLength: Constants.MAX_TOPIC_SIZE }
+        deleteLegacy: true
       },
       submitTopic: {
-        sea: { maxLength: Constants.MAX_TOPIC_SIZE }
+        deleteLegacy: true
       },
       tabs: {
-        sea: { maxLength: Constants.MAX_LISTING_TABS_SIZE }
+        deleteLegacy: true
       },
       curators: {
-        sea: { maxLength: Constants.MAX_LISTING_SOURCE_SIZE }
+        deleteLegacy: true
       },
       censors: {
-        sea: { maxLength: Constants.MAX_LISTING_SOURCE_SIZE }
+        deleteLegacy: true
       },
-      userId: { sea: { $ref: "schema.json#/definitions/seaAuthorId" } },
-      opId: { sea: { $ref: "schema.json#/definitions/thingId" } },
-      isChat: { sea: { type: ["boolean", "string"] } }
+      opId: {
+        deleteLegacy: true
+      },
+      isChat: {
+        deleteLegacy: true
+      }
     },
     patternProperties: {
       "^d+$": { sea: { type: ["string", "null", "undefined"] } }

@@ -144,6 +144,18 @@ const keysAreProofsOfWork = (schema, data) => {
   return true;
 };
 
+const deleteLegacy = (
+  schema,
+  data,
+  pSchema,
+  cPath,
+  parentData,
+  keyInParent
+) => {
+  delete parentData[keyInParent];
+  return true;
+};
+
 const initAjv = R.compose(
   ajv => {
     ajv.addKeyword("isLegacyThing", {
@@ -167,6 +179,9 @@ const initAjv = R.compose(
     ajv.addKeyword("keysAreProofsOfWork", {
       validate: keysAreProofsOfWork,
       modifying: true
+    });
+    ajv.addKeyword("deleteLegacy", {
+      validate: deleteLegacy
     });
     return ajv;
   },
