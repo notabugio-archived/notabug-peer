@@ -347,6 +347,7 @@ const definitions = {
     title: "Listing Node Data",
     description: "Shared description of listing properties",
     type: "object",
+    additionalProperties: false,
     patternProperties: {
       "^d+$": { sea: { type: ["string", "null", "undefined"] } }
     }
