@@ -350,7 +350,9 @@ const definitions = {
     additionalProperties: false,
     patternProperties: {
       "^d+$": { sea: { type: ["string", "null", "undefined"] } }
-    }
+    },
+
+    deleteMetaForMissing: true
   },
 
   sortName: {

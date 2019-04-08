@@ -144,7 +144,7 @@ const keysAreProofsOfWork = (schema, data) => {
   return true;
 };
 
-const deleteLegacy = (
+const deleteMetaForMissing = (
   schema,
   data,
   pSchema,
@@ -152,7 +152,16 @@ const deleteLegacy = (
   parentData,
   keyInParent
 ) => {
-  delete parentData[keyInParent];
+  const keys = R.without(["_"], R.keys(data));
+  const meta = R.pathOr({}, ["_", ">"], data);
+  const metaKeys = R.keys(meta);
+  const missing = R.difference(metaKeys, keys);
+
+  if (missing.length) {
+    console.log("omiting", missing);
+    data["_"][">"] = R.omit(missing, meta);
+  }
+
   return true;
 };
 
@@ -180,8 +189,9 @@ const initAjv = R.compose(
       validate: keysAreProofsOfWork,
       modifying: true
     });
-    ajv.addKeyword("deleteLegacy", {
-      validate: deleteLegacy
+    ajv.addKeyword("deleteMetaForMissing", {
+      validate: deleteMetaForMissing,
+      modifying: true
     });
     return ajv;
   },
@@ -190,7 +200,10 @@ const initAjv = R.compose(
 
 export const suppressor = createSuppressor({
   definitions: Schema.definitions,
-  init: R.compose(initAjv, R.always({ removeAdditional: true }))
+  init: R.compose(
+    initAjv,
+    R.always({ removeAdditional: true })
+  )
 });
 
 const gunWireInput = R.curry((peer, context) =>
