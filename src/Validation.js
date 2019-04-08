@@ -190,7 +190,7 @@ const initAjv = R.compose(
 
 export const suppressor = createSuppressor({
   definitions: Schema.definitions,
-  init: initAjv
+  init: R.compose(initAjv, R.always({ removeAdditional: true }))
 });
 
 const gunWireInput = R.curry((peer, context) =>

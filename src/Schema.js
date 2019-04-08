@@ -347,36 +347,6 @@ const definitions = {
     title: "Listing Node Data",
     description: "Shared description of listing properties",
     type: "object",
-    properties: {
-      // XXX: these are all deprecated
-      ids: {
-        deleteLegacy: true
-      },
-      source: {
-        deleteLegacy: true
-      },
-      name: {
-        deleteLegacy: true
-      },
-      submitTopic: {
-        deleteLegacy: true
-      },
-      tabs: {
-        deleteLegacy: true
-      },
-      curators: {
-        deleteLegacy: true
-      },
-      censors: {
-        deleteLegacy: true
-      },
-      opId: {
-        deleteLegacy: true
-      },
-      isChat: {
-        deleteLegacy: true
-      }
-    },
     patternProperties: {
       "^d+$": { sea: { type: ["string", "null", "undefined"] } }
     }

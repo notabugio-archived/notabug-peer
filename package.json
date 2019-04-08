@@ -1,6 +1,6 @@
 {
   "name": "notabug-peer",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "description": "Peer/client library for notabug network",
   "main": "lib/notabug-peer.js",
   "scripts": {
