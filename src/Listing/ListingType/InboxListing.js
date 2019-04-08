@@ -9,7 +9,7 @@ import { ListingSpec } from "../ListingSpec";
 import { ListingNode } from "../ListingNode";
 import { ListingOracle } from "../ListingOracle";
 
-const path = "/user/:authorId/replied/:type/:sort";
+const path = "/user/:authorId/replies/:type/:sort";
 
 const getSidebar = query(scope =>
   Query.wikiPage(scope, Config.indexer, "listing:topic:sidebar")
@@ -20,7 +20,7 @@ const getSource = query((scope, { authorId, type, sort = "new" }) =>
     scope,
     Config.indexer,
     "listing:inbox",
-    [`replies to author ${authorId}`, `type ${type}`, `sort ${sort}`].join("\n")
+    [`replies to author ${authorId}`, "kind comment", `type ${type}`, `sort ${sort}`].join("\n")
   )
 );
 

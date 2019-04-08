@@ -1,11 +1,8 @@
 import * as R from "ramda";
 import { query, resolve } from "gun-scope";
-// import memoize from "fast-memoize";
 import { Constants } from "../Constants";
 import { Config } from "../Config";
 import { Schema } from "../Schema";
-
-const memoize = R.compose;
 
 const [POS_IDX, POS_ID, POS_VAL] = [0, 1, 2, 3]; // eslint-disable-line no-unused-vars
 const rowsToIds = R.map(R.prop(POS_ID));
@@ -37,7 +34,7 @@ const getRow = R.curry((node, idx) =>
   )(node)
 );
 
-const itemKeys = memoize(R.compose(
+const itemKeys = R.compose(
   R.filter(
     R.compose(
       val => !!(val === 0 || val),
@@ -45,7 +42,7 @@ const itemKeys = memoize(R.compose(
     )
   ),
   R.keys
-));
+);
 
 const serialize = R.curry((spec, items) =>
   R.compose(
@@ -77,12 +74,12 @@ const sortRows = R.sortWith([
   )
 ]);
 
-const sortedIds = memoize(R.compose(
+const sortedIds = R.compose(
   R.map(R.prop(POS_ID)),
   sortRows,
   R.filter(R.identity),
   rows
-));
+);
 
 const itemsToRows = R.addIndex(R.map)((item, idx) => [idx, ...item]);
 
@@ -217,8 +214,6 @@ const rowsFromSouls = query((scope, souls) =>
 
 const read = query((scope, path, opts) => {
   const { indexer = Config.indexer } = opts || {};
-
-  console.log("ListingNode.read", path);
 
   return rowsFromSouls(scope, [soulFromPath(indexer, path)]).then(rowsToIds);
 }, "listingRows");

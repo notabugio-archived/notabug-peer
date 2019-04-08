@@ -67,7 +67,7 @@ const singleAuthor = query((scope, params) =>
     params.type && params.type !== "submitted" && params.type !== "overview"
       ? resolve([])
       : scope
-          .get(params.authorId)
+          .get(`~${params.authorId}`)
           .get("submissions")
           .souls(),
     params.type &&
@@ -76,7 +76,7 @@ const singleAuthor = query((scope, params) =>
     params.type !== "commands"
       ? resolve([])
       : scope
-          .get(params.authorId)
+          .get(`~${params.authorId}`)
           .get("comments")
           .souls()
   ]).then(([submissions, comments]) => unionArrays([submissions, comments]))

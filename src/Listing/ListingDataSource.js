@@ -58,8 +58,10 @@ const listingSource = definition => {
 const topicSource = definition => {
   const { sort } = definition;
   const topics = R.path(["filters", "allow", "topics"], definition) || [];
-  const listingPaths = R.map(t => `/t/${t}/${sort}`, topics);
-  // const listingPaths = [`/t/${topics.sort().join("+")}/${sort}`];
+
+  if (!topics.length) topics.push("all");
+  // const listingPaths = R.map(t => `/t/${t}/${sort}`, topics);
+  const listingPaths = [`/t/${topics.sort().join("+")}/${sort}`];
 
   const query = scope =>
     Query.multiTopic(scope, { topics, sort }).then(souls =>
@@ -74,7 +76,8 @@ const domainSource = definition => {
   const domains = R.path(["filters", "allow", "domains"], definition) || [];
 
   if (!domains.length) return topicSource(definition);
-  const listingPaths = R.map(d => `/domain/${d}/${sort}`, domains);
+  // const listingPaths = R.map(d => `/domain/${d}/${sort}`, domains);
+  const listingPaths = [`/domain/${domains.sort().join("+")}/${sort}`];
   const query = scope =>
     Query.multiDomain(scope, { domains, sort }).then(souls =>
       itemsFromThingSouls(scope, souls, definition)

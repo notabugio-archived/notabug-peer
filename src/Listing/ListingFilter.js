@@ -136,6 +136,11 @@ const getFilteredRows = async (
       R.map(async row => {
         let inListing = true;
 
+        if (!row[ListingNode.POS_ID]) {
+          console.log("blankRow", row);
+          return;
+        }
+
         if (filterFn) inListing = await filterFn(row[ListingNode.POS_ID]);
         if (inListing) filtered.push(row);
       }, rows.splice(count, size))

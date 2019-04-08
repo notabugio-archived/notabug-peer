@@ -145,8 +145,6 @@ const put = R.curry((peer, data) => {
       "#": Schema.Thing.route.reverse({ thingId: replyToId })
     };
 
-  console.log("created", thingId);
-
   peer.gun.get(dataSoul).put(data);
   node.put(metaData);
   index(peer, thingId, data);
@@ -264,7 +262,6 @@ const writePage = R.curry((peer, name, body) => {
 
   return chain.then(res => {
     if (res && res.data) {
-      console.log("res", res);
       chain
         .get("data")
         .get("body")
@@ -278,7 +275,6 @@ const writePage = R.curry((peer, name, body) => {
         authorId: user.pub
       };
 
-      console.log("page data", data);
       thing = put(peer, data);
       chain.put(thing);
     }

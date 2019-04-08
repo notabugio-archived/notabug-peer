@@ -1,17 +1,57 @@
 import * as R from "ramda";
-import { query } from "gun-scope";
+import qs from "query-string";
+import { query, resolve } from "gun-scope";
 import { Config } from "./Config";
 import { Query } from "./Query";
-import { Listing, ListingType } from "./Listing";
+import { Listing, ListingSpec, ListingType } from "./Listing";
 
-const preloadPath = match => async (scope, path, params) => {
-  const [spec, ids] = await Promise.all([
+const wikiPage = R.mergeLeft({
+  withMatch: ({ params: { authorId = Config.owner, name } }) => ({
+    preload: scope => Query.wikiPage(scope, authorId, name)
+  })
+});
+
+const withListingMatch = (path, params) => {
+  if (!path) {
+    return {
+      preload: query(R.always(resolve({}))),
+      sidebar: query(R.always(resolve(""))),
+      space: query(R.always(resolve(ListingSpec.fromSource("")))),
+      ids: query(R.always(resolve([])))
+    };
+  }
+
+  return {
+    // eslint-disable-next-line no-use-before-define
+    preload: scope => preloadListing(scope, path, params),
+    sidebar: query(
+      scope => Listing.sidebarFromPath(scope, path),
+      `sidebar:${path}`
+    ),
+    space: query(
+      scope => Listing.specFromPath(scope, path, params),
+      `spec:${path}`
+    ),
+    ids: query(
+      (scope, opts = {}) =>
+        Listing.fromPath(scope, path, R.mergeLeft(opts, params)),
+      `ids:${path}:${qs.stringify(params)}`
+    )
+  };
+};
+
+const preloadListing = async (scope, path, params) => {
+  const match = withListingMatch(path, params);
+  let [spec, ids] = await Promise.all([
     match.space(scope),
-    match.ids(scope, params || {}),
+    match.ids(scope, {}),
     match.sidebar(scope)
   ]);
+
+  if (!spec) spec = ListingSpec.fromSource("");
+
   const thingSouls = Listing.idsToSouls(ids);
-  const [ things ] = await Promise.all([
+  const [things] = await Promise.all([
     Query.multiThingMeta(scope, {
       thingSouls,
       tabulator: spec.tabulator || Config.tabulator,
@@ -20,7 +60,7 @@ const preloadPath = match => async (scope, path, params) => {
     }),
     ...R.map(
       id => Query.userMeta(scope, id),
-      R.uniq([spec.indexer, spec.owner, spec.tabulator])
+      R.uniq([spec && spec.indexer, spec && spec.owner, spec && spec.tabulator])
     )
   ]);
   const opIds = R.compose(
@@ -29,6 +69,8 @@ const preloadPath = match => async (scope, path, params) => {
     R.uniq,
     R.map(R.pathOr(null, ["data", "opId"]))
   )(things);
+
+  console.log("opIds", opIds);
 
   if (opIds.length) {
     const opSouls = Listing.idsToSouls(opIds);
@@ -40,26 +82,15 @@ const preloadPath = match => async (scope, path, params) => {
     });
   }
 
+  if (spec.chatTopic) {
+    const chatPath = `/t/${spec.chatTopic}/chat`;
+
+    if (chatPath !== path)
+      await preloadListing(scope, `/t/${spec.chatTopic}/chat`, {});
+  }
+
   return scope.getCache();
 };
-
-const wikiPage = R.mergeLeft({
-  withMatch: ({ params: { authorId = Config.owner, name } }) => ({
-    preload: scope => Query.wikiPage(scope, authorId, name)
-  })
-});
-
-const withListingMatch = R.compose(
-  match => R.assoc("preload", preloadPath(match), match),
-  (path, params) => ({
-    sidebar: query(scope => Listing.sidebarFromPath(scope, path), `sidebar:${path}`),
-    space: query(scope => Listing.specFromPath(scope, path, params), `spec:${path}`),
-    ids: query((scope, opts = {}) =>
-      Listing.fromPath(scope, path, R.mergeLeft(opts, params)),
-      `ids:${path}`
-    )
-  })
-);
 
 const listing = ({
   prefix: defaultPrefix = "t",
@@ -154,12 +185,17 @@ const spaceThingComments = ({
       sort
     });
 
-    const match = {
-      space: query(scope => Listing.specFromPath(scope, spacePath, query), `spec:${spacePath}`),
-      ids: query(scope => Listing.fromPath(scope, listingPath, query), listingPath)
+    return {
+      space: query(
+        scope => Listing.specFromPath(scope, spacePath, query),
+        `spec:${spacePath}`
+      ),
+      ids: query(
+        scope => Listing.fromPath(scope, listingPath, query),
+        listingPath
+      ),
+      preload: scope => preloadListing(scope, listingPath, query)
     };
-
-    return R.assoc("preload", preloadPath(match), match);
   }
 });
 
@@ -179,11 +215,26 @@ const profile = ({
     )
 });
 
-const inbox = R.always({});
+const inbox = ({
+  sort: defaultSort = "new",
+  type: defaultType = "overview",
+  ...rest
+} = {}) => ({
+  ...rest,
+  withMatch: ({
+    authorId,
+    params: { type = defaultType, sort = defaultSort },
+    query
+  }) =>
+    withListingMatch(
+      ListingType.InboxListing.route.reverse({ authorId, type, sort }),
+      query
+    )
+});
 
 export const Page = {
   withListingMatch,
-  preloadPath,
+  preloadListing,
   wikiPage,
   thingComments,
   listing,

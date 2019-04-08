@@ -350,32 +350,32 @@ const definitions = {
     properties: {
       // XXX: these are all deprecated
       ids: {
-        sea: { type: "string", maxLength: Constants.MAX_LISTING_IDS_SIZE }
+        sea: { maxLength: Constants.MAX_LISTING_IDS_SIZE }
       },
       source: {
-        sea: { type: "string", maxLength: Constants.MAX_LISTING_SOURCE_SIZE }
+        sea: { maxLength: Constants.MAX_LISTING_SOURCE_SIZE }
       },
       name: {
-        sea: { type: ["string", "null"], maxLength: Constants.MAX_TOPIC_SIZE }
+        sea: { maxLength: Constants.MAX_TOPIC_SIZE }
       },
       submitTopic: {
-        sea: { type: "string", maxLength: Constants.MAX_TOPIC_SIZE }
+        sea: { maxLength: Constants.MAX_TOPIC_SIZE }
       },
       tabs: {
-        sea: { type: "string", maxLength: Constants.MAX_LISTING_TABS_SIZE }
+        sea: { maxLength: Constants.MAX_LISTING_TABS_SIZE }
       },
       curators: {
-        sea: { type: "string", maxLength: Constants.MAX_LISTING_SOURCE_SIZE }
+        sea: { maxLength: Constants.MAX_LISTING_SOURCE_SIZE }
       },
       censors: {
-        sea: { type: "string", maxLength: Constants.MAX_LISTING_SOURCE_SIZE }
+        sea: { maxLength: Constants.MAX_LISTING_SOURCE_SIZE }
       },
       userId: { sea: { $ref: "schema.json#/definitions/seaAuthorId" } },
       opId: { sea: { $ref: "schema.json#/definitions/thingId" } },
       isChat: { sea: { type: ["boolean", "string"] } }
     },
     patternProperties: {
-      "^d+$": { sea: { type: "string" } }
+      "^d+$": { sea: { type: ["string", "null", "undefined"] } }
     }
   },
 
@@ -400,8 +400,9 @@ const definitions = {
   TopicListing: {
     soul: {
       pattern: `${Constants.PREFIX}/t/:topic/:sort@~:indexer.`,
+      required: ["topic", "sort", "indexer"],
       properties: {
-        topic: { $ref: "schema.json#/definitions/topicName" },
+        topic: { type: "string" },
         sort: { $ref: "schema.json#/definitions/sortName" },
         indexer: { $ref: "schema.json#/definitions/seaAuthorId" }
       }
@@ -412,8 +413,9 @@ const definitions = {
   DomainListing: {
     soul: {
       pattern: `${Constants.PREFIX}/domain/:domain/:sort@~:indexer.`,
+      required: ["domain", "sort", "indexer"],
       properties: {
-        domain: { $ref: "schema.json#/definitions/domainName" },
+        domain: { type: "string" },
         sort: { $ref: "schema.json#/definitions/sortName" },
         indexer: { $ref: "schema.json#/definitions/seaAuthorId" }
       }

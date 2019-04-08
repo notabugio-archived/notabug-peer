@@ -1,5 +1,6 @@
 import * as R from "ramda";
 import { query, resolve } from "gun-scope";
+import { Constants } from "../Constants";
 import { ListingNode } from "./ListingNode";
 import { ListingFilter } from "./ListingFilter";
 import { ListingType } from "./ListingType";
@@ -65,7 +66,9 @@ const fromPath = query((scope, path, opts) => {
 });
 
 const nodeFromPath = query((scope, path, opts) =>
-  ListingType.specFromPath(scope, path).then(spec => toNode(scope, spec, R.mergeLeft(opts, { limit: 1000 })))
+  ListingType.specFromPath(scope, path).then(spec =>
+    toNode(scope, spec, R.mergeLeft(opts, { limit: Constants.LISTING_SIZE }))
+  )
 );
 
 export const ListingQuery = {
