@@ -160,7 +160,7 @@ const multiSubmission = multiQuery(
   "submissionId"
 );
 
-const thingDataFromSouls = scope => souls =>
+const thingDataFromSouls = R.curry((scope, souls) =>
   all(
     souls
       .filter(x => !!x)
@@ -170,7 +170,7 @@ const thingDataFromSouls = scope => souls =>
           .get("data")
           .then(x => x)
       )
-  );
+  ));
 
 const curated = query((scope, authorIds, submissionOnly = false) =>
   all([

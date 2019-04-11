@@ -12,7 +12,7 @@ const tabulatorQuery = query(async (scope, route) => {
     scope.get(`${thingSoul}/allcomments`).count(),
     scope.get(`${thingSoul}/comments`).souls()
   ]);
-  const thingData = await Query.thingDataFromSouls(replySouls);
+  const thingData = await Query.thingDataFromSouls(scope, replySouls);
   const commandMap = CommentCommand.map(thingData);
   const result = {
     up,
