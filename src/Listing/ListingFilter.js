@@ -131,6 +131,7 @@ const getFilteredRows = async (
   const count = parseInt(countProp, 10) || 0;
   const rows = sortedRows.slice();
   const filtered = [];
+  const data = [];
   const fetchBatch = (size = 30) =>
     Promise.all(
       R.map(async row => {
@@ -142,7 +143,29 @@ const getFilteredRows = async (
         }
 
         if (filterFn) inListing = await filterFn(row[ListingNode.POS_ID]);
-        if (inListing) filtered.push(row);
+        if (inListing) {
+          if (spec.uniqueByContent) {
+            const itemData = await Query.thingData(
+              scope,
+              row[ListingNode.POS_ID]
+            );
+            const url = ThingDataNode.url(itemData);
+
+            if (
+              url &&
+              R.find(
+                R.compose(
+                  R.equals(url),
+                  ThingDataNode.url
+                ),
+                data
+              )
+            )
+              return;
+            data.push(itemData);
+          }
+          filtered.push(row);
+        }
       }, rows.splice(count, size))
     );
 

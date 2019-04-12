@@ -13,4 +13,4 @@ const domain = R.compose(
   url
 );
 
-export const ThingDataNode = { body, domain };
+export const ThingDataNode = { body, url, domain };
