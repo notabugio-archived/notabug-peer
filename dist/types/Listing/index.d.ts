@@ -1,0 +1,63 @@
+/// <reference types="ramda" />
+export { ListingDataSource } from './ListingDataSource';
+export { ListingDefinition } from './ListingDefinition';
+export { ListingFilter } from './ListingFilter';
+export { ListingNode } from './ListingNode';
+export { ListingQuery } from './ListingQuery';
+export { ListingSort } from './ListingSort';
+export { ListingSpec } from './ListingSpec';
+export { ListingType } from './ListingType';
+export { SpaceSpec } from './SpaceSpec';
+export declare const Listing: {
+    ListingNode: {
+        POS_IDX: number;
+        POS_ID: number;
+        POS_VAL: number;
+        source: <U, V>(obj: U) => V;
+        get: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<any>;
+        getRow: Curry.Curry<(node: any, idx: string | number) => [number | null, string | null, number | null]>;
+        itemKeys: (x0: any) => string[];
+        serialize: Curry.Curry<(spec: any, items: [string, number][]) => any>;
+        rows: (node: any) => [number | null, string | null, number | null][];
+        ids: (x0: any) => string[];
+        idToSoul: (thingId: string) => string;
+        idsToSouls: (ids: string[]) => string[];
+        soulToId: (soul: string) => {};
+        soulsToIds: (list: readonly string[]) => {}[];
+        rowsToIds: (rows: [number | null, string | null, number | null][]) => string[];
+        rowsToItems: (list: readonly [number | null, string | null, number | null][]) => [string, number][];
+        itemsToRows: (data: [string, number][]) => [number | null, string | null, number | null][];
+        sortRows: (rows: [number | null, string | null, number | null][]) => [number | null, string | null, number | null][];
+        sortedIds: (x: any) => (string | undefined)[];
+        soulFromPath: Curry.Curry<(indexer: any, path: any) => string>;
+        pathFromSoul: (x0: string) => string;
+        rowsFromSouls: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<[number | null, string | null, number | null][]>;
+        read: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<{} | string[]>;
+        diff: (node: any, updatedItems?: [string, number][], removeIds?: string[], { maxSize }?: {
+            maxSize?: number | undefined;
+        }) => Promise<any>;
+        categorizeDiff: (diff: any, original: any) => string[][];
+        unionRows: (x: readonly any[]) => [number | null, string | null, number | null][];
+    };
+    ListingSpec: {
+        fromSource: (source: string, ownerId?: string | undefined, spaceName?: string | undefined) => import("../types").ListingSpecType;
+        getSource: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<string>;
+    };
+    isValidSort: (sort: string) => boolean;
+    idsToSouls: (ids: string[]) => string[];
+    get: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<any>;
+    fromSpec: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<{} | string[]>;
+    fromPath: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<any>;
+    typeFromPath: (path: string) => any;
+    sidebarFromPath: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<import("../types").ThingDataNodeType | null>;
+    specFromPath: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<import("../types").ListingSpecType>;
+    ChatListing: any;
+    FirehoseListing: any;
+    TopicListing: any;
+    DomainListing: any;
+    CommentListing: any;
+    SpaceListing: any;
+    InboxListing: any;
+    CommentedListing: any;
+    ProfileListing: any;
+};
