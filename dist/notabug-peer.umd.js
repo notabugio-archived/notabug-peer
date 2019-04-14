@@ -2308,7 +2308,7 @@
                             .toLowerCase();
                         if (!(kind === 'submission')) return [3 /*break*/, 2];
                         domain = ThingDataNode.domain(data);
-                        taggedBy = R.compose(R.without(['anon']), R.keysIn, R.propOr({}, 'commands'))(scores);
+                        taggedBy = R.compose(R.without(['anon']), R.keysIn, function (x) { return (typeof x === 'string' ? {} : x); }, R.propOr({}, 'commands'))(scores);
                         if (topic)
                             listings.push("/t/" + topic);
                         if (topic !== 'all')

@@ -4,7 +4,7 @@ import objHash from 'object-hash';
 import { parse } from 'uri-js';
 import Route from 'route-parser';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, apply, juxt, identity, slice, ifElse, insert, filter, sortWith, ascend, cond, isNil, T, addIndex, indexBy, concat, sortBy, includes, multiply, find, values, identical, last, lte, gte, equals, match, mergeRight, pick, pipe, toLower } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, ifElse, insert, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, values, find, identical, last, lte, gte, equals, match, mergeRight, pick, pipe, toLower } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -2308,7 +2308,7 @@ function getListings(scope$$1, thingId) {
                         .toLowerCase();
                     if (!(kind === 'submission')) return [3 /*break*/, 2];
                     domain = ThingDataNode.domain(data);
-                    taggedBy = compose(without(['anon']), keysIn, propOr({}, 'commands'))(scores);
+                    taggedBy = compose(without(['anon']), keysIn, function (x) { return (typeof x === 'string' ? {} : x); }, propOr({}, 'commands'))(scores);
                     if (topic)
                         listings.push("/t/" + topic);
                     if (topic !== 'all')

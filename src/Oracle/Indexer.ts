@@ -26,6 +26,7 @@ async function getListings(scope: GunScope, thingId: string) {
     const taggedBy = R.compose(
       R.without(['anon']),
       R.keysIn,
+      x => (typeof x === 'string' ? {} : x),
       R.propOr({}, 'commands')
     )(scores);
 
