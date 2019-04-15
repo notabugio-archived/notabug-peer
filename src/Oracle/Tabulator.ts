@@ -1,5 +1,6 @@
 import * as R from 'ramda';
 import { query, all } from 'gun-scope';
+import { Config } from '../Config';
 import { GunNode } from '../GunNode';
 import { Schema } from '../Schema';
 import { Query } from '../Query';
@@ -59,6 +60,13 @@ class TabulatorQueue extends ThingQueue {
       R.map(R.tap(([id, isNew]: [string, boolean]) => id && this.enqueue(id, isNew))),
       R.uniqBy(R.nth(0) as (i: any) => any),
       R.map((soul: string) => {
+        const meta = R.pathOr({}, ['put', soul, '_', '>'], msg);
+        const latest = R.values(meta)
+          .sort()
+          .pop();
+        const now = new Date().getTime();
+        const age = now - latest;
+        if (age > Config.oracleMaxStaleness) return [];
         const thingMatch = Schema.Thing.route.match(soul);
         const votesUpMatch = Schema.ThingVotesUp.route.match(soul);
         const votesDownMatch = Schema.ThingVotesDown.route.match(soul);

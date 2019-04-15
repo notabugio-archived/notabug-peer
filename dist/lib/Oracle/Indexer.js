@@ -269,6 +269,14 @@ var IndexerQueue = /** @class */ (function (_super) {
             var id = _a[0], isNew = _a[1];
             return id && _this.enqueue(id, isNew);
         })), R.uniqBy(R.nth(0)), R.map(function (soul) {
+            var meta = R.pathOr({}, ['put', soul, '_', '>'], msg);
+            var latest = R.values(meta)
+                .sort()
+                .pop();
+            var now = new Date().getTime();
+            var age = now - latest;
+            if (age > Config_1.Config.oracleMaxStaleness)
+                return [];
             var thingMatch = Schema_1.Schema.Thing.route.match(soul);
             var thingDataMatch = Schema_1.Schema.ThingDataSigned.route.match(soul);
             var countsMatch = Schema_1.Schema.ThingVoteCounts.route.match(soul);

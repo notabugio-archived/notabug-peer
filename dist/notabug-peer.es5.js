@@ -4,7 +4,7 @@ import objHash from 'object-hash';
 import { parse } from 'uri-js';
 import Route from 'route-parser';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, ifElse, insert, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, values, find, identical, last, lte, gte, equals, match, mergeRight, pick, pipe, toLower } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, ifElse, insert, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, sortBy, includes, multiply, apply, juxt, find, identical, last, lte, gte, equals, match, mergeRight, pick, pipe, toLower } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -813,6 +813,7 @@ var Config = {
     tabulator: Constants.INDEXER,
     indexer: Constants.INDEXER,
     owner: Constants.INDEXER,
+    oracleMaxStaleness: 1000 * 60 * 60,
     update: compose(map(function (_a) {
         var key = _a[0], val = _a[1];
         return (Config[key] = val);
@@ -2498,6 +2499,14 @@ var IndexerQueue = /** @class */ (function (_super) {
             var id = _a[0], isNew = _a[1];
             return id && _this.enqueue(id, isNew);
         })), uniqBy(nth(0)), map(function (soul) {
+            var meta = pathOr({}, ['put', soul, '_', '>'], msg);
+            var latest = values(meta)
+                .sort()
+                .pop();
+            var now = new Date().getTime();
+            var age = now - latest;
+            if (age > Config.oracleMaxStaleness)
+                return [];
             var thingMatch = Schema.Thing.route.match(soul);
             var thingDataMatch = Schema.ThingDataSigned.route.match(soul);
             var countsMatch = Schema.ThingVoteCounts.route.match(soul);
@@ -2612,6 +2621,14 @@ var TabulatorQueue = /** @class */ (function (_super) {
             var id = _a[0], isNew = _a[1];
             return id && _this.enqueue(id, isNew);
         })), uniqBy(nth(0)), map(function (soul) {
+            var meta = pathOr({}, ['put', soul, '_', '>'], msg);
+            var latest = values(meta)
+                .sort()
+                .pop();
+            var now = new Date().getTime();
+            var age = now - latest;
+            if (age > Config.oracleMaxStaleness)
+                return [];
             var thingMatch = Schema.Thing.route.match(soul);
             var votesUpMatch = Schema.ThingVotesUp.route.match(soul);
             var votesDownMatch = Schema.ThingVotesDown.route.match(soul);

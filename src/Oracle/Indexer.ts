@@ -155,6 +155,13 @@ class IndexerQueue extends ThingQueue {
       R.map(R.tap(([id, isNew]: [string, boolean]) => id && this.enqueue(id, isNew))),
       R.uniqBy(R.nth(0) as (i: any) => any),
       R.map((soul: string) => {
+        const meta = R.pathOr({}, ['put', soul, '_', '>'], msg);
+        const latest = R.values(meta)
+          .sort()
+          .pop();
+        const now = new Date().getTime();
+        const age = now - latest;
+        if (age > Config.oracleMaxStaleness) return [];
         const thingMatch = Schema.Thing.route.match(soul);
         const thingDataMatch = Schema.ThingDataSigned.route.match(soul);
         const countsMatch = Schema.ThingVoteCounts.route.match(soul);

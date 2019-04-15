@@ -6,6 +6,7 @@ exports.Config = {
     tabulator: Constants_1.Constants.INDEXER,
     indexer: Constants_1.Constants.INDEXER,
     owner: Constants_1.Constants.INDEXER,
+    oracleMaxStaleness: 1000 * 60 * 60,
     update: R.compose(R.map(function (_a) {
         var key = _a[0], val = _a[1];
         return (exports.Config[key] = val);

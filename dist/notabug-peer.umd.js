@@ -813,6 +813,7 @@
         tabulator: Constants.INDEXER,
         indexer: Constants.INDEXER,
         owner: Constants.INDEXER,
+        oracleMaxStaleness: 1000 * 60 * 60,
         update: R.compose(R.map(function (_a) {
             var key = _a[0], val = _a[1];
             return (Config[key] = val);
@@ -2498,6 +2499,14 @@
                 var id = _a[0], isNew = _a[1];
                 return id && _this.enqueue(id, isNew);
             })), R.uniqBy(R.nth(0)), R.map(function (soul) {
+                var meta = R.pathOr({}, ['put', soul, '_', '>'], msg);
+                var latest = R.values(meta)
+                    .sort()
+                    .pop();
+                var now = new Date().getTime();
+                var age = now - latest;
+                if (age > Config.oracleMaxStaleness)
+                    return [];
                 var thingMatch = Schema.Thing.route.match(soul);
                 var thingDataMatch = Schema.ThingDataSigned.route.match(soul);
                 var countsMatch = Schema.ThingVoteCounts.route.match(soul);
@@ -2612,6 +2621,14 @@
                 var id = _a[0], isNew = _a[1];
                 return id && _this.enqueue(id, isNew);
             })), R.uniqBy(R.nth(0)), R.map(function (soul) {
+                var meta = R.pathOr({}, ['put', soul, '_', '>'], msg);
+                var latest = R.values(meta)
+                    .sort()
+                    .pop();
+                var now = new Date().getTime();
+                var age = now - latest;
+                if (age > Config.oracleMaxStaleness)
+                    return [];
                 var thingMatch = Schema.Thing.route.match(soul);
                 var votesUpMatch = Schema.ThingVotesUp.route.match(soul);
                 var votesDownMatch = Schema.ThingVotesDown.route.match(soul);
