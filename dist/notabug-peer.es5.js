@@ -4,7 +4,7 @@ import objHash from 'object-hash';
 import { parse } from 'uri-js';
 import Route from 'route-parser';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, ifElse, insert, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, sortBy, includes, multiply, apply, juxt, find, identical, last, lte, gte, equals, match, mergeRight, pick, pipe, toLower } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, ifElse, insert, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, identical, last, lte, gte, equals, match, mergeRight, pick, pipe, toLower } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -2799,10 +2799,10 @@ var thingComments = function (_a) {
     if (_a === void 0) { _a = {}; }
     var _b = _a.prefix, _c = _a.identifier, _d = _a.sort, defaultSort = _d === void 0 ? 'best' : _d, rest = __rest(_a, ["prefix", "identifier", "sort"]);
     return (__assign({}, rest, { withMatch: function (_a) {
-            var _b = _a.params, _c = _b.opId, opId = _c === void 0 ? '' : _c, _d = _b.prefix, _e = _b.identifier, _f = _b.sort, sort = _f === void 0 ? defaultSort : _f, _g = _a.query, queryParams = _g === void 0 ? {} : _g;
+            var _b = _a.params.opId, opId = _b === void 0 ? '' : _b, _c = _a.query, queryParams = _c === void 0 ? {} : _c;
             return withListingMatch(ListingType.CommentListing.route.reverse({
                 thingId: opId,
-                sort: sort
+                sort: propOr(defaultSort, 'sort', queryParams)
             }), assoc('limit', 1000, queryParams));
         } }));
 };

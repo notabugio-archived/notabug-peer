@@ -104,19 +104,11 @@ const thingComments = ({
   ...rest
 } = {}) => ({
   ...rest,
-  withMatch: ({
-    params: {
-      opId = '',
-      prefix = defaultPrefix,
-      identifier = defaultIdentifier,
-      sort = defaultSort
-    },
-    query: queryParams = {}
-  }) =>
+  withMatch: ({ params: { opId = '' }, query: queryParams = {} }) =>
     withListingMatch(
       ListingType.CommentListing.route.reverse({
         thingId: opId,
-        sort
+        sort: R.propOr(defaultSort, 'sort', queryParams)
       }),
       R.assoc('limit', 1000, queryParams)
     )

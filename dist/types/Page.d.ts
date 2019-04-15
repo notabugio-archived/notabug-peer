@@ -28,12 +28,9 @@ export declare const Page: {
         identifier?: string | undefined;
         sort?: string | undefined;
     }) => {
-        withMatch: ({ params: { opId, prefix, identifier, sort }, query: queryParams }: {
+        withMatch: ({ params: { opId }, query: queryParams }: {
             params: {
                 opId?: string | undefined;
-                prefix?: string | undefined;
-                identifier?: string | undefined;
-                sort?: string | undefined;
             };
             query?: {} | undefined;
         }) => {

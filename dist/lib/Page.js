@@ -153,10 +153,10 @@ var thingComments = function (_a) {
     if (_a === void 0) { _a = {}; }
     var _b = _a.prefix, defaultPrefix = _b === void 0 ? 't' : _b, _c = _a.identifier, defaultIdentifier = _c === void 0 ? 'all' : _c, _d = _a.sort, defaultSort = _d === void 0 ? 'best' : _d, rest = __rest(_a, ["prefix", "identifier", "sort"]);
     return (__assign({}, rest, { withMatch: function (_a) {
-            var _b = _a.params, _c = _b.opId, opId = _c === void 0 ? '' : _c, _d = _b.prefix, prefix = _d === void 0 ? defaultPrefix : _d, _e = _b.identifier, identifier = _e === void 0 ? defaultIdentifier : _e, _f = _b.sort, sort = _f === void 0 ? defaultSort : _f, _g = _a.query, queryParams = _g === void 0 ? {} : _g;
+            var _b = _a.params.opId, opId = _b === void 0 ? '' : _b, _c = _a.query, queryParams = _c === void 0 ? {} : _c;
             return withListingMatch(Listing_1.ListingType.CommentListing.route.reverse({
                 thingId: opId,
-                sort: sort
+                sort: R.propOr(defaultSort, 'sort', queryParams)
             }), R.assoc('limit', 1000, queryParams));
         } }));
 };
