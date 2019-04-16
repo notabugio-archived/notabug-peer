@@ -53,22 +53,26 @@ var idToSoul = function (thingId) { return Schema_1.Schema.Thing.route.reverse({
 var idsToSouls = function (ids) { return ids.map(idToSoul).filter(function (id) { return !!id; }); };
 var soulToId = function (soul) { return R.propOr('', 'thingId', Schema_1.Schema.Thing.route.match(soul)); };
 var soulsToIds = R.map(soulToId);
-var getRow = R.curry(function (node, idx) {
-    return R.compose(R.ifElse(R.prop('length'), R.insert(0, parseInt(idx, 10)), R.always(null)), function (row) {
-        row[1] = parseFloat(row[1]);
-        return row;
-    }, R.map(R.trim), R.split(','), R.propOr('', "" + idx))(node);
-});
+function getRow(node, idx) {
+    var row = R.split(',', R.propOr('', "" + idx, node));
+    row[0] = (row[0] || '').trim();
+    row[1] = parseFloat(row[1]);
+    row.splice(0, 0, parseInt(idx, 10));
+    return row;
+}
 var itemKeys = R.compose(R.filter(R.compose(function (val) { return !!(val === 0 || val); }, function (val) { return parseInt(val, 10); })), R.keysIn);
-var serialize = R.curry(function (spec, items) {
-    var result = {};
-    for (var i = 0; i < items.length; i++)
-        result["" + i] = items[i].join(',');
+function rows(node) {
+    var keys = R.keysIn(node);
+    var result = [];
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        var keyVal = parseInt(key, 10);
+        if (!keyVal && keyVal !== 0)
+            continue;
+        result.push(getRow(node, key));
+    }
     return result;
-});
-var rows = function (node) {
-    return R.compose(R.map(getRow(node)), itemKeys)(node);
-};
+}
 var ids = R.compose(rowsToIds, rows);
 var sortRows = R.sortWith([
     R.ascend(R.compose(R.cond([[R.isNil, R.always(Infinity)], [R.T, parseFloat]]), R.nth(POS_VAL)))
@@ -94,7 +98,7 @@ var diff = function (node, updatedItems, removeIds, _a) {
                 parsed = parseInt(key, 10);
                 if (!(parsed || parsed === 0))
                     continue;
-                row = getRow(node, key) || [parsed, null, null];
+                row = getRow(node, key);
                 idx = row[0], _c = row[1], id = _c === void 0 ? null : _c, _d = row[2], rawValue = _d === void 0 ? null : _d;
                 row[POS_VAL] = rawValue === null ? null : rawValue;
                 if (id && removed[id])
@@ -164,23 +168,6 @@ var diff = function (node, updatedItems, removeIds, _a) {
         });
     });
 };
-var categorizeDiff = function (diff, original) {
-    var allKeys = itemKeys(R.mergeLeft(diff, original));
-    var added = [];
-    var removed = [];
-    for (var i = 0; i < allKeys.length; i++) {
-        var key = allKeys[i];
-        var _a = getRow(diff, key) || [], _b = _a[0], _diffIdx = _b === void 0 ? -1 : _b, _c = _a[1], diffId = _c === void 0 ? '' : _c; // eslint-disable-line no-unused-vars
-        var _d = getRow(original, key), _e = _d[0], _origIdx = _e === void 0 ? -1 : _e, origId = _d[1]; // eslint-disable-line no-unused-vars
-        if (diffId !== origId) {
-            if (diffId)
-                added.push(diffId);
-            if (origId)
-                removed.push(origId);
-        }
-    }
-    return [added, removed];
-};
 var unionRows = R.compose(R.uniqBy(R.nth(POS_ID)), sortRows, R.reduce(R.concat, []), R.map(rows));
 var rowsFromSouls = gun_scope_1.query(function (scope, souls) {
     return Promise.all(R.map(scope.get, souls)).then(unionRows);
@@ -198,7 +185,6 @@ exports.ListingNode = {
     get: get,
     getRow: getRow,
     itemKeys: itemKeys,
-    serialize: serialize,
     rows: rows,
     ids: ids,
     idToSoul: idToSoul,
@@ -215,7 +201,6 @@ exports.ListingNode = {
     rowsFromSouls: rowsFromSouls,
     read: read,
     diff: diff,
-    categorizeDiff: categorizeDiff,
     unionRows: unionRows
 };
 //# sourceMappingURL=ListingNode.js.map

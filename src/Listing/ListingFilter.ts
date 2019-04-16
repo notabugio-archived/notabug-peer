@@ -225,13 +225,14 @@ const getFilteredIds: (
   getFilteredRows
 );
 
-const thingFilter = R.curry((scope, spec, thingId) =>
-  Query.thingMeta(scope, {
-    tabulator: spec.tabulator,
-    thingSoul: Schema.Thing.route.reverse({ thingId }),
-    scores: ListingDataSource.needsScores(spec),
-    data: ListingDataSource.needsData(spec)
-  }).then(spec.thingFilter)
+const thingFilter = R.curry(
+  (scope, spec, thingId): Promise<boolean> =>
+    Query.thingMeta(scope, {
+      tabulator: spec.tabulator,
+      thingSoul: Schema.Thing.route.reverse({ thingId }),
+      scores: ListingDataSource.needsScores(spec),
+      data: ListingDataSource.needsData(spec)
+    }).then(spec.thingFilter)
 );
 
 export const ListingFilter = {

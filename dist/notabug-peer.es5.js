@@ -3,8 +3,9 @@ import { AUTH_SCHEMA, initAjv } from 'gun-suppressor-sear';
 import objHash from 'object-hash';
 import { parse } from 'uri-js';
 import Route from 'route-parser';
+import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, ifElse, insert, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, identical, last, lte, gte, equals, match, mergeRight, pick, pipe, toLower } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -833,22 +834,26 @@ var idToSoul = function (thingId) { return Schema.Thing.route.reverse({ thingId:
 var idsToSouls = function (ids) { return ids.map(idToSoul).filter(function (id) { return !!id; }); };
 var soulToId = function (soul) { return propOr('', 'thingId', Schema.Thing.route.match(soul)); };
 var soulsToIds = map(soulToId);
-var getRow = curry(function (node, idx) {
-    return compose(ifElse(prop('length'), insert(0, parseInt(idx, 10)), always(null)), function (row) {
-        row[1] = parseFloat(row[1]);
-        return row;
-    }, map(trim), split(','), propOr('', "" + idx))(node);
-});
+function getRow(node, idx) {
+    var row = split(',', propOr('', "" + idx, node));
+    row[0] = (row[0] || '').trim();
+    row[1] = parseFloat(row[1]);
+    row.splice(0, 0, parseInt(idx, 10));
+    return row;
+}
 var itemKeys = compose(filter(compose(function (val) { return !!(val === 0 || val); }, function (val) { return parseInt(val, 10); })), keysIn);
-var serialize = curry(function (spec, items) {
-    var result = {};
-    for (var i = 0; i < items.length; i++)
-        result["" + i] = items[i].join(',');
+function rows(node) {
+    var keys$$1 = keysIn(node);
+    var result = [];
+    for (var i = 0; i < keys$$1.length; i++) {
+        var key = keys$$1[i];
+        var keyVal = parseInt(key, 10);
+        if (!keyVal && keyVal !== 0)
+            continue;
+        result.push(getRow(node, key));
+    }
     return result;
-});
-var rows = function (node) {
-    return compose(map(getRow(node)), itemKeys)(node);
-};
+}
 var ids = compose(rowsToIds, rows);
 var sortRows = sortWith([
     ascend(compose(cond([[isNil, always(Infinity)], [T, parseFloat]]), nth(POS_VAL)))
@@ -874,7 +879,7 @@ var diff = function (node, updatedItems, removeIds, _a) {
                 parsed = parseInt(key, 10);
                 if (!(parsed || parsed === 0))
                     continue;
-                row = getRow(node, key) || [parsed, null, null];
+                row = getRow(node, key);
                 idx = row[0], _c = row[1], id = _c === void 0 ? null : _c, _d = row[2], rawValue = _d === void 0 ? null : _d;
                 row[POS_VAL] = rawValue === null ? null : rawValue;
                 if (id && removed[id])
@@ -944,23 +949,6 @@ var diff = function (node, updatedItems, removeIds, _a) {
         });
     });
 };
-var categorizeDiff = function (diff, original) {
-    var allKeys = itemKeys(mergeLeft(diff, original));
-    var added = [];
-    var removed = [];
-    for (var i = 0; i < allKeys.length; i++) {
-        var key = allKeys[i];
-        var _a = getRow(diff, key) || [], _b = _a[0], _c = _a[1], diffId = _c === void 0 ? '' : _c; // eslint-disable-line no-unused-vars
-        var _d = getRow(original, key), _e = _d[0], origId = _d[1]; // eslint-disable-line no-unused-vars
-        if (diffId !== origId) {
-            if (diffId)
-                added.push(diffId);
-            if (origId)
-                removed.push(origId);
-        }
-    }
-    return [added, removed];
-};
 var unionRows = compose(uniqBy(nth(POS_ID)), sortRows, reduce(concat, []), map(rows));
 var rowsFromSouls = query(function (scope$$1, souls) {
     return Promise.all(map(scope$$1.get, souls)).then(unionRows);
@@ -978,7 +966,6 @@ var ListingNode = {
     get: get,
     getRow: getRow,
     itemKeys: itemKeys,
-    serialize: serialize,
     rows: rows,
     ids: ids,
     idToSoul: idToSoul,
@@ -995,7 +982,6 @@ var ListingNode = {
     rowsFromSouls: rowsFromSouls,
     read: read,
     diff: diff,
-    categorizeDiff: categorizeDiff,
     unionRows: unionRows
 };
 
@@ -2243,6 +2229,34 @@ var ListingSort = {
     sortItems: sortItems
 };
 
+var ListingView = /** @class */ (function () {
+    function ListingView(path$$1) {
+        this.path = path$$1;
+        this.type = ListingType.fromPath(path$$1);
+        this.rowsFromNode = memoize(ListingNode.rows);
+    }
+    ListingView.prototype.getSortedSourceRows = function (scope$$1, sourceSouls) {
+        var _this = this;
+        return Promise.all(sourceSouls.map(function (soul) { return scope$$1.get(soul).then(_this.rowsFromNode); })).then(pipe(reduce(concat, []), ListingNode.sortRows, uniqBy(nth(ListingNode.POS_ID))));
+    };
+    ListingView.prototype.query = function (scope$$1, opts) {
+        var _this = this;
+        if (opts === void 0) { opts = {}; }
+        if (!this.type)
+            return Promise.resolve([]);
+        return this.type.getSpec(scope$$1, this.type.match).then(function (spec) {
+            var stickyRows = map(function (id) { return [-1, id, -Infinity]; }, spec.stickyIds);
+            var paths = pathOr([], ['dataSource', 'listingPaths'], spec);
+            var sourceSouls = map(ListingNode.soulFromPath(spec.indexer), paths);
+            var filterFn = ListingFilter.thingFilter(scope$$1, spec);
+            return _this.getSortedSourceRows(scope$$1, sourceSouls).then(function (rows) {
+                return ListingFilter.getFilteredIds(scope$$1, spec, stickyRows.concat(rows), __assign({}, opts, { filterFn: filterFn }));
+            });
+        });
+    };
+    return ListingView;
+}());
+
 var Listing = __assign({}, ListingType.types, { ListingNode: ListingNode,
     ListingSpec: ListingSpec, isValidSort: ListingSort.isValidSort, idsToSouls: ListingNode.idsToSouls, get: ListingNode.get, fromSpec: ListingQuery.fromSpec, fromPath: ListingQuery.fromPath, typeFromPath: ListingType.fromPath, sidebarFromPath: ListingType.sidebarFromPath, specFromPath: ListingType.specFromPath });
 
@@ -2724,10 +2738,8 @@ var withListingMatch = function (path$$1, params) {
             ids: query(always(resolve([])))
         };
     }
-    var realQuery = query(function (scope$$1, opts) {
-        if (opts === void 0) { opts = {}; }
-        return Listing.fromPath(scope$$1, path$$1, opts);
-    }, "ids:" + path$$1);
+    var view = new ListingView(path$$1);
+    var realQuery = query(view.query.bind(view), "ids:" + path$$1);
     return {
         preload: function (scope$$1) { return preloadListing(scope$$1, path$$1, params); },
         sidebar: query(function (scope$$1) { return Listing.sidebarFromPath(scope$$1, path$$1); }, "sidebar:" + path$$1),

@@ -12,6 +12,7 @@ export { ListingQuery } from './ListingQuery';
 export { ListingSort } from './ListingSort';
 export { ListingSpec } from './ListingSpec';
 export { ListingType } from './ListingType';
+export { ListingView } from './ListingView';
 export { SpaceSpec } from './SpaceSpec';
 
 export const Listing = {

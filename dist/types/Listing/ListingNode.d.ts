@@ -1,14 +1,16 @@
 /// <reference types="ramda" />
+import { ListingNodeRow, ListingNodeType } from '../types';
+declare function getRow(node: ListingNodeType, idx: string | number): [number | null, string | null, number | null];
+declare function rows(node: ListingNodeType): ListingNodeRow[];
 export declare const ListingNode: {
     POS_IDX: number;
     POS_ID: number;
     POS_VAL: number;
     source: <U, V>(obj: U) => V;
     get: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<any>;
-    getRow: Curry.Curry<(node: any, idx: string | number) => [number | null, string | null, number | null]>;
+    getRow: typeof getRow;
     itemKeys: (x0: any) => string[];
-    serialize: Curry.Curry<(spec: any, items: [string, number][]) => any>;
-    rows: (node: any) => [number | null, string | null, number | null][];
+    rows: typeof rows;
     ids: (x0: any) => string[];
     idToSoul: (thingId: string) => string;
     idsToSouls: (ids: string[]) => string[];
@@ -26,6 +28,6 @@ export declare const ListingNode: {
     diff: (node: any, updatedItems?: [string, number][], removeIds?: string[], { maxSize }?: {
         maxSize?: number | undefined;
     }) => Promise<any>;
-    categorizeDiff: (diff: any, original: any) => string[][];
     unionRows: (x: readonly any[]) => [number | null, string | null, number | null][];
 };
+export {};

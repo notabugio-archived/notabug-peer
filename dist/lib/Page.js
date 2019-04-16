@@ -78,10 +78,8 @@ var withListingMatch = function (path, params) {
             ids: gun_scope_1.query(R.always(gun_scope_1.resolve([])))
         };
     }
-    var realQuery = gun_scope_1.query(function (scope, opts) {
-        if (opts === void 0) { opts = {}; }
-        return Listing_1.Listing.fromPath(scope, path, opts);
-    }, "ids:" + path);
+    var view = new Listing_1.ListingView(path);
+    var realQuery = gun_scope_1.query(view.query.bind(view), "ids:" + path);
     return {
         preload: function (scope) { return preloadListing(scope, path, params); },
         sidebar: gun_scope_1.query(function (scope) { return Listing_1.Listing.sidebarFromPath(scope, path); }, "sidebar:" + path),

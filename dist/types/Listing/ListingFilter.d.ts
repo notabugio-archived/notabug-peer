@@ -15,6 +15,6 @@ export declare const ListingFilter: {
     };
     getFilteredRows: (scope: GunScope, spec: ListingSpecType, sortedRows: [number | null, string | null, number | null][], params?: GetRowsParams | undefined) => Promise<[number | null, string | null, number | null][]>;
     getFilteredIds: (scope: GunScope, spec: ListingSpecType, sortedRows: [number | null, string | null, number | null][], params?: GetRowsParams | undefined) => Promise<string[]>;
-    thingFilter: Curry.Curry<(scope: any, spec: any, thingId: any) => Promise<CombinedThingType | null>>;
+    thingFilter: Curry.Curry<(scope: any, spec: any, thingId: any) => Promise<boolean>>;
 };
 export {};

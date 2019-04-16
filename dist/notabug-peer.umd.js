@@ -1,11 +1,12 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('gun-suppressor'), require('gun-suppressor-sear'), require('object-hash'), require('uri-js'), require('route-parser'), require('ramda'), require('gun-scope')) :
-    typeof define === 'function' && define.amd ? define(['exports', 'gun-suppressor', 'gun-suppressor-sear', 'object-hash', 'uri-js', 'route-parser', 'ramda', 'gun-scope'], factory) :
-    (factory((global.notabugPeer = {}),global.gunSuppressor,global.sea,global.objHash,global.uriJs,global.Route,global.R,global.gunScope));
-}(this, (function (exports,gunSuppressor,sea,objHash,uriJs,Route,R,gunScope) { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('gun-suppressor'), require('gun-suppressor-sear'), require('object-hash'), require('uri-js'), require('route-parser'), require('fast-memoize'), require('ramda'), require('gun-scope')) :
+    typeof define === 'function' && define.amd ? define(['exports', 'gun-suppressor', 'gun-suppressor-sear', 'object-hash', 'uri-js', 'route-parser', 'fast-memoize', 'ramda', 'gun-scope'], factory) :
+    (factory((global.notabugPeer = {}),global.gunSuppressor,global.sea,global.objHash,global.uriJs,global.Route,global.memoize,global.R,global.gunScope));
+}(this, (function (exports,gunSuppressor,sea,objHash,uriJs,Route,memoize,R,gunScope) { 'use strict';
 
     objHash = objHash && objHash.hasOwnProperty('default') ? objHash['default'] : objHash;
     Route = Route && Route.hasOwnProperty('default') ? Route['default'] : Route;
+    memoize = memoize && memoize.hasOwnProperty('default') ? memoize['default'] : memoize;
 
     /*! *****************************************************************************
     Copyright (c) Microsoft Corporation. All rights reserved.
@@ -833,22 +834,26 @@
     var idsToSouls = function (ids) { return ids.map(idToSoul).filter(function (id) { return !!id; }); };
     var soulToId = function (soul) { return R.propOr('', 'thingId', Schema.Thing.route.match(soul)); };
     var soulsToIds = R.map(soulToId);
-    var getRow = R.curry(function (node, idx) {
-        return R.compose(R.ifElse(R.prop('length'), R.insert(0, parseInt(idx, 10)), R.always(null)), function (row) {
-            row[1] = parseFloat(row[1]);
-            return row;
-        }, R.map(R.trim), R.split(','), R.propOr('', "" + idx))(node);
-    });
+    function getRow(node, idx) {
+        var row = R.split(',', R.propOr('', "" + idx, node));
+        row[0] = (row[0] || '').trim();
+        row[1] = parseFloat(row[1]);
+        row.splice(0, 0, parseInt(idx, 10));
+        return row;
+    }
     var itemKeys = R.compose(R.filter(R.compose(function (val) { return !!(val === 0 || val); }, function (val) { return parseInt(val, 10); })), R.keysIn);
-    var serialize = R.curry(function (spec, items) {
-        var result = {};
-        for (var i = 0; i < items.length; i++)
-            result["" + i] = items[i].join(',');
+    function rows(node) {
+        var keys = R.keysIn(node);
+        var result = [];
+        for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            var keyVal = parseInt(key, 10);
+            if (!keyVal && keyVal !== 0)
+                continue;
+            result.push(getRow(node, key));
+        }
         return result;
-    });
-    var rows = function (node) {
-        return R.compose(R.map(getRow(node)), itemKeys)(node);
-    };
+    }
     var ids = R.compose(rowsToIds, rows);
     var sortRows = R.sortWith([
         R.ascend(R.compose(R.cond([[R.isNil, R.always(Infinity)], [R.T, parseFloat]]), R.nth(POS_VAL)))
@@ -874,7 +879,7 @@
                     parsed = parseInt(key, 10);
                     if (!(parsed || parsed === 0))
                         continue;
-                    row = getRow(node, key) || [parsed, null, null];
+                    row = getRow(node, key);
                     idx = row[0], _c = row[1], id = _c === void 0 ? null : _c, _d = row[2], rawValue = _d === void 0 ? null : _d;
                     row[POS_VAL] = rawValue === null ? null : rawValue;
                     if (id && removed[id])
@@ -944,23 +949,6 @@
             });
         });
     };
-    var categorizeDiff = function (diff, original) {
-        var allKeys = itemKeys(R.mergeLeft(diff, original));
-        var added = [];
-        var removed = [];
-        for (var i = 0; i < allKeys.length; i++) {
-            var key = allKeys[i];
-            var _a = getRow(diff, key) || [], _b = _a[0], _c = _a[1], diffId = _c === void 0 ? '' : _c; // eslint-disable-line no-unused-vars
-            var _d = getRow(original, key), _e = _d[0], origId = _d[1]; // eslint-disable-line no-unused-vars
-            if (diffId !== origId) {
-                if (diffId)
-                    added.push(diffId);
-                if (origId)
-                    removed.push(origId);
-            }
-        }
-        return [added, removed];
-    };
     var unionRows = R.compose(R.uniqBy(R.nth(POS_ID)), sortRows, R.reduce(R.concat, []), R.map(rows));
     var rowsFromSouls = gunScope.query(function (scope, souls) {
         return Promise.all(R.map(scope.get, souls)).then(unionRows);
@@ -978,7 +966,6 @@
         get: get,
         getRow: getRow,
         itemKeys: itemKeys,
-        serialize: serialize,
         rows: rows,
         ids: ids,
         idToSoul: idToSoul,
@@ -995,7 +982,6 @@
         rowsFromSouls: rowsFromSouls,
         read: read,
         diff: diff,
-        categorizeDiff: categorizeDiff,
         unionRows: unionRows
     };
 
@@ -2243,6 +2229,34 @@
         sortItems: sortItems
     };
 
+    var ListingView = /** @class */ (function () {
+        function ListingView(path) {
+            this.path = path;
+            this.type = ListingType.fromPath(path);
+            this.rowsFromNode = memoize(ListingNode.rows);
+        }
+        ListingView.prototype.getSortedSourceRows = function (scope, sourceSouls) {
+            var _this = this;
+            return Promise.all(sourceSouls.map(function (soul) { return scope.get(soul).then(_this.rowsFromNode); })).then(R.pipe(R.reduce(R.concat, []), ListingNode.sortRows, R.uniqBy(R.nth(ListingNode.POS_ID))));
+        };
+        ListingView.prototype.query = function (scope, opts) {
+            var _this = this;
+            if (opts === void 0) { opts = {}; }
+            if (!this.type)
+                return Promise.resolve([]);
+            return this.type.getSpec(scope, this.type.match).then(function (spec) {
+                var stickyRows = R.map(function (id) { return [-1, id, -Infinity]; }, spec.stickyIds);
+                var paths = R.pathOr([], ['dataSource', 'listingPaths'], spec);
+                var sourceSouls = R.map(ListingNode.soulFromPath(spec.indexer), paths);
+                var filterFn = ListingFilter.thingFilter(scope, spec);
+                return _this.getSortedSourceRows(scope, sourceSouls).then(function (rows) {
+                    return ListingFilter.getFilteredIds(scope, spec, stickyRows.concat(rows), __assign({}, opts, { filterFn: filterFn }));
+                });
+            });
+        };
+        return ListingView;
+    }());
+
     var Listing = __assign({}, ListingType.types, { ListingNode: ListingNode,
         ListingSpec: ListingSpec, isValidSort: ListingSort.isValidSort, idsToSouls: ListingNode.idsToSouls, get: ListingNode.get, fromSpec: ListingQuery.fromSpec, fromPath: ListingQuery.fromPath, typeFromPath: ListingType.fromPath, sidebarFromPath: ListingType.sidebarFromPath, specFromPath: ListingType.specFromPath });
 
@@ -2724,10 +2738,8 @@
                 ids: gunScope.query(R.always(gunScope.resolve([])))
             };
         }
-        var realQuery = gunScope.query(function (scope, opts) {
-            if (opts === void 0) { opts = {}; }
-            return Listing.fromPath(scope, path, opts);
-        }, "ids:" + path);
+        var view = new ListingView(path);
+        var realQuery = gunScope.query(view.query.bind(view), "ids:" + path);
         return {
             preload: function (scope) { return preloadListing(scope, path, params); },
             sidebar: gunScope.query(function (scope) { return Listing.sidebarFromPath(scope, path); }, "sidebar:" + path),

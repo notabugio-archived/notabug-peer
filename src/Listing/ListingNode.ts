@@ -24,19 +24,13 @@ const idsToSouls = (ids: string[]) => ids.map(idToSoul).filter(id => !!id);
 const soulToId = (soul: string) => R.propOr('', 'thingId', Schema.Thing.route.match(soul));
 const soulsToIds = R.map(soulToId);
 
-const getRow = R.curry(
-  (node, idx: string | number): ListingNodeRow =>
-    R.compose(
-      R.ifElse(R.prop('length'), R.insert(0, parseInt(idx as string, 10)), R.always(null)),
-      (row: any[]) => {
-        row[1] = parseFloat(row[1]);
-        return row;
-      },
-      R.map(R.trim),
-      R.split(','),
-      R.propOr('', `${idx}`)
-    )(node)
-);
+function getRow(node: ListingNodeType, idx: string | number) {
+  const row: (string | number)[] = R.split(',', R.propOr('', `${idx}`, node));
+  row[0] = ((row[0] as string) || '').trim();
+  row[1] = parseFloat(row[1] as string);
+  row.splice(0, 0, parseInt(idx as string, 10));
+  return row as ListingNodeRow;
+}
 
 const itemKeys = R.compose(
   R.filter(
@@ -48,18 +42,19 @@ const itemKeys = R.compose(
   R.keysIn as (node: ListingNodeType) => string[]
 );
 
-const serialize = R.curry((spec, items: SortDataRow[]) => {
-  const result: ListingNodeType = {};
+function rows(node: ListingNodeType): ListingNodeRow[] {
+  const keys = R.keysIn(node);
+  const result: ListingNodeRow[] = [];
 
-  for (let i = 0; i < items.length; i++) result[`${i}`] = items[i].join(',');
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const keyVal = parseInt(key, 10);
+    if (!keyVal && keyVal !== 0) continue;
+    result.push(getRow(node, key));
+  }
+
   return result;
-});
-
-const rows = (node: ListingNodeType): ListingNodeRow[] =>
-  R.compose(
-    R.map(getRow(node)),
-    itemKeys
-  )(node);
+}
 
 const ids = R.compose(
   rowsToIds,
@@ -110,9 +105,8 @@ const diff = async (
     const parsed = parseInt(key, 10);
 
     if (!(parsed || parsed === 0)) continue;
-    const row: ListingNodeRow = getRow(node, key) || [parsed, null, null];
-    const [idx, id = null, rawValue = null] = row; // eslint-disable-line no-unused-vars
-
+    const row: ListingNodeRow = getRow(node, key);
+    const [idx, id = null, rawValue = null] = row;
     row[POS_VAL] = rawValue === null ? null : rawValue;
     if (id && removed[id]) row[POS_ID] = row[POS_VAL] = null;
     if (id) byId[id] = row;
@@ -188,25 +182,6 @@ const diff = async (
   return R.keys(changes).length ? changes : null;
 };
 
-const categorizeDiff = (diff: ListingNodeType, original: ListingNodeType) => {
-  const allKeys = itemKeys(R.mergeLeft(diff, original));
-  const added = [];
-  const removed = [];
-
-  for (let i = 0; i < allKeys.length; i++) {
-    const key = allKeys[i];
-    const [_diffIdx = -1, diffId = ''] = getRow(diff, key) || []; // eslint-disable-line no-unused-vars
-    const [_origIdx = -1, origId] = getRow(original, key); // eslint-disable-line no-unused-vars
-
-    if (diffId !== origId) {
-      if (diffId) added.push(diffId);
-      if (origId) removed.push(origId);
-    }
-  }
-
-  return [added, removed];
-};
-
 const unionRows = R.compose(
   R.uniqBy(R.nth(POS_ID)),
   sortRows,
@@ -240,7 +215,6 @@ export const ListingNode = {
   get,
   getRow,
   itemKeys,
-  serialize,
   rows,
   ids,
   idToSoul,
@@ -257,6 +231,5 @@ export const ListingNode = {
   rowsFromSouls,
   read,
   diff,
-  categorizeDiff,
   unionRows
 };

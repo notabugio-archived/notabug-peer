@@ -3,7 +3,7 @@ import { query, resolve } from 'gun-scope';
 import { GunScope } from './types';
 import { Config } from './Config';
 import { Query } from './Query';
-import { Listing, ListingSpec, ListingType } from './Listing';
+import { Listing, ListingSpec, ListingType, ListingView } from './Listing';
 
 const wikiPage = R.mergeLeft({
   withMatch: ({
@@ -25,7 +25,8 @@ const withListingMatch = (path: string, params?: any) => {
     };
   }
 
-  const realQuery = query((scope, opts = {}) => Listing.fromPath(scope, path, opts), `ids:${path}`);
+  const view = new ListingView(path);
+  const realQuery = query(view.query.bind(view), `ids:${path}`);
 
   return {
     preload: (scope: GunScope) => preloadListing(scope, path, params),

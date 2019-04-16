@@ -7,6 +7,7 @@ export { ListingQuery } from './ListingQuery';
 export { ListingSort } from './ListingSort';
 export { ListingSpec } from './ListingSpec';
 export { ListingType } from './ListingType';
+export { ListingView } from './ListingView';
 export { SpaceSpec } from './SpaceSpec';
 export declare const Listing: {
     ListingNode: {
@@ -15,9 +16,8 @@ export declare const Listing: {
         POS_VAL: number;
         source: <U, V>(obj: U) => V;
         get: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<any>;
-        getRow: Curry.Curry<(node: any, idx: string | number) => [number | null, string | null, number | null]>;
+        getRow: (node: any, idx: string | number) => [number | null, string | null, number | null];
         itemKeys: (x0: any) => string[];
-        serialize: Curry.Curry<(spec: any, items: [string, number][]) => any>;
         rows: (node: any) => [number | null, string | null, number | null][];
         ids: (x0: any) => string[];
         idToSoul: (thingId: string) => string;
@@ -36,7 +36,6 @@ export declare const Listing: {
         diff: (node: any, updatedItems?: [string, number][], removeIds?: string[], { maxSize }?: {
             maxSize?: number | undefined;
         }) => Promise<any>;
-        categorizeDiff: (diff: any, original: any) => string[][];
         unionRows: (x: readonly any[]) => [number | null, string | null, number | null][];
     };
     ListingSpec: {
