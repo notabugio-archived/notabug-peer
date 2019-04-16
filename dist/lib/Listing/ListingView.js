@@ -21,10 +21,11 @@ var ListingView = /** @class */ (function () {
         this.path = path;
         this.type = ListingType_1.ListingType.fromPath(path);
         this.rowsFromNode = fast_memoize_1.default(ListingNode_1.ListingNode.rows);
+        this.combineSourceRows = fast_memoize_1.default(R.pipe(R.reduce(R.concat, []), ListingNode_1.ListingNode.sortRows, R.uniqBy(R.nth(ListingNode_1.ListingNode.POS_ID))));
     }
     ListingView.prototype.getSortedSourceRows = function (scope, sourceSouls) {
         var _this = this;
-        return Promise.all(sourceSouls.map(function (soul) { return scope.get(soul).then(_this.rowsFromNode); })).then(R.pipe(R.reduce(R.concat, []), ListingNode_1.ListingNode.sortRows, R.uniqBy(R.nth(ListingNode_1.ListingNode.POS_ID))));
+        return Promise.all(sourceSouls.map(function (soul) { return scope.get(soul).then(_this.rowsFromNode); })).then(this.combineSourceRows);
     };
     ListingView.prototype.query = function (scope, opts) {
         var _this = this;

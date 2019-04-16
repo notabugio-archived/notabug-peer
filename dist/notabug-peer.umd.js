@@ -2234,10 +2234,11 @@
             this.path = path;
             this.type = ListingType.fromPath(path);
             this.rowsFromNode = memoize(ListingNode.rows);
+            this.combineSourceRows = memoize(R.pipe(R.reduce(R.concat, []), ListingNode.sortRows, R.uniqBy(R.nth(ListingNode.POS_ID))));
         }
         ListingView.prototype.getSortedSourceRows = function (scope, sourceSouls) {
             var _this = this;
-            return Promise.all(sourceSouls.map(function (soul) { return scope.get(soul).then(_this.rowsFromNode); })).then(R.pipe(R.reduce(R.concat, []), ListingNode.sortRows, R.uniqBy(R.nth(ListingNode.POS_ID))));
+            return Promise.all(sourceSouls.map(function (soul) { return scope.get(soul).then(_this.rowsFromNode); })).then(this.combineSourceRows);
         };
         ListingView.prototype.query = function (scope, opts) {
             var _this = this;

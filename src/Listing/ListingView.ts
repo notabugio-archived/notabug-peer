@@ -9,15 +9,13 @@ export class ListingView {
   path: string;
   type: any;
   rowsFromNode: (node: ListingNodeType) => ListingNodeRow[];
+  combineSourceRows: (rowsSets: ListingNodeRow[][]) => ListingNodeRow[];
 
   constructor(path: string) {
     this.path = path;
     this.type = ListingType.fromPath(path);
     this.rowsFromNode = memoize(ListingNode.rows);
-  }
-
-  getSortedSourceRows(scope: GunScope, sourceSouls: string[]) {
-    return Promise.all(sourceSouls.map(soul => scope.get(soul).then(this.rowsFromNode))).then(
+    this.combineSourceRows = memoize(
       R.pipe(
         R.reduce(
           R.concat as (a: ListingNodeRow[], b: ListingNodeRow[]) => ListingNodeRow[],
@@ -26,6 +24,12 @@ export class ListingView {
         ListingNode.sortRows,
         R.uniqBy(R.nth(ListingNode.POS_ID))
       )
+    );
+  }
+
+  getSortedSourceRows(scope: GunScope, sourceSouls: string[]) {
+    return Promise.all(sourceSouls.map(soul => scope.get(soul).then(this.rowsFromNode))).then(
+      this.combineSourceRows
     );
   }
 

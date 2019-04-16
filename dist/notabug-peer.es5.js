@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, apply, juxt, identity, slice, filter, sortWith, ascend, cond, isNil, T, addIndex, indexBy, concat, sortBy, includes, multiply, find, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -2234,10 +2234,11 @@ var ListingView = /** @class */ (function () {
         this.path = path$$1;
         this.type = ListingType.fromPath(path$$1);
         this.rowsFromNode = memoize(ListingNode.rows);
+        this.combineSourceRows = memoize(pipe(reduce(concat, []), ListingNode.sortRows, uniqBy(nth(ListingNode.POS_ID))));
     }
     ListingView.prototype.getSortedSourceRows = function (scope$$1, sourceSouls) {
         var _this = this;
-        return Promise.all(sourceSouls.map(function (soul) { return scope$$1.get(soul).then(_this.rowsFromNode); })).then(pipe(reduce(concat, []), ListingNode.sortRows, uniqBy(nth(ListingNode.POS_ID))));
+        return Promise.all(sourceSouls.map(function (soul) { return scope$$1.get(soul).then(_this.rowsFromNode); })).then(this.combineSourceRows);
     };
     ListingView.prototype.query = function (scope$$1, opts) {
         var _this = this;
