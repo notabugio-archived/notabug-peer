@@ -106,7 +106,7 @@ async function diffSingle(
     const [idx, id = null, value] = row;
     if (id === updateId) {
       if (updateValue === value) return null;
-      return { ['${idx}']: row.join(',') };
+      return { [`${idx}`]: updatedItem.join(',') };
     }
 
     if (highestValue === null || (value !== null && value > highestValue)) {
@@ -116,7 +116,7 @@ async function diffSingle(
     if (idx !== null && idx > highestKey) highestKey = idx;
   }
 
-  if (!maxSize || highestKey < maxSize) {
+  if (!maxSize || highestKey + 1 < maxSize) {
     return { [`${highestKey + 1}`]: updatedItem.join(',') };
   }
 

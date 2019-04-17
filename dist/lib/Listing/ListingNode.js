@@ -97,7 +97,7 @@ function diffSingle(node, updatedItem, _a) {
                 if (id === updateId) {
                     if (updateValue === value)
                         return [2 /*return*/, null];
-                    return [2 /*return*/, (_c = {}, _c['${idx}'] = row.join(','), _c)];
+                    return [2 /*return*/, (_c = {}, _c["" + idx] = updatedItem.join(','), _c)];
                 }
                 if (highestValue === null || (value !== null && value > highestValue)) {
                     highestValue = value;
@@ -106,7 +106,7 @@ function diffSingle(node, updatedItem, _a) {
                 if (idx !== null && idx > highestKey)
                     highestKey = idx;
             }
-            if (!maxSize || highestKey < maxSize) {
+            if (!maxSize || highestKey + 1 < maxSize) {
                 return [2 /*return*/, (_d = {}, _d["" + (highestKey + 1)] = updatedItem.join(','), _d)];
             }
             if (highestValue === null || updateValue < highestValue) {

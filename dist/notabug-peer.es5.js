@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, uniq, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, uniq, find, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -878,7 +878,7 @@ function diffSingle(node, updatedItem, _a) {
                 if (id === updateId) {
                     if (updateValue === value)
                         return [2 /*return*/, null];
-                    return [2 /*return*/, (_c = {}, _c['${idx}'] = row.join(','), _c)];
+                    return [2 /*return*/, (_c = {}, _c["" + idx] = updatedItem.join(','), _c)];
                 }
                 if (highestValue === null || (value !== null && value > highestValue)) {
                     highestValue = value;
@@ -887,7 +887,7 @@ function diffSingle(node, updatedItem, _a) {
                 if (idx !== null && idx > highestKey)
                     highestKey = idx;
             }
-            if (!maxSize || highestKey < maxSize) {
+            if (!maxSize || highestKey + 1 < maxSize) {
                 return [2 /*return*/, (_d = {}, _d["" + (highestKey + 1)] = updatedItem.join(','), _d)];
             }
             if (highestValue === null || updateValue < highestValue) {
