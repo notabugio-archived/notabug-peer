@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, find, uniq, identical, last, lte, gte, equals, sortBy, includes, multiply, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -1328,10 +1328,10 @@ var thingScores = query(function (scope$$1, thingId, tabulator) {
         tabulator: tabulator || Config.tabulator
     }))
         .then();
-}, 'thingScores');
+});
 var thingData = query(function (scope$$1, thingId) {
     return thingId ? scope$$1.get(Schema.Thing.route.reverse({ thingId: thingId })).get('data') : resolve(null);
-}, 'thingData');
+});
 var thingMeta = query(function (scope$$1, _a) {
     var thingSoul = _a.thingSoul, tabulator = _a.tabulator, _b = _a.data, data = _b === void 0 ? false : _b, _c = _a.scores, scores = _c === void 0 ? false : _c;
     if (!thingSoul)
@@ -1380,7 +1380,9 @@ var wikiPageId = query(function (scope$$1, authorId, name) {
         .get('id');
 }, 'wikiPageId');
 var wikiPage = query(function (scope$$1, authorId, name) {
-    return wikiPageId(scope$$1, authorId, name).then(function (id) { return id && thingData(scope$$1, id); });
+    return wikiPageId(scope$$1, authorId, name)
+        .then(function (id) { return id && thingForDisplay(scope$$1, id); })
+        .then(propOr(null, 'data'));
 });
 var userMeta = query(function (scope$$1, id) {
     if (!id)
@@ -2767,7 +2769,7 @@ var withListingMatch = function (path$$1, params) {
     };
 };
 var preloadListing = function (scope$$1, path$$1, params) { return __awaiter(_this$3, void 0, void 0, function () {
-    var match$$1, _a, spec, ids, thingSouls, things, opIds, opSouls, chatPath;
+    var match$$1, _a, spec, ids, chatPath;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -2778,40 +2780,20 @@ var preloadListing = function (scope$$1, path$$1, params) { return __awaiter(_th
                         match$$1.sidebar(scope$$1)
                     ])];
             case 1:
-                _a = _b.sent(), spec = _a[0], ids = _a[1];
+                _a = (_b.sent()), spec = _a[0], ids = _a[1];
                 if (!spec)
                     spec = ListingSpec.fromSource('');
-                thingSouls = Listing.idsToSouls(ids);
-                return [4 /*yield*/, Promise.all([
-                        Query.multiThingMeta(scope$$1, {
-                            thingSouls: thingSouls,
-                            tabulator: spec.tabulator || Config.tabulator,
-                            scores: true,
-                            data: true
-                        })
-                    ].concat(map(function (id) { return Query.userMeta(scope$$1, id); }, uniq([spec && spec.indexer, spec && spec.owner, spec && spec.tabulator]))))];
+                return [4 /*yield*/, Promise.all(ids.map(function (id) { return Query.thingForDisplay(scope$$1, id, spec.tabulator || Config.tabulator); }))];
             case 2:
-                things = (_b.sent())[0];
-                opIds = compose(without(ids), function (ids) { return ids.filter(function (x) { return !!x; }); }, uniq, map(pathOr(null, ['data', 'opId'])))(things);
-                if (!opIds.length) return [3 /*break*/, 4];
-                opSouls = Listing.idsToSouls(opIds);
-                return [4 /*yield*/, Query.multiThingMeta(scope$$1, {
-                        thingSouls: opSouls,
-                        tabulator: spec.tabulator || Config.tabulator,
-                        data: true
-                    })];
+                _b.sent();
+                if (!spec.chatTopic) return [3 /*break*/, 4];
+                chatPath = "/t/" + spec.chatTopic + "/chat";
+                if (!(chatPath !== path$$1)) return [3 /*break*/, 4];
+                return [4 /*yield*/, preloadListing(scope$$1, "/t/" + spec.chatTopic + "/chat", {})];
             case 3:
                 _b.sent();
                 _b.label = 4;
-            case 4:
-                if (!spec.chatTopic) return [3 /*break*/, 6];
-                chatPath = "/t/" + spec.chatTopic + "/chat";
-                if (!(chatPath !== path$$1)) return [3 /*break*/, 6];
-                return [4 /*yield*/, preloadListing(scope$$1, "/t/" + spec.chatTopic + "/chat", {})];
-            case 5:
-                _b.sent();
-                _b.label = 6;
-            case 6: return [2 /*return*/, scope$$1.getCache()];
+            case 4: return [2 /*return*/, scope$$1.getCache()];
         }
     });
 }); };

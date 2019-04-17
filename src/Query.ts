@@ -55,11 +55,11 @@ const thingScores = query((scope, thingId, tabulator = '') => {
       })
     )
     .then();
-}, 'thingScores');
+});
 
 const thingData = query<ThingDataNodeType | null>((scope, thingId) => {
   return thingId ? scope.get(Schema.Thing.route.reverse({ thingId })).get('data') : resolve(null);
-}, 'thingData');
+});
 
 const thingMeta = query<CombinedThingType | null>(
   (scope, { thingSoul, tabulator, data = false, scores = false }) => {
@@ -121,7 +121,9 @@ const wikiPageId = query((scope, authorId, name) => {
 }, 'wikiPageId');
 
 const wikiPage = query<ThingDataNodeType | null>((scope, authorId, name) =>
-  wikiPageId(scope, authorId, name).then(id => id && thingData(scope, id))
+  wikiPageId(scope, authorId, name)
+    .then(id => id && thingForDisplay(scope, id))
+    .then(R.propOr(null, 'data') as (x: any) => ThingDataNodeType | null)
 );
 
 const userMeta = query((scope, id) => {

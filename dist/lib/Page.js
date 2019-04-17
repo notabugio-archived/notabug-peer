@@ -91,7 +91,7 @@ var withListingMatch = function (path, params) {
     };
 };
 var preloadListing = function (scope, path, params) { return __awaiter(_this, void 0, void 0, function () {
-    var match, _a, spec, ids, thingSouls, things, opIds, opSouls, chatPath;
+    var match, _a, spec, ids, chatPath;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -102,40 +102,20 @@ var preloadListing = function (scope, path, params) { return __awaiter(_this, vo
                         match.sidebar(scope)
                     ])];
             case 1:
-                _a = _b.sent(), spec = _a[0], ids = _a[1];
+                _a = (_b.sent()), spec = _a[0], ids = _a[1];
                 if (!spec)
                     spec = Listing_1.ListingSpec.fromSource('');
-                thingSouls = Listing_1.Listing.idsToSouls(ids);
-                return [4 /*yield*/, Promise.all([
-                        Query_1.Query.multiThingMeta(scope, {
-                            thingSouls: thingSouls,
-                            tabulator: spec.tabulator || Config_1.Config.tabulator,
-                            scores: true,
-                            data: true
-                        })
-                    ].concat(R.map(function (id) { return Query_1.Query.userMeta(scope, id); }, R.uniq([spec && spec.indexer, spec && spec.owner, spec && spec.tabulator]))))];
+                return [4 /*yield*/, Promise.all(ids.map(function (id) { return Query_1.Query.thingForDisplay(scope, id, spec.tabulator || Config_1.Config.tabulator); }))];
             case 2:
-                things = (_b.sent())[0];
-                opIds = R.compose(R.without(ids), function (ids) { return ids.filter(function (x) { return !!x; }); }, R.uniq, R.map(R.pathOr(null, ['data', 'opId'])))(things);
-                if (!opIds.length) return [3 /*break*/, 4];
-                opSouls = Listing_1.Listing.idsToSouls(opIds);
-                return [4 /*yield*/, Query_1.Query.multiThingMeta(scope, {
-                        thingSouls: opSouls,
-                        tabulator: spec.tabulator || Config_1.Config.tabulator,
-                        data: true
-                    })];
+                _b.sent();
+                if (!spec.chatTopic) return [3 /*break*/, 4];
+                chatPath = "/t/" + spec.chatTopic + "/chat";
+                if (!(chatPath !== path)) return [3 /*break*/, 4];
+                return [4 /*yield*/, preloadListing(scope, "/t/" + spec.chatTopic + "/chat", {})];
             case 3:
                 _b.sent();
                 _b.label = 4;
-            case 4:
-                if (!spec.chatTopic) return [3 /*break*/, 6];
-                chatPath = "/t/" + spec.chatTopic + "/chat";
-                if (!(chatPath !== path)) return [3 /*break*/, 6];
-                return [4 /*yield*/, preloadListing(scope, "/t/" + spec.chatTopic + "/chat", {})];
-            case 5:
-                _b.sent();
-                _b.label = 6;
-            case 6: return [2 /*return*/, scope.getCache()];
+            case 4: return [2 /*return*/, scope.getCache()];
         }
     });
 }); };

@@ -1,6 +1,6 @@
 import * as R from 'ramda';
 import { query, resolve } from 'gun-scope';
-import { GunScope } from './types';
+import { GunScope, ListingSpecType } from './types';
 import { Config } from './Config';
 import { Query } from './Query';
 import { Listing, ListingSpec, ListingType, ListingView } from './Listing';
@@ -38,43 +38,17 @@ const withListingMatch = (path: string, params?: any) => {
 
 const preloadListing = async (scope: GunScope, path: string, params?: any) => {
   const match = withListingMatch(path, params);
-  let [spec, ids] = await Promise.all([
+  let [spec, ids]: [ListingSpecType, string[]] = (await Promise.all([
     match.space(scope),
     match.ids(scope, {}),
     match.sidebar(scope)
-  ]);
+  ])) as [ListingSpecType, string[]];
 
   if (!spec) spec = ListingSpec.fromSource('');
 
-  const thingSouls = Listing.idsToSouls(ids);
-  const [things] = await Promise.all([
-    Query.multiThingMeta(scope, {
-      thingSouls,
-      tabulator: spec.tabulator || Config.tabulator,
-      scores: true,
-      data: true
-    }),
-    ...R.map(
-      id => Query.userMeta(scope, id),
-      R.uniq([spec && spec.indexer, spec && spec.owner, spec && spec.tabulator])
-    )
-  ]);
-  const opIds = R.compose(
-    R.without(ids),
-    (ids: string[]) => ids.filter(x => !!x),
-    R.uniq,
-    R.map(R.pathOr(null, ['data', 'opId']))
-  )(things);
-
-  if (opIds.length) {
-    const opSouls = Listing.idsToSouls(opIds);
-
-    await Query.multiThingMeta(scope, {
-      thingSouls: opSouls,
-      tabulator: spec.tabulator || Config.tabulator,
-      data: true
-    });
-  }
+  await Promise.all(
+    ids.map(id => Query.thingForDisplay(scope, id, spec.tabulator || Config.tabulator))
+  );
 
   if (spec.chatTopic) {
     const chatPath = `/t/${spec.chatTopic}/chat`;

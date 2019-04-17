@@ -1328,10 +1328,10 @@
             tabulator: tabulator || Config.tabulator
         }))
             .then();
-    }, 'thingScores');
+    });
     var thingData = gunScope.query(function (scope, thingId) {
         return thingId ? scope.get(Schema.Thing.route.reverse({ thingId: thingId })).get('data') : gunScope.resolve(null);
-    }, 'thingData');
+    });
     var thingMeta = gunScope.query(function (scope, _a) {
         var thingSoul = _a.thingSoul, tabulator = _a.tabulator, _b = _a.data, data = _b === void 0 ? false : _b, _c = _a.scores, scores = _c === void 0 ? false : _c;
         if (!thingSoul)
@@ -1380,7 +1380,9 @@
             .get('id');
     }, 'wikiPageId');
     var wikiPage = gunScope.query(function (scope, authorId, name) {
-        return wikiPageId(scope, authorId, name).then(function (id) { return id && thingData(scope, id); });
+        return wikiPageId(scope, authorId, name)
+            .then(function (id) { return id && thingForDisplay(scope, id); })
+            .then(R.propOr(null, 'data'));
     });
     var userMeta = gunScope.query(function (scope, id) {
         if (!id)
@@ -2767,7 +2769,7 @@
         };
     };
     var preloadListing = function (scope, path, params) { return __awaiter(_this$3, void 0, void 0, function () {
-        var match, _a, spec, ids, thingSouls, things, opIds, opSouls, chatPath;
+        var match, _a, spec, ids, chatPath;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -2778,40 +2780,20 @@
                             match.sidebar(scope)
                         ])];
                 case 1:
-                    _a = _b.sent(), spec = _a[0], ids = _a[1];
+                    _a = (_b.sent()), spec = _a[0], ids = _a[1];
                     if (!spec)
                         spec = ListingSpec.fromSource('');
-                    thingSouls = Listing.idsToSouls(ids);
-                    return [4 /*yield*/, Promise.all([
-                            Query.multiThingMeta(scope, {
-                                thingSouls: thingSouls,
-                                tabulator: spec.tabulator || Config.tabulator,
-                                scores: true,
-                                data: true
-                            })
-                        ].concat(R.map(function (id) { return Query.userMeta(scope, id); }, R.uniq([spec && spec.indexer, spec && spec.owner, spec && spec.tabulator]))))];
+                    return [4 /*yield*/, Promise.all(ids.map(function (id) { return Query.thingForDisplay(scope, id, spec.tabulator || Config.tabulator); }))];
                 case 2:
-                    things = (_b.sent())[0];
-                    opIds = R.compose(R.without(ids), function (ids) { return ids.filter(function (x) { return !!x; }); }, R.uniq, R.map(R.pathOr(null, ['data', 'opId'])))(things);
-                    if (!opIds.length) return [3 /*break*/, 4];
-                    opSouls = Listing.idsToSouls(opIds);
-                    return [4 /*yield*/, Query.multiThingMeta(scope, {
-                            thingSouls: opSouls,
-                            tabulator: spec.tabulator || Config.tabulator,
-                            data: true
-                        })];
+                    _b.sent();
+                    if (!spec.chatTopic) return [3 /*break*/, 4];
+                    chatPath = "/t/" + spec.chatTopic + "/chat";
+                    if (!(chatPath !== path)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, preloadListing(scope, "/t/" + spec.chatTopic + "/chat", {})];
                 case 3:
                     _b.sent();
                     _b.label = 4;
-                case 4:
-                    if (!spec.chatTopic) return [3 /*break*/, 6];
-                    chatPath = "/t/" + spec.chatTopic + "/chat";
-                    if (!(chatPath !== path)) return [3 /*break*/, 6];
-                    return [4 /*yield*/, preloadListing(scope, "/t/" + spec.chatTopic + "/chat", {})];
-                case 5:
-                    _b.sent();
-                    _b.label = 6;
-                case 6: return [2 /*return*/, scope.getCache()];
+                case 4: return [2 /*return*/, scope.getCache()];
             }
         });
     }); };

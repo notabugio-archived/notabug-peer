@@ -55,10 +55,10 @@ var thingScores = gun_scope_1.query(function (scope, thingId, tabulator) {
         tabulator: tabulator || Config_1.Config.tabulator
     }))
         .then();
-}, 'thingScores');
+});
 var thingData = gun_scope_1.query(function (scope, thingId) {
     return thingId ? scope.get(Schema_1.Schema.Thing.route.reverse({ thingId: thingId })).get('data') : gun_scope_1.resolve(null);
-}, 'thingData');
+});
 var thingMeta = gun_scope_1.query(function (scope, _a) {
     var thingSoul = _a.thingSoul, tabulator = _a.tabulator, _b = _a.data, data = _b === void 0 ? false : _b, _c = _a.scores, scores = _c === void 0 ? false : _c;
     if (!thingSoul)
@@ -107,7 +107,9 @@ var wikiPageId = gun_scope_1.query(function (scope, authorId, name) {
         .get('id');
 }, 'wikiPageId');
 var wikiPage = gun_scope_1.query(function (scope, authorId, name) {
-    return wikiPageId(scope, authorId, name).then(function (id) { return id && thingData(scope, id); });
+    return wikiPageId(scope, authorId, name)
+        .then(function (id) { return id && thingForDisplay(scope, id); })
+        .then(R.propOr(null, 'data'));
 });
 var userMeta = gun_scope_1.query(function (scope, id) {
     if (!id)

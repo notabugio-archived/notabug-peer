@@ -1,15 +1,15 @@
 import * as R from 'ramda';
-import { GunScope } from './types';
+import { GunScope, ListingSpecType } from './types';
 export declare const Page: {
     withListingMatch: (path: string, params?: any) => {
         preload: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<{}>;
         sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string>;
-        space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+        space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
         ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<never[]>;
     } | {
         preload: (scope: GunScope) => Promise<any>;
         sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
-        space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+        space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
         ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
     };
     preloadListing: (scope: GunScope, path: string, params?: any) => Promise<any>;
@@ -36,12 +36,12 @@ export declare const Page: {
         }) => {
             preload: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<{}>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
             ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<never[]>;
         } | {
             preload: (scope: GunScope) => Promise<any>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
             ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
         };
     };
@@ -60,12 +60,12 @@ export declare const Page: {
         }) => {
             preload: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<{}>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
             ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<never[]>;
         } | {
             preload: (scope: GunScope) => Promise<any>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
             ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
         };
     };
@@ -84,12 +84,12 @@ export declare const Page: {
         }) => {
             preload: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<{}>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
             ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<never[]>;
         } | {
             preload: (scope: GunScope) => Promise<any>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
             ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
         };
     };
@@ -108,7 +108,7 @@ export declare const Page: {
             };
             query?: {} | undefined;
         }) => {
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
             ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
             preload: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
         };
@@ -127,12 +127,12 @@ export declare const Page: {
         }) => {
             preload: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<{}>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
             ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<never[]>;
         } | {
             preload: (scope: GunScope) => Promise<any>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
             ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
         };
     };
@@ -150,12 +150,12 @@ export declare const Page: {
         }) => {
             preload: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<{}>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
             ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<never[]>;
         } | {
             preload: (scope: GunScope) => Promise<any>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ListingSpecType>;
+            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
             ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
         };
     };
