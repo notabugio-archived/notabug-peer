@@ -5,7 +5,7 @@ export declare class ListingView {
     spec: ListingSpecType;
     rowsFromNode: (node: ListingNodeType) => ListingNodeRow[];
     combineSourceRows: (rowsSets: ListingNodeRow[][]) => ListingNodeRow[];
-    childViews: {
+    viewCache: {
         [soul: string]: ListingView;
     };
     listings: ListingView[];

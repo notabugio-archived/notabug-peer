@@ -55,7 +55,7 @@ var ListingSpec_1 = require("./ListingSpec");
 var ListingView = /** @class */ (function () {
     function ListingView(path, parent) {
         this.listings = [];
-        this.childViews = {};
+        this.viewCache = parent ? parent.viewCache : {};
         this.sourced = {};
         this.path = path;
         this.type = ListingType_1.ListingType.fromPath(path);
@@ -75,7 +75,7 @@ var ListingView = /** @class */ (function () {
             _this.spec = spec;
             var paths = R.pathOr([], ['dataSource', 'listingPaths'], spec);
             var listingPaths = R.without([_this.path], paths);
-            _this.listings = listingPaths.map(function (path) { return _this.childViews[path] || (_this.childViews[path] = new ListingView(path, _this)); });
+            _this.listings = listingPaths.map(function (path) { return _this.viewCache[path] || (_this.viewCache[path] = new ListingView(path, _this)); });
             if (!_this.listings.length) {
                 return scope.get(ListingNode_1.ListingNode.soulFromPath(spec.indexer, _this.path)).then(R.pipe(_this.rowsFromNode, R.of, _this.combineSourceRows));
             }

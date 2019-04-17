@@ -2290,7 +2290,7 @@ var ListingSort = {
 var ListingView = /** @class */ (function () {
     function ListingView(path$$1, parent) {
         this.listings = [];
-        this.childViews = {};
+        this.viewCache = parent ? parent.viewCache : {};
         this.sourced = {};
         this.path = path$$1;
         this.type = ListingType.fromPath(path$$1);
@@ -2310,7 +2310,7 @@ var ListingView = /** @class */ (function () {
             _this.spec = spec;
             var paths = pathOr([], ['dataSource', 'listingPaths'], spec);
             var listingPaths = without([_this.path], paths);
-            _this.listings = listingPaths.map(function (path$$1) { return _this.childViews[path$$1] || (_this.childViews[path$$1] = new ListingView(path$$1, _this)); });
+            _this.listings = listingPaths.map(function (path$$1) { return _this.viewCache[path$$1] || (_this.viewCache[path$$1] = new ListingView(path$$1, _this)); });
             if (!_this.listings.length) {
                 return scope$$1.get(ListingNode.soulFromPath(spec.indexer, _this.path)).then(pipe(_this.rowsFromNode, of, _this.combineSourceRows));
             }

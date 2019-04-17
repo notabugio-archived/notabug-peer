@@ -12,13 +12,13 @@ export class ListingView {
   spec: ListingSpecType;
   rowsFromNode: (node: ListingNodeType) => ListingNodeRow[];
   combineSourceRows: (rowsSets: ListingNodeRow[][]) => ListingNodeRow[];
-  childViews: { [soul: string]: ListingView };
+  viewCache: { [soul: string]: ListingView };
   listings: ListingView[];
   sourced: { [id: string]: ListingNodeRow };
 
   constructor(path: string, parent?: ListingView) {
     this.listings = [];
-    this.childViews = {};
+    this.viewCache = parent ? parent.viewCache : {};
     this.sourced = {};
     this.path = path;
     this.type = ListingType.fromPath(path);
@@ -47,7 +47,7 @@ export class ListingView {
         const paths = R.pathOr([], ['dataSource', 'listingPaths'], spec);
         const listingPaths = R.without([this.path], paths);
         this.listings = listingPaths.map(
-          path => this.childViews[path] || (this.childViews[path] = new ListingView(path, this))
+          path => this.viewCache[path] || (this.viewCache[path] = new ListingView(path, this))
         );
         if (!this.listings.length) {
           return scope.get(ListingNode.soulFromPath(spec.indexer, this.path)).then(
