@@ -91,7 +91,7 @@ var ListingView = /** @class */ (function () {
     };
     ListingView.prototype.checkId = function (scope, id) {
         return __awaiter(this, void 0, void 0, function () {
-            var filterFn;
+            var filterFn, listings, i;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -102,7 +102,22 @@ var ListingView = /** @class */ (function () {
                     case 1:
                         if (!(_a.sent()))
                             return [2 /*return*/, false];
-                        return [2 /*return*/, Promise.all(this.listings.map(function (l) { return l.checkId(scope, id); })).then(function (r) { return !!r.find(R.identity); })];
+                        listings = this.listings.slice();
+                        if (!listings.length)
+                            return [2 /*return*/, true];
+                        i = 0;
+                        _a.label = 2;
+                    case 2:
+                        if (!(i < listings.length)) return [3 /*break*/, 5];
+                        return [4 /*yield*/, listings[i].checkId(scope, id)];
+                    case 3:
+                        if (_a.sent())
+                            return [2 /*return*/, true];
+                        _a.label = 4;
+                    case 4:
+                        i++;
+                        return [3 /*break*/, 2];
+                    case 5: return [2 /*return*/, false];
                 }
             });
         });

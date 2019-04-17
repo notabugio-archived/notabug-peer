@@ -68,9 +68,14 @@ export class ListingView {
     if (!(id in this.sourced)) return false;
     const filterFn = ListingFilter.thingFilter(scope, this.spec);
     if (!(await filterFn(id))) return false;
-    return Promise.all(this.listings.map(l => l.checkId(scope, id))).then(
-      r => !!r.find(R.identity)
-    );
+
+    const listings = this.listings.slice();
+    if (!listings.length) return true;
+    for (let i = 0; i < listings.length; i++) {
+      if (await listings[i].checkId(scope, id)) return true;
+    }
+
+    return false;
   }
 
   ids(scope: GunScope, opts = {}) {

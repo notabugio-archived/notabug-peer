@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, uniq, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, sortBy, includes, multiply, apply, juxt, find, uniq, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -2324,7 +2324,7 @@ var ListingView = /** @class */ (function () {
     };
     ListingView.prototype.checkId = function (scope$$1, id) {
         return __awaiter(this, void 0, void 0, function () {
-            var filterFn;
+            var filterFn, listings, i;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -2335,7 +2335,22 @@ var ListingView = /** @class */ (function () {
                     case 1:
                         if (!(_a.sent()))
                             return [2 /*return*/, false];
-                        return [2 /*return*/, Promise.all(this.listings.map(function (l) { return l.checkId(scope$$1, id); })).then(function (r) { return !!r.find(identity); })];
+                        listings = this.listings.slice();
+                        if (!listings.length)
+                            return [2 /*return*/, true];
+                        i = 0;
+                        _a.label = 2;
+                    case 2:
+                        if (!(i < listings.length)) return [3 /*break*/, 5];
+                        return [4 /*yield*/, listings[i].checkId(scope$$1, id)];
+                    case 3:
+                        if (_a.sent())
+                            return [2 /*return*/, true];
+                        _a.label = 4;
+                    case 4:
+                        i++;
+                        return [3 /*break*/, 2];
+                    case 5: return [2 /*return*/, false];
                 }
             });
         });
