@@ -1,7 +1,10 @@
 /// <reference types="ramda" />
-import { ListingNodeRow, ListingNodeType } from '../types';
+import { ListingNodeRow, ListingNodeType, SortDataRow } from '../types';
 declare function getRow(node: ListingNodeType, idx: string | number): [number | null, string | null, number | null];
 declare function rows(node: ListingNodeType): ListingNodeRow[];
+declare function diff(node: ListingNodeType, updatedItems?: SortDataRow[], removeIds?: string[], { maxSize }?: {
+    maxSize?: number | undefined;
+}): Promise<any>;
 export declare const ListingNode: {
     POS_IDX: number;
     POS_ID: number;
@@ -25,9 +28,7 @@ export declare const ListingNode: {
     pathFromSoul: (x0: string) => string;
     rowsFromSouls: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<[number | null, string | null, number | null][]>;
     read: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<{} | string[]>;
-    diff: (node: any, updatedItems?: [string, number][], removeIds?: string[], { maxSize }?: {
-        maxSize?: number | undefined;
-    }) => Promise<any>;
+    diff: typeof diff;
     unionRows: (x: readonly any[]) => [number | null, string | null, number | null][];
 };
 export {};

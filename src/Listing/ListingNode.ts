@@ -86,12 +86,56 @@ const itemsToRows = mapSortData(
   (item: SortDataRow, idx: number): ListingNodeRow => [idx, item[0], item[1]]
 );
 
-const diff = async (
+async function diffSingle(
+  node: ListingNodeType,
+  updatedItem: SortDataRow,
+  { maxSize = 1000 } = {}
+) {
+  let highestKey = -1;
+  let highestValueKey = null;
+  let highestValue = null;
+  let key: string;
+  const [updateId, updateValue] = updatedItem;
+
+  for (key in node || {}) {
+    const parsed = parseInt(key, 10);
+
+    if (!(parsed || parsed === 0)) continue;
+
+    const row: ListingNodeRow = getRow(node, key);
+    const [idx, id = null, value] = row;
+    if (id === updateId) {
+      if (updateValue === value) return null;
+      return { ['${idx}']: row.join(',') };
+    }
+
+    if (highestValue === null || (value !== null && value > highestValue)) {
+      highestValue = value;
+      highestValueKey = idx;
+    }
+    if (idx !== null && idx > highestKey) highestKey = idx;
+  }
+
+  if (!maxSize || highestKey < maxSize) {
+    return { [`${highestKey + 1}`]: updatedItem.join(',') };
+  }
+
+  if (highestValue === null || updateValue < highestValue) {
+    return { [`${highestValueKey}`]: updatedItem.join(',') };
+  }
+
+  return null;
+}
+
+async function diff(
   node: ListingNodeType,
   updatedItems: SortDataRow[] = [],
   removeIds: string[] = [],
   { maxSize = 1000 } = {}
-) => {
+) {
+  if (updatedItems.length === 1 && !removeIds.length) {
+    return diffSingle(node, updatedItems[0], { maxSize });
+  }
   const removed = R.indexBy(R.identity, removeIds);
   const byId = {} as { [id: string]: ListingNodeRow };
   const changes: ListingNodeType = {};
@@ -180,7 +224,7 @@ const diff = async (
   }
 
   return R.keys(changes).length ? changes : null;
-};
+}
 
 const unionRows = R.compose(
   R.uniqBy(R.nth(POS_ID)),

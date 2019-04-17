@@ -34,7 +34,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var R = require("ramda");
 var gun_scope_1 = require("gun-scope");
@@ -80,13 +79,53 @@ var sortRows = R.sortWith([
 var sortedIds = R.compose(R.map(R.nth(POS_ID)), sortRows, R.filter(R.identity), rows);
 var mapSortData = R.addIndex(R.map);
 var itemsToRows = mapSortData(function (item, idx) { return [idx, item[0], item[1]]; });
-var diff = function (node, updatedItems, removeIds, _a) {
+function diffSingle(node, updatedItem, _a) {
+    var _b = (_a === void 0 ? {} : _a).maxSize, maxSize = _b === void 0 ? 1000 : _b;
+    return __awaiter(this, void 0, void 0, function () {
+        var _c, _d, _e, highestKey, highestValueKey, highestValue, key, updateId, updateValue, parsed, row, idx, _f, id, value;
+        return __generator(this, function (_g) {
+            highestKey = -1;
+            highestValueKey = null;
+            highestValue = null;
+            updateId = updatedItem[0], updateValue = updatedItem[1];
+            for (key in node || {}) {
+                parsed = parseInt(key, 10);
+                if (!(parsed || parsed === 0))
+                    continue;
+                row = getRow(node, key);
+                idx = row[0], _f = row[1], id = _f === void 0 ? null : _f, value = row[2];
+                if (id === updateId) {
+                    if (updateValue === value)
+                        return [2 /*return*/, null];
+                    return [2 /*return*/, (_c = {}, _c['${idx}'] = row.join(','), _c)];
+                }
+                if (highestValue === null || (value !== null && value > highestValue)) {
+                    highestValue = value;
+                    highestValueKey = idx;
+                }
+                if (idx !== null && idx > highestKey)
+                    highestKey = idx;
+            }
+            if (!maxSize || highestKey < maxSize) {
+                return [2 /*return*/, (_d = {}, _d["" + (highestKey + 1)] = updatedItem.join(','), _d)];
+            }
+            if (highestValue === null || updateValue < highestValue) {
+                return [2 /*return*/, (_e = {}, _e["" + highestValueKey] = updatedItem.join(','), _e)];
+            }
+            return [2 /*return*/, null];
+        });
+    });
+}
+function diff(node, updatedItems, removeIds, _a) {
     if (updatedItems === void 0) { updatedItems = []; }
     if (removeIds === void 0) { removeIds = []; }
     var _b = (_a === void 0 ? {} : _a).maxSize, maxSize = _b === void 0 ? 1000 : _b;
-    return __awaiter(_this, void 0, void 0, function () {
+    return __awaiter(this, void 0, void 0, function () {
         var removed, byId, changes, rows, updated, toReplace, maxIdx, key, parsed, row, idx, _c, id, _d, rawValue, i, _e, id, value, existing, row, allSorted, sorted, missing, added, i, id, idx, val, inserted, row, replaced, idx, row, idx;
         return __generator(this, function (_f) {
+            if (updatedItems.length === 1 && !removeIds.length) {
+                return [2 /*return*/, diffSingle(node, updatedItems[0], { maxSize: maxSize })];
+            }
             removed = R.indexBy(R.identity, removeIds);
             byId = {};
             changes = {};
@@ -167,7 +206,7 @@ var diff = function (node, updatedItems, removeIds, _a) {
             return [2 /*return*/, R.keys(changes).length ? changes : null];
         });
     });
-};
+}
 var unionRows = R.compose(R.uniqBy(R.nth(POS_ID)), sortRows, R.reduce(R.concat, []), R.map(rows));
 var rowsFromSouls = gun_scope_1.query(function (scope, souls) {
     return Promise.all(R.map(scope.get, souls)).then(unionRows);

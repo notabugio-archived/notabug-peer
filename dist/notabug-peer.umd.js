@@ -821,7 +821,6 @@
         }), R.toPairs)
     };
 
-    var _this = undefined;
     var _a = [0, 1, 2, 3], POS_IDX = _a[0], POS_ID = _a[1], POS_VAL = _a[2]; // eslint-disable-line no-ustringnused-vars
     var rowsToIds = function (rows) {
         return rows.map(function (row) { return ((row && row[POS_ID]) || ''); }).filter(function (id) { return !!id; });
@@ -861,13 +860,53 @@
     var sortedIds = R.compose(R.map(R.nth(POS_ID)), sortRows, R.filter(R.identity), rows);
     var mapSortData = R.addIndex(R.map);
     var itemsToRows = mapSortData(function (item, idx) { return [idx, item[0], item[1]]; });
-    var diff = function (node, updatedItems, removeIds, _a) {
+    function diffSingle(node, updatedItem, _a) {
+        var _b = (_a === void 0 ? {} : _a).maxSize, maxSize = _b === void 0 ? 1000 : _b;
+        return __awaiter(this, void 0, void 0, function () {
+            var _c, _d, _e, highestKey, highestValueKey, highestValue, key, updateId, updateValue, parsed, row, idx, _f, id, value;
+            return __generator(this, function (_g) {
+                highestKey = -1;
+                highestValueKey = null;
+                highestValue = null;
+                updateId = updatedItem[0], updateValue = updatedItem[1];
+                for (key in node || {}) {
+                    parsed = parseInt(key, 10);
+                    if (!(parsed || parsed === 0))
+                        continue;
+                    row = getRow(node, key);
+                    idx = row[0], _f = row[1], id = _f === void 0 ? null : _f, value = row[2];
+                    if (id === updateId) {
+                        if (updateValue === value)
+                            return [2 /*return*/, null];
+                        return [2 /*return*/, (_c = {}, _c['${idx}'] = row.join(','), _c)];
+                    }
+                    if (highestValue === null || (value !== null && value > highestValue)) {
+                        highestValue = value;
+                        highestValueKey = idx;
+                    }
+                    if (idx !== null && idx > highestKey)
+                        highestKey = idx;
+                }
+                if (!maxSize || highestKey < maxSize) {
+                    return [2 /*return*/, (_d = {}, _d["" + (highestKey + 1)] = updatedItem.join(','), _d)];
+                }
+                if (highestValue === null || updateValue < highestValue) {
+                    return [2 /*return*/, (_e = {}, _e["" + highestValueKey] = updatedItem.join(','), _e)];
+                }
+                return [2 /*return*/, null];
+            });
+        });
+    }
+    function diff(node, updatedItems, removeIds, _a) {
         if (updatedItems === void 0) { updatedItems = []; }
         if (removeIds === void 0) { removeIds = []; }
         var _b = (_a === void 0 ? {} : _a).maxSize, maxSize = _b === void 0 ? 1000 : _b;
-        return __awaiter(_this, void 0, void 0, function () {
+        return __awaiter(this, void 0, void 0, function () {
             var removed, byId, changes, rows, updated, toReplace, maxIdx, key, parsed, row, idx, _c, id, _d, rawValue, i, _e, id, value, existing, row, allSorted, sorted, missing, added, i, id, idx, val, inserted, row, replaced, idx, row, idx;
             return __generator(this, function (_f) {
+                if (updatedItems.length === 1 && !removeIds.length) {
+                    return [2 /*return*/, diffSingle(node, updatedItems[0], { maxSize: maxSize })];
+                }
                 removed = R.indexBy(R.identity, removeIds);
                 byId = {};
                 changes = {};
@@ -948,7 +987,7 @@
                 return [2 /*return*/, R.keys(changes).length ? changes : null];
             });
         });
-    };
+    }
     var unionRows = R.compose(R.uniqBy(R.nth(POS_ID)), sortRows, R.reduce(R.concat, []), R.map(rows));
     var rowsFromSouls = gunScope.query(function (scope, souls) {
         return Promise.all(R.map(scope.get, souls)).then(unionRows);
@@ -1560,7 +1599,7 @@
         needsData: needsData
     };
 
-    var _this$1 = undefined;
+    var _this = undefined;
     var intPath = function (p) {
         return R.compose(parseInt, R.pathOr('', p));
     };
@@ -1660,7 +1699,7 @@
         };
         return { thingFilter: thingFilter, contentFilter: contentFilter, voteFilter: voteFilter };
     };
-    var getFilteredRows = function (scope, spec, sortedRows, params) { return __awaiter(_this$1, void 0, void 0, function () {
+    var getFilteredRows = function (scope, spec, sortedRows, params) { return __awaiter(_this, void 0, void 0, function () {
         var _a, _b, limitProp, _c, countProp, _d, _e, filterFn, limit, count, rows, filtered, data, fetchBatch, res;
         var _this = this;
         return __generator(this, function (_f) {
@@ -2567,8 +2606,8 @@
     };
     var CommentCommand = { tokenize: tokenize$1, map: map };
 
-    var _this$2 = undefined;
-    var tabulate = gunScope.query(function (scope, thingId) { return __awaiter(_this$2, void 0, void 0, function () {
+    var _this$1 = undefined;
+    var tabulate = gunScope.query(function (scope, thingId) { return __awaiter(_this$1, void 0, void 0, function () {
         var _a, up, down, comment, replySouls, thingData, result, commandMap;
         return __generator(this, function (_b) {
             switch (_b.label) {
@@ -2738,7 +2777,7 @@
         init: init
     };
 
-    var _this$3 = undefined;
+    var _this$2 = undefined;
     var wikiPage$1 = R.mergeLeft({
         withMatch: function (_a) {
             var _b = _a.params, _c = _b.authorId, authorId = _c === void 0 ? Config.owner : _c, name = _b.name;
@@ -2768,7 +2807,7 @@
             })
         };
     };
-    var preloadListing = function (scope, path, params) { return __awaiter(_this$3, void 0, void 0, function () {
+    var preloadListing = function (scope, path, params) { return __awaiter(_this$2, void 0, void 0, function () {
         var match, _a, spec, ids, chatPath;
         return __generator(this, function (_b) {
             switch (_b.label) {
