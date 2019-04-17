@@ -11,6 +11,7 @@ import {
   ThingDataNodeType,
   ThingDataMap
 } from './types';
+import { ThingDataNode } from './Thing';
 
 const thing = query<CombinedThingType | null>((scope, thingSoul) =>
   scope.get(thingSoul).then((meta: ThingNode) => {
@@ -76,6 +77,22 @@ const thingMeta = query<CombinedThingType | null>(
   }
 );
 
+const thingForDisplay = query(
+  (scope, thingId, tabulator = null) =>
+    Promise.all([thingData(scope, thingId), thingScores(scope, thingId, tabulator)]).then(
+      ([data, scores]) => {
+        const opId = ThingDataNode.opId(data);
+        if (!opId) return { data, scores };
+        return thingData(scope, opId).then(opData => ({
+          data,
+          scores,
+          opData
+        }));
+      }
+    ),
+  'thing'
+);
+
 const multiThingMeta = query((scope, params) =>
   all(
     R.reduce(
@@ -123,6 +140,7 @@ export const Query = {
   thingScores,
   thingData,
   thingDataFromSouls,
+  thingForDisplay,
   userPages,
   wikiPageId,
   wikiPage,

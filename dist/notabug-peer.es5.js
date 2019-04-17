@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, apply, juxt, identity, slice, filter, sortWith, ascend, cond, isNil, T, addIndex, indexBy, concat, sortBy, includes, multiply, find, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -985,106 +985,6 @@ var ListingNode = {
     unionRows: unionRows
 };
 
-var thing = query(function (scope$$1, thingSoul) {
-    return scope$$1.get(thingSoul).then(function (meta) {
-        if (!meta || !meta.id)
-            return null;
-        var result = {
-            id: meta.id,
-            timestamp: parseFloat(meta.timestamp)
-        };
-        var replyToSoul = pathOr('', ['replyTo', '#'], meta);
-        var opSoul = pathOr('', ['op', '#'], meta);
-        var opId = propOr('', 'thingId', opSoul && Schema.Thing.route.match(opSoul));
-        var replyToId = propOr('', 'thingId', replyToSoul && Schema.Thing.route.match(replyToSoul));
-        if (opId)
-            result.opId = opId;
-        if (replyToId)
-            result.replyToId = replyToId;
-        return result;
-    });
-});
-var thingDataFromSouls = curry(function (scope$$1, souls) {
-    var ids = ListingNode.soulsToIds(souls || []);
-    return all(map(function (id) { return thingData(scope$$1, id).then(function (data) { return [id, data]; }); }, ids)).then(function (pairs) {
-        return pairs.reduce(function (res, _a) {
-            var id = _a[0], data = _a[1];
-            return assoc(id, data, res);
-        }, {});
-    });
-});
-var thingScores = query(function (scope$$1, thingId, tabulator) {
-    if (tabulator === void 0) { tabulator = ''; }
-    if (!thingId)
-        return resolve(null);
-    return scope$$1
-        .get(Schema.ThingVoteCounts.route.reverse({
-        thingId: thingId,
-        tabulator: tabulator || Config.tabulator
-    }))
-        .then();
-}, 'thingScores');
-var thingData = query(function (scope$$1, thingId) {
-    return thingId ? scope$$1.get(Schema.Thing.route.reverse({ thingId: thingId })).get('data') : resolve(null);
-}, 'thingData');
-var thingMeta = query(function (scope$$1, _a) {
-    var thingSoul = _a.thingSoul, tabulator = _a.tabulator, _b = _a.data, data = _b === void 0 ? false : _b, _c = _a.scores, scores = _c === void 0 ? false : _c;
-    if (!thingSoul)
-        return resolve(null);
-    var id = ListingNode.soulToId(thingSoul);
-    return all([
-        thing(scope$$1, thingSoul),
-        scores ? thingScores(scope$$1, id, tabulator) : resolve(null),
-        data ? thingData(scope$$1, id) : resolve(null)
-    ]).then(function (_a) {
-        var meta = _a[0], votes = _a[1], data = _a[2];
-        if (!meta || !meta.id)
-            return null;
-        return __assign({}, meta, { votes: votes, data: data });
-    });
-});
-var multiThingMeta = query(function (scope$$1, params) {
-    return all(reduce(function (promises, thingSoul) {
-        if (!thingSoul)
-            return promises;
-        promises.push(thingMeta(scope$$1, __assign({}, params, { thingSoul: thingSoul })));
-        return promises;
-    }, [], propOr([], 'thingSouls', params)));
-});
-var userPages = query(function (scope$$1, authorId) { return scope$$1.get(Schema.AuthorPages.route.reverse({ authorId: authorId })); }, 'userPages');
-var wikiPageId = query(function (scope$$1, authorId, name) {
-    if (!authorId || !name)
-        return resolve(null);
-    return scope$$1
-        .get(Schema.AuthorPages.route.reverse({ authorId: authorId }))
-        .get(name)
-        .get('id');
-}, 'wikiPageId');
-var wikiPage = query(function (scope$$1, authorId, name) {
-    return wikiPageId(scope$$1, authorId, name).then(function (id) { return id && thingData(scope$$1, id); });
-});
-var userMeta = query(function (scope$$1, id) {
-    if (!id)
-        return resolve(null);
-    return scope$$1.get("~" + id).then(function (meta) { return ({
-        alias: prop('alias', meta),
-        createdAt: path(['_', '>', 'pub'], meta)
-    }); });
-}, 'userMeta');
-var createScope = curry(function (nab, opts) { return scope(assoc('gun', nab.gun, opts || {})); });
-var Query = {
-    thingMeta: thingMeta,
-    multiThingMeta: multiThingMeta,
-    thingScores: thingScores,
-    thingData: thingData,
-    thingDataFromSouls: thingDataFromSouls,
-    userPages: userPages,
-    wikiPageId: wikiPageId,
-    wikiPage: wikiPage,
-    userMeta: userMeta,
-    createScope: createScope
-};
-
 var soul = pathOr('', ['_', '#']);
 var state = pathOr({}, ['_', '>']);
 var latest = compose(last, sortBy(identity), values, state);
@@ -1388,6 +1288,121 @@ var Thing = {
     writePage: writePage,
     vote: vote,
     index: index
+};
+
+var thing = query(function (scope$$1, thingSoul) {
+    return scope$$1.get(thingSoul).then(function (meta) {
+        if (!meta || !meta.id)
+            return null;
+        var result = {
+            id: meta.id,
+            timestamp: parseFloat(meta.timestamp)
+        };
+        var replyToSoul = pathOr('', ['replyTo', '#'], meta);
+        var opSoul = pathOr('', ['op', '#'], meta);
+        var opId = propOr('', 'thingId', opSoul && Schema.Thing.route.match(opSoul));
+        var replyToId = propOr('', 'thingId', replyToSoul && Schema.Thing.route.match(replyToSoul));
+        if (opId)
+            result.opId = opId;
+        if (replyToId)
+            result.replyToId = replyToId;
+        return result;
+    });
+});
+var thingDataFromSouls = curry(function (scope$$1, souls) {
+    var ids = ListingNode.soulsToIds(souls || []);
+    return all(map(function (id) { return thingData(scope$$1, id).then(function (data) { return [id, data]; }); }, ids)).then(function (pairs) {
+        return pairs.reduce(function (res, _a) {
+            var id = _a[0], data = _a[1];
+            return assoc(id, data, res);
+        }, {});
+    });
+});
+var thingScores = query(function (scope$$1, thingId, tabulator) {
+    if (tabulator === void 0) { tabulator = ''; }
+    if (!thingId)
+        return resolve(null);
+    return scope$$1
+        .get(Schema.ThingVoteCounts.route.reverse({
+        thingId: thingId,
+        tabulator: tabulator || Config.tabulator
+    }))
+        .then();
+}, 'thingScores');
+var thingData = query(function (scope$$1, thingId) {
+    return thingId ? scope$$1.get(Schema.Thing.route.reverse({ thingId: thingId })).get('data') : resolve(null);
+}, 'thingData');
+var thingMeta = query(function (scope$$1, _a) {
+    var thingSoul = _a.thingSoul, tabulator = _a.tabulator, _b = _a.data, data = _b === void 0 ? false : _b, _c = _a.scores, scores = _c === void 0 ? false : _c;
+    if (!thingSoul)
+        return resolve(null);
+    var id = ListingNode.soulToId(thingSoul);
+    return all([
+        thing(scope$$1, thingSoul),
+        scores ? thingScores(scope$$1, id, tabulator) : resolve(null),
+        data ? thingData(scope$$1, id) : resolve(null)
+    ]).then(function (_a) {
+        var meta = _a[0], votes = _a[1], data = _a[2];
+        if (!meta || !meta.id)
+            return null;
+        return __assign({}, meta, { votes: votes, data: data });
+    });
+});
+var thingForDisplay = query(function (scope$$1, thingId, tabulator) {
+    if (tabulator === void 0) { tabulator = null; }
+    return Promise.all([thingData(scope$$1, thingId), thingScores(scope$$1, thingId, tabulator)]).then(function (_a) {
+        var data = _a[0], scores = _a[1];
+        var opId = ThingDataNode.opId(data);
+        if (!opId)
+            return { data: data, scores: scores };
+        return thingData(scope$$1, opId).then(function (opData) { return ({
+            data: data,
+            scores: scores,
+            opData: opData
+        }); });
+    });
+}, 'thing');
+var multiThingMeta = query(function (scope$$1, params) {
+    return all(reduce(function (promises, thingSoul) {
+        if (!thingSoul)
+            return promises;
+        promises.push(thingMeta(scope$$1, __assign({}, params, { thingSoul: thingSoul })));
+        return promises;
+    }, [], propOr([], 'thingSouls', params)));
+});
+var userPages = query(function (scope$$1, authorId) { return scope$$1.get(Schema.AuthorPages.route.reverse({ authorId: authorId })); }, 'userPages');
+var wikiPageId = query(function (scope$$1, authorId, name) {
+    if (!authorId || !name)
+        return resolve(null);
+    return scope$$1
+        .get(Schema.AuthorPages.route.reverse({ authorId: authorId }))
+        .get(name)
+        .get('id');
+}, 'wikiPageId');
+var wikiPage = query(function (scope$$1, authorId, name) {
+    return wikiPageId(scope$$1, authorId, name).then(function (id) { return id && thingData(scope$$1, id); });
+});
+var userMeta = query(function (scope$$1, id) {
+    if (!id)
+        return resolve(null);
+    return scope$$1.get("~" + id).then(function (meta) { return ({
+        alias: prop('alias', meta),
+        createdAt: path(['_', '>', 'pub'], meta)
+    }); });
+}, 'userMeta');
+var createScope = curry(function (nab, opts) { return scope(assoc('gun', nab.gun, opts || {})); });
+var Query = {
+    thingMeta: thingMeta,
+    multiThingMeta: multiThingMeta,
+    thingScores: thingScores,
+    thingData: thingData,
+    thingDataFromSouls: thingDataFromSouls,
+    thingForDisplay: thingForDisplay,
+    userPages: userPages,
+    wikiPageId: wikiPageId,
+    wikiPage: wikiPage,
+    userMeta: userMeta,
+    createScope: createScope
 };
 
 var signup = curry(function (peer, username, password, opts) {

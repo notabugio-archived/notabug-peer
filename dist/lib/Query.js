@@ -16,6 +16,7 @@ var gun_scope_1 = require("gun-scope");
 var Config_1 = require("./Config");
 var Schema_1 = require("./Schema");
 var ListingNode_1 = require("./Listing/ListingNode");
+var Thing_1 = require("./Thing");
 var thing = gun_scope_1.query(function (scope, thingSoul) {
     return scope.get(thingSoul).then(function (meta) {
         if (!meta || !meta.id)
@@ -74,6 +75,20 @@ var thingMeta = gun_scope_1.query(function (scope, _a) {
         return __assign({}, meta, { votes: votes, data: data });
     });
 });
+var thingForDisplay = gun_scope_1.query(function (scope, thingId, tabulator) {
+    if (tabulator === void 0) { tabulator = null; }
+    return Promise.all([thingData(scope, thingId), thingScores(scope, thingId, tabulator)]).then(function (_a) {
+        var data = _a[0], scores = _a[1];
+        var opId = Thing_1.ThingDataNode.opId(data);
+        if (!opId)
+            return { data: data, scores: scores };
+        return thingData(scope, opId).then(function (opData) { return ({
+            data: data,
+            scores: scores,
+            opData: opData
+        }); });
+    });
+}, 'thing');
 var multiThingMeta = gun_scope_1.query(function (scope, params) {
     return gun_scope_1.all(R.reduce(function (promises, thingSoul) {
         if (!thingSoul)
@@ -109,6 +124,7 @@ exports.Query = {
     thingScores: thingScores,
     thingData: thingData,
     thingDataFromSouls: thingDataFromSouls,
+    thingForDisplay: thingForDisplay,
     userPages: userPages,
     wikiPageId: wikiPageId,
     wikiPage: wikiPage,
