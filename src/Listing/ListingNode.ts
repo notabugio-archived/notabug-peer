@@ -5,7 +5,7 @@ import { Config } from '../Config';
 import { Schema } from '../Schema';
 import { ListingNodeRow, ListingNodeType, SortDataRow, GunScope } from '../types';
 
-const [POS_IDX, POS_ID, POS_VAL] = [0, 1, 2, 3]; // eslint-disable-line no-ustringnused-vars
+const [POS_IDX, POS_ID, POS_VAL] = [0, 1, 2, 3];
 
 const rowsToIds = (rows: ListingNodeRow[]) =>
   rows.map(row => ((row && row[POS_ID]) || '') as string).filter(id => !!id);

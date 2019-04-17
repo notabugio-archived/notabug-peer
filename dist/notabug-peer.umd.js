@@ -821,7 +821,7 @@
         }), R.toPairs)
     };
 
-    var _a = [0, 1, 2, 3], POS_IDX = _a[0], POS_ID = _a[1], POS_VAL = _a[2]; // eslint-disable-line no-ustringnused-vars
+    var _a = [0, 1, 2, 3], POS_IDX = _a[0], POS_ID = _a[1], POS_VAL = _a[2];
     var rowsToIds = function (rows) {
         return rows.map(function (row) { return ((row && row[POS_ID]) || ''); }).filter(function (id) { return !!id; });
     };
@@ -2286,29 +2286,67 @@
     };
 
     var ListingView = /** @class */ (function () {
-        function ListingView(path) {
+        function ListingView(path, parent) {
+            this.listings = [];
+            this.childViews = {};
+            this.sourced = {};
             this.path = path;
             this.type = ListingType.fromPath(path);
-            this.rowsFromNode = memoize(ListingNode.rows);
-            this.combineSourceRows = memoize(R.pipe(R.reduce(R.concat, []), ListingNode.sortRows, R.uniqBy(R.nth(ListingNode.POS_ID))));
+            this.spec = ListingSpec.fromSource('');
+            this.rowsFromNode = parent ? parent.rowsFromNode : memoize(ListingNode.rows);
+            this.combineSourceRows = parent
+                ? parent.combineSourceRows
+                : memoize(R.pipe(R.reduce(R.concat, []), ListingNode.sortRows, R.uniqBy(R.nth(ListingNode.POS_ID))));
         }
-        ListingView.prototype.getSortedSourceRows = function (scope, sourceSouls) {
-            var _this = this;
-            return Promise.all(sourceSouls.map(function (soul) { return scope.get(soul).then(_this.rowsFromNode); })).then(this.combineSourceRows);
-        };
-        ListingView.prototype.query = function (scope, opts) {
+        ListingView.prototype.unfilteredRows = function (scope, opts) {
             var _this = this;
             if (opts === void 0) { opts = {}; }
             if (!this.type)
                 return Promise.resolve([]);
-            return this.type.getSpec(scope, this.type.match).then(function (spec) {
-                var stickyRows = R.map(function (id) { return [-1, id, -Infinity]; }, spec.stickyIds);
+            return this.type
+                .getSpec(scope, this.type.match)
+                .then(function (spec) {
+                _this.spec = spec;
                 var paths = R.pathOr([], ['dataSource', 'listingPaths'], spec);
-                var sourceSouls = R.map(ListingNode.soulFromPath(spec.indexer), paths);
-                var filterFn = ListingFilter.thingFilter(scope, spec);
-                return _this.getSortedSourceRows(scope, sourceSouls).then(function (rows) {
-                    return ListingFilter.getFilteredIds(scope, spec, stickyRows.concat(rows), __assign({}, opts, { filterFn: filterFn }));
+                var listingPaths = R.without([_this.path], paths);
+                _this.listings = listingPaths.map(function (path) { return _this.childViews[path] || (_this.childViews[path] = new ListingView(path, _this)); });
+                if (!_this.listings.length) {
+                    return scope
+                        .get(ListingNode.soulFromPath(spec.indexer, _this.path))
+                        .then(_this.rowsFromNode);
+                }
+                return Promise.all(_this.listings.map(function (l) { return l.unfilteredRows(scope); })).then(_this.combineSourceRows);
+            })
+                .then(function (rows) {
+                _this.sourced = R.indexBy(R.nth(ListingNode.POS_ID), rows);
+                return rows;
+            });
+        };
+        ListingView.prototype.checkId = function (scope, id) {
+            return __awaiter(this, void 0, void 0, function () {
+                var filterFn;
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            if (!(id in this.sourced))
+                                return [2 /*return*/, false];
+                            filterFn = ListingFilter.thingFilter(scope, this.spec);
+                            return [4 /*yield*/, filterFn(id)];
+                        case 1:
+                            if (!(_a.sent()))
+                                return [2 /*return*/, false];
+                            return [2 /*return*/, Promise.all(this.listings.map(function (l) { return l.checkId(scope, id); })).then(function (r) { return !!r.find(R.identity); })];
+                    }
                 });
+            });
+        };
+        ListingView.prototype.ids = function (scope, opts) {
+            var _this = this;
+            if (opts === void 0) { opts = {}; }
+            return this.unfilteredRows(scope, opts).then(function (rows) {
+                var stickyRows = R.map(function (id) { return [-1, id, -Infinity]; }, _this.spec.stickyIds);
+                var filterFn = function (id) { return _this.checkId(scope, id); };
+                return ListingFilter.getFilteredIds(scope, _this.spec, stickyRows.concat(rows), __assign({}, opts, { filterFn: filterFn }));
             });
         };
         return ListingView;
@@ -2796,7 +2834,7 @@
             };
         }
         var view = new ListingView(path);
-        var realQuery = gunScope.query(view.query.bind(view), "ids:" + path);
+        var realQuery = gunScope.query(view.ids.bind(view), "ids:" + path);
         return {
             preload: function (scope) { return preloadListing(scope, path, params); },
             sidebar: gunScope.query(function (scope) { return Listing.sidebarFromPath(scope, path); }, "sidebar:" + path),
@@ -2808,16 +2846,17 @@
         };
     };
     var preloadListing = function (scope, path, params) { return __awaiter(_this$2, void 0, void 0, function () {
-        var match, _a, spec, ids, chatPath;
+        var match, promise, _a, spec, ids, chatPath;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
                     match = withListingMatch(path, params);
-                    return [4 /*yield*/, Promise.all([
-                            match.space(scope),
-                            match.ids(scope, {}),
-                            match.sidebar(scope)
-                        ])];
+                    promise = Promise.all([
+                        match.space(scope),
+                        match.ids(scope, {}),
+                        match.sidebar(scope)
+                    ]);
+                    return [4 /*yield*/, promise];
                 case 1:
                     _a = (_b.sent()), spec = _a[0], ids = _a[1];
                     if (!spec)

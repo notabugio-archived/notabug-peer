@@ -40,7 +40,7 @@ var gun_scope_1 = require("gun-scope");
 var Constants_1 = require("../Constants");
 var Config_1 = require("../Config");
 var Schema_1 = require("../Schema");
-var _a = [0, 1, 2, 3], POS_IDX = _a[0], POS_ID = _a[1], POS_VAL = _a[2]; // eslint-disable-line no-ustringnused-vars
+var _a = [0, 1, 2, 3], POS_IDX = _a[0], POS_ID = _a[1], POS_VAL = _a[2];
 var rowsToIds = function (rows) {
     return rows.map(function (row) { return ((row && row[POS_ID]) || ''); }).filter(function (id) { return !!id; });
 };

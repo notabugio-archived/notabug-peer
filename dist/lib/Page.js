@@ -79,7 +79,7 @@ var withListingMatch = function (path, params) {
         };
     }
     var view = new Listing_1.ListingView(path);
-    var realQuery = gun_scope_1.query(view.query.bind(view), "ids:" + path);
+    var realQuery = gun_scope_1.query(view.ids.bind(view), "ids:" + path);
     return {
         preload: function (scope) { return preloadListing(scope, path, params); },
         sidebar: gun_scope_1.query(function (scope) { return Listing_1.Listing.sidebarFromPath(scope, path); }, "sidebar:" + path),
@@ -91,16 +91,17 @@ var withListingMatch = function (path, params) {
     };
 };
 var preloadListing = function (scope, path, params) { return __awaiter(_this, void 0, void 0, function () {
-    var match, _a, spec, ids, chatPath;
+    var match, promise, _a, spec, ids, chatPath;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
                 match = withListingMatch(path, params);
-                return [4 /*yield*/, Promise.all([
-                        match.space(scope),
-                        match.ids(scope, {}),
-                        match.sidebar(scope)
-                    ])];
+                promise = Promise.all([
+                    match.space(scope),
+                    match.ids(scope, {}),
+                    match.sidebar(scope)
+                ]);
+                return [4 /*yield*/, promise];
             case 1:
                 _a = (_b.sent()), spec = _a[0], ids = _a[1];
                 if (!spec)

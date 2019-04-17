@@ -26,7 +26,7 @@ const withListingMatch = (path: string, params?: any) => {
   }
 
   const view = new ListingView(path);
-  const realQuery = query(view.query.bind(view), `ids:${path}`);
+  const realQuery = query(view.ids.bind(view), `ids:${path}`);
 
   return {
     preload: (scope: GunScope) => preloadListing(scope, path, params),
@@ -38,11 +38,12 @@ const withListingMatch = (path: string, params?: any) => {
 
 const preloadListing = async (scope: GunScope, path: string, params?: any) => {
   const match = withListingMatch(path, params);
-  let [spec, ids]: [ListingSpecType, string[]] = (await Promise.all([
+  const promise = Promise.all([
     match.space(scope),
     match.ids(scope, {}),
     match.sidebar(scope)
-  ])) as [ListingSpecType, string[]];
+  ] as Promise<any>[]);
+  let [spec, ids]: [ListingSpecType, string[]] = (await promise) as [ListingSpecType, string[]];
 
   if (!spec) spec = ListingSpec.fromSource('');
 

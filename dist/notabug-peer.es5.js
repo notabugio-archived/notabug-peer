@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, uniq, find, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, uniq, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -821,7 +821,7 @@ var Config = {
     }), toPairs)
 };
 
-var _a = [0, 1, 2, 3], POS_IDX = _a[0], POS_ID = _a[1], POS_VAL = _a[2]; // eslint-disable-line no-ustringnused-vars
+var _a = [0, 1, 2, 3], POS_IDX = _a[0], POS_ID = _a[1], POS_VAL = _a[2];
 var rowsToIds = function (rows) {
     return rows.map(function (row) { return ((row && row[POS_ID]) || ''); }).filter(function (id) { return !!id; });
 };
@@ -2286,29 +2286,67 @@ var ListingSort = {
 };
 
 var ListingView = /** @class */ (function () {
-    function ListingView(path$$1) {
+    function ListingView(path$$1, parent) {
+        this.listings = [];
+        this.childViews = {};
+        this.sourced = {};
         this.path = path$$1;
         this.type = ListingType.fromPath(path$$1);
-        this.rowsFromNode = memoize(ListingNode.rows);
-        this.combineSourceRows = memoize(pipe(reduce(concat, []), ListingNode.sortRows, uniqBy(nth(ListingNode.POS_ID))));
+        this.spec = ListingSpec.fromSource('');
+        this.rowsFromNode = parent ? parent.rowsFromNode : memoize(ListingNode.rows);
+        this.combineSourceRows = parent
+            ? parent.combineSourceRows
+            : memoize(pipe(reduce(concat, []), ListingNode.sortRows, uniqBy(nth(ListingNode.POS_ID))));
     }
-    ListingView.prototype.getSortedSourceRows = function (scope$$1, sourceSouls) {
-        var _this = this;
-        return Promise.all(sourceSouls.map(function (soul) { return scope$$1.get(soul).then(_this.rowsFromNode); })).then(this.combineSourceRows);
-    };
-    ListingView.prototype.query = function (scope$$1, opts) {
+    ListingView.prototype.unfilteredRows = function (scope$$1, opts) {
         var _this = this;
         if (opts === void 0) { opts = {}; }
         if (!this.type)
             return Promise.resolve([]);
-        return this.type.getSpec(scope$$1, this.type.match).then(function (spec) {
-            var stickyRows = map(function (id) { return [-1, id, -Infinity]; }, spec.stickyIds);
+        return this.type
+            .getSpec(scope$$1, this.type.match)
+            .then(function (spec) {
+            _this.spec = spec;
             var paths = pathOr([], ['dataSource', 'listingPaths'], spec);
-            var sourceSouls = map(ListingNode.soulFromPath(spec.indexer), paths);
-            var filterFn = ListingFilter.thingFilter(scope$$1, spec);
-            return _this.getSortedSourceRows(scope$$1, sourceSouls).then(function (rows) {
-                return ListingFilter.getFilteredIds(scope$$1, spec, stickyRows.concat(rows), __assign({}, opts, { filterFn: filterFn }));
+            var listingPaths = without([_this.path], paths);
+            _this.listings = listingPaths.map(function (path$$1) { return _this.childViews[path$$1] || (_this.childViews[path$$1] = new ListingView(path$$1, _this)); });
+            if (!_this.listings.length) {
+                return scope$$1
+                    .get(ListingNode.soulFromPath(spec.indexer, _this.path))
+                    .then(_this.rowsFromNode);
+            }
+            return Promise.all(_this.listings.map(function (l) { return l.unfilteredRows(scope$$1); })).then(_this.combineSourceRows);
+        })
+            .then(function (rows) {
+            _this.sourced = indexBy(nth(ListingNode.POS_ID), rows);
+            return rows;
+        });
+    };
+    ListingView.prototype.checkId = function (scope$$1, id) {
+        return __awaiter(this, void 0, void 0, function () {
+            var filterFn;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!(id in this.sourced))
+                            return [2 /*return*/, false];
+                        filterFn = ListingFilter.thingFilter(scope$$1, this.spec);
+                        return [4 /*yield*/, filterFn(id)];
+                    case 1:
+                        if (!(_a.sent()))
+                            return [2 /*return*/, false];
+                        return [2 /*return*/, Promise.all(this.listings.map(function (l) { return l.checkId(scope$$1, id); })).then(function (r) { return !!r.find(identity); })];
+                }
             });
+        });
+    };
+    ListingView.prototype.ids = function (scope$$1, opts) {
+        var _this = this;
+        if (opts === void 0) { opts = {}; }
+        return this.unfilteredRows(scope$$1, opts).then(function (rows) {
+            var stickyRows = map(function (id) { return [-1, id, -Infinity]; }, _this.spec.stickyIds);
+            var filterFn = function (id) { return _this.checkId(scope$$1, id); };
+            return ListingFilter.getFilteredIds(scope$$1, _this.spec, stickyRows.concat(rows), __assign({}, opts, { filterFn: filterFn }));
         });
     };
     return ListingView;
@@ -2796,7 +2834,7 @@ var withListingMatch = function (path$$1, params) {
         };
     }
     var view = new ListingView(path$$1);
-    var realQuery = query(view.query.bind(view), "ids:" + path$$1);
+    var realQuery = query(view.ids.bind(view), "ids:" + path$$1);
     return {
         preload: function (scope$$1) { return preloadListing(scope$$1, path$$1, params); },
         sidebar: query(function (scope$$1) { return Listing.sidebarFromPath(scope$$1, path$$1); }, "sidebar:" + path$$1),
@@ -2808,16 +2846,17 @@ var withListingMatch = function (path$$1, params) {
     };
 };
 var preloadListing = function (scope$$1, path$$1, params) { return __awaiter(_this$2, void 0, void 0, function () {
-    var match$$1, _a, spec, ids, chatPath;
+    var match$$1, promise, _a, spec, ids, chatPath;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
                 match$$1 = withListingMatch(path$$1, params);
-                return [4 /*yield*/, Promise.all([
-                        match$$1.space(scope$$1),
-                        match$$1.ids(scope$$1, {}),
-                        match$$1.sidebar(scope$$1)
-                    ])];
+                promise = Promise.all([
+                    match$$1.space(scope$$1),
+                    match$$1.ids(scope$$1, {}),
+                    match$$1.sidebar(scope$$1)
+                ]);
+                return [4 /*yield*/, promise];
             case 1:
                 _a = (_b.sent()), spec = _a[0], ids = _a[1];
                 if (!spec)

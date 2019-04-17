@@ -10,7 +10,7 @@ export declare const Page: {
         preload: (scope: GunScope) => Promise<any>;
         sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
         space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
-        ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
+        ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
     };
     preloadListing: (scope: GunScope, path: string, params?: any) => Promise<any>;
     wikiPage: <T2>(b: T2) => R.Merge<{
@@ -42,7 +42,7 @@ export declare const Page: {
             preload: (scope: GunScope) => Promise<any>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
             space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
         };
     };
     listing: ({ prefix: defaultPrefix, identifier: defaultIdentifier, sort: defaultSort, ...rest }?: {
@@ -66,7 +66,7 @@ export declare const Page: {
             preload: (scope: GunScope) => Promise<any>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
             space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
         };
     };
     spaceListing: ({ name: defaultName, authorId: defaultAuthorId, sort: defaultSort, ...rest }?: {
@@ -90,7 +90,7 @@ export declare const Page: {
             preload: (scope: GunScope) => Promise<any>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
             space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
         };
     };
     spaceThingComments: ({ name: defaultName, authorId: defaultAuthorId, sort: defaultSort, ...rest }: {
@@ -133,7 +133,7 @@ export declare const Page: {
             preload: (scope: GunScope) => Promise<any>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
             space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
         };
     };
     inbox: ({ sort: defaultSort, type: defaultType, ...rest }?: {
@@ -156,7 +156,7 @@ export declare const Page: {
             preload: (scope: GunScope) => Promise<any>;
             sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
             space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
         };
     };
 };

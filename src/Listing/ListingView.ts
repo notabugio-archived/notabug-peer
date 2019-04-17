@@ -4,49 +4,84 @@ import { ListingSpecType, ListingNodeRow, GunScope, ListingNodeType } from '../t
 import { ListingNode } from './ListingNode';
 import { ListingFilter } from './ListingFilter';
 import { ListingType } from './ListingType';
+import { ListingSpec } from './ListingSpec';
 
 export class ListingView {
   path: string;
   type: any;
+  spec: ListingSpecType;
   rowsFromNode: (node: ListingNodeType) => ListingNodeRow[];
   combineSourceRows: (rowsSets: ListingNodeRow[][]) => ListingNodeRow[];
+  childViews: { [soul: string]: ListingView };
+  listings: ListingView[];
+  sourced: { [id: string]: ListingNodeRow };
 
-  constructor(path: string) {
+  constructor(path: string, parent?: ListingView) {
+    this.listings = [];
+    this.childViews = {};
+    this.sourced = {};
     this.path = path;
     this.type = ListingType.fromPath(path);
-    this.rowsFromNode = memoize(ListingNode.rows);
-    this.combineSourceRows = memoize(
-      R.pipe(
-        R.reduce(
-          R.concat as (a: ListingNodeRow[], b: ListingNodeRow[]) => ListingNodeRow[],
-          [] as ListingNodeRow[]
-        ),
-        ListingNode.sortRows,
-        R.uniqBy(R.nth(ListingNode.POS_ID))
-      )
-    );
+    this.spec = ListingSpec.fromSource('');
+    this.rowsFromNode = parent ? parent.rowsFromNode : memoize(ListingNode.rows);
+    this.combineSourceRows = parent
+      ? parent.combineSourceRows
+      : memoize(
+          R.pipe(
+            R.reduce(
+              R.concat as (a: ListingNodeRow[], b: ListingNodeRow[]) => ListingNodeRow[],
+              [] as ListingNodeRow[]
+            ),
+            ListingNode.sortRows,
+            R.uniqBy(R.nth(ListingNode.POS_ID))
+          )
+        );
   }
 
-  getSortedSourceRows(scope: GunScope, sourceSouls: string[]) {
-    return Promise.all(sourceSouls.map(soul => scope.get(soul).then(this.rowsFromNode))).then(
-      this.combineSourceRows
-    );
-  }
-
-  query(scope: GunScope, opts = {}) {
+  unfilteredRows(scope: GunScope, opts = {}): Promise<ListingNodeRow[]> {
     if (!this.type) return Promise.resolve([]);
-    return this.type.getSpec(scope, this.type.match).then((spec: ListingSpecType) => {
-      const stickyRows: ListingNodeRow[] = R.map(id => [-1, id, -Infinity], spec.stickyIds);
-      const paths = R.pathOr([], ['dataSource', 'listingPaths'], spec);
-      const sourceSouls = R.map(ListingNode.soulFromPath(spec.indexer), paths);
-      const filterFn = ListingFilter.thingFilter(scope, spec);
+    return this.type
+      .getSpec(scope, this.type.match)
+      .then((spec: ListingSpecType) => {
+        this.spec = spec;
+        const paths = R.pathOr([], ['dataSource', 'listingPaths'], spec);
+        const listingPaths = R.without([this.path], paths);
+        this.listings = listingPaths.map(
+          path => this.childViews[path] || (this.childViews[path] = new ListingView(path, this))
+        );
+        if (!this.listings.length) {
+          return scope
+            .get(ListingNode.soulFromPath(spec.indexer, this.path))
+            .then(this.rowsFromNode);
+        }
+        return Promise.all<ListingNodeRow[]>(this.listings.map(l => l.unfilteredRows(scope))).then(
+          this.combineSourceRows
+        );
+      })
+      .then((rows: ListingNodeRow[]) => {
+        this.sourced = R.indexBy(R.nth(ListingNode.POS_ID) as (row: any) => string, rows);
+        return rows;
+      });
+  }
 
-      return this.getSortedSourceRows(scope, sourceSouls).then(rows =>
-        ListingFilter.getFilteredIds(scope, spec, [...stickyRows, ...rows], {
-          ...opts,
-          filterFn
-        })
-      );
+  async checkId(scope: GunScope, id: string): Promise<boolean> {
+    if (!(id in this.sourced)) return false;
+    const filterFn = ListingFilter.thingFilter(scope, this.spec);
+    if (!(await filterFn(id))) return false;
+    return Promise.all(this.listings.map(l => l.checkId(scope, id))).then(
+      r => !!r.find(R.identity)
+    );
+  }
+
+  ids(scope: GunScope, opts = {}) {
+    return this.unfilteredRows(scope, opts).then(rows => {
+      const stickyRows: ListingNodeRow[] = R.map(id => [-1, id, -Infinity], this.spec.stickyIds);
+      const filterFn = (id: string) => this.checkId(scope, id);
+
+      return ListingFilter.getFilteredIds(scope, this.spec, [...stickyRows, ...rows], {
+        ...opts,
+        filterFn
+      });
     });
   }
 }
