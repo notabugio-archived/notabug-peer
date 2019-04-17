@@ -38,7 +38,7 @@ export class ListingView {
         );
   }
 
-  unfilteredRows(scope: GunScope, opts = {}): Promise<ListingNodeRow[]> {
+  unfilteredRows(scope: GunScope): Promise<ListingNodeRow[]> {
     if (!this.type) return Promise.resolve([]);
     return this.type
       .getSpec(scope, this.type.match)
@@ -50,9 +50,13 @@ export class ListingView {
           path => this.childViews[path] || (this.childViews[path] = new ListingView(path, this))
         );
         if (!this.listings.length) {
-          return scope
-            .get(ListingNode.soulFromPath(spec.indexer, this.path))
-            .then(this.rowsFromNode);
+          return scope.get(ListingNode.soulFromPath(spec.indexer, this.path)).then(
+            R.pipe(
+              this.rowsFromNode,
+              R.of,
+              this.combineSourceRows
+            )
+          );
         }
         return Promise.all<ListingNodeRow[]>(this.listings.map(l => l.unfilteredRows(scope))).then(
           this.combineSourceRows
@@ -65,6 +69,7 @@ export class ListingView {
   }
 
   async checkId(scope: GunScope, id: string): Promise<boolean> {
+    if (this.spec.isIdSticky(id)) return true;
     if (!(id in this.sourced)) return false;
     const filterFn = ListingFilter.thingFilter(scope, this.spec);
     if (!(await filterFn(id))) return false;
@@ -79,7 +84,7 @@ export class ListingView {
   }
 
   ids(scope: GunScope, opts = {}) {
-    return this.unfilteredRows(scope, opts).then(rows => {
+    return this.unfilteredRows(scope).then(rows => {
       const stickyRows: ListingNodeRow[] = R.map(id => [-1, id, -Infinity], this.spec.stickyIds);
       const filterFn = (id: string) => this.checkId(scope, id);
 

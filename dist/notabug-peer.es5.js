@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, uniq, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, uniq, identical, last, lte, gte, equals, pipe, of, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -2300,9 +2300,8 @@ var ListingView = /** @class */ (function () {
             ? parent.combineSourceRows
             : memoize(pipe(reduce(concat, []), ListingNode.sortRows, uniqBy(nth(ListingNode.POS_ID))));
     }
-    ListingView.prototype.unfilteredRows = function (scope$$1, opts) {
+    ListingView.prototype.unfilteredRows = function (scope$$1) {
         var _this = this;
-        if (opts === void 0) { opts = {}; }
         if (!this.type)
             return Promise.resolve([]);
         return this.type
@@ -2313,9 +2312,7 @@ var ListingView = /** @class */ (function () {
             var listingPaths = without([_this.path], paths);
             _this.listings = listingPaths.map(function (path$$1) { return _this.childViews[path$$1] || (_this.childViews[path$$1] = new ListingView(path$$1, _this)); });
             if (!_this.listings.length) {
-                return scope$$1
-                    .get(ListingNode.soulFromPath(spec.indexer, _this.path))
-                    .then(_this.rowsFromNode);
+                return scope$$1.get(ListingNode.soulFromPath(spec.indexer, _this.path)).then(pipe(_this.rowsFromNode, of, _this.combineSourceRows));
             }
             return Promise.all(_this.listings.map(function (l) { return l.unfilteredRows(scope$$1); })).then(_this.combineSourceRows);
         })
@@ -2330,6 +2327,8 @@ var ListingView = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (this.spec.isIdSticky(id))
+                            return [2 /*return*/, true];
                         if (!(id in this.sourced))
                             return [2 /*return*/, false];
                         filterFn = ListingFilter.thingFilter(scope$$1, this.spec);
@@ -2360,7 +2359,7 @@ var ListingView = /** @class */ (function () {
     ListingView.prototype.ids = function (scope$$1, opts) {
         var _this = this;
         if (opts === void 0) { opts = {}; }
-        return this.unfilteredRows(scope$$1, opts).then(function (rows) {
+        return this.unfilteredRows(scope$$1).then(function (rows) {
             var stickyRows = map(function (id) { return [-1, id, -Infinity]; }, _this.spec.stickyIds);
             var filterFn = function (id) { return _this.checkId(scope$$1, id); };
             return ListingFilter.getFilteredIds(scope$$1, _this.spec, stickyRows.concat(rows), __assign({}, opts, { filterFn: filterFn }));

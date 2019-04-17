@@ -2300,9 +2300,8 @@
                 ? parent.combineSourceRows
                 : memoize(R.pipe(R.reduce(R.concat, []), ListingNode.sortRows, R.uniqBy(R.nth(ListingNode.POS_ID))));
         }
-        ListingView.prototype.unfilteredRows = function (scope, opts) {
+        ListingView.prototype.unfilteredRows = function (scope) {
             var _this = this;
-            if (opts === void 0) { opts = {}; }
             if (!this.type)
                 return Promise.resolve([]);
             return this.type
@@ -2313,9 +2312,7 @@
                 var listingPaths = R.without([_this.path], paths);
                 _this.listings = listingPaths.map(function (path) { return _this.childViews[path] || (_this.childViews[path] = new ListingView(path, _this)); });
                 if (!_this.listings.length) {
-                    return scope
-                        .get(ListingNode.soulFromPath(spec.indexer, _this.path))
-                        .then(_this.rowsFromNode);
+                    return scope.get(ListingNode.soulFromPath(spec.indexer, _this.path)).then(R.pipe(_this.rowsFromNode, R.of, _this.combineSourceRows));
                 }
                 return Promise.all(_this.listings.map(function (l) { return l.unfilteredRows(scope); })).then(_this.combineSourceRows);
             })
@@ -2330,6 +2327,8 @@
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
+                            if (this.spec.isIdSticky(id))
+                                return [2 /*return*/, true];
                             if (!(id in this.sourced))
                                 return [2 /*return*/, false];
                             filterFn = ListingFilter.thingFilter(scope, this.spec);
@@ -2360,7 +2359,7 @@
         ListingView.prototype.ids = function (scope, opts) {
             var _this = this;
             if (opts === void 0) { opts = {}; }
-            return this.unfilteredRows(scope, opts).then(function (rows) {
+            return this.unfilteredRows(scope).then(function (rows) {
                 var stickyRows = R.map(function (id) { return [-1, id, -Infinity]; }, _this.spec.stickyIds);
                 var filterFn = function (id) { return _this.checkId(scope, id); };
                 return ListingFilter.getFilteredIds(scope, _this.spec, stickyRows.concat(rows), __assign({}, opts, { filterFn: filterFn }));

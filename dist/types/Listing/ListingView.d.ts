@@ -13,7 +13,7 @@ export declare class ListingView {
         [id: string]: ListingNodeRow;
     };
     constructor(path: string, parent?: ListingView);
-    unfilteredRows(scope: GunScope, opts?: {}): Promise<ListingNodeRow[]>;
+    unfilteredRows(scope: GunScope): Promise<ListingNodeRow[]>;
     checkId(scope: GunScope, id: string): Promise<boolean>;
     ids(scope: GunScope, opts?: {}): Promise<string[]>;
 }
