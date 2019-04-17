@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, sortBy, includes, multiply, apply, juxt, find, uniq, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, uniq, pipe, match, mergeRight, identical, last, lte, gte, equals, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -2861,7 +2861,7 @@ var withListingMatch = function (path$$1, params) {
     };
 };
 var preloadListing = function (scope$$1, path$$1, params) { return __awaiter(_this$2, void 0, void 0, function () {
-    var match$$1, promise, _a, spec, ids, chatPath;
+    var match$$1, promise, _a, spec, ids, opIds, chatPath;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -2876,17 +2876,25 @@ var preloadListing = function (scope$$1, path$$1, params) { return __awaiter(_th
                 _a = (_b.sent()), spec = _a[0], ids = _a[1];
                 if (!spec)
                     spec = ListingSpec.fromSource('');
-                return [4 /*yield*/, Promise.all(ids.map(function (id) { return Query.thingForDisplay(scope$$1, id, spec.tabulator || Config.tabulator); }))];
+                opIds = pathOr([], ['filters', 'allow', 'ops'], spec);
+                if (!opIds.length) return [3 /*break*/, 3];
+                return [4 /*yield*/, Promise.all(opIds.map(function (id) {
+                        return Query.thingForDisplay(scope$$1, id, spec.tabulator || Config.tabulator);
+                    }))];
             case 2:
                 _b.sent();
-                if (!spec.chatTopic) return [3 /*break*/, 4];
-                chatPath = "/t/" + spec.chatTopic + "/chat";
-                if (!(chatPath !== path$$1)) return [3 /*break*/, 4];
-                return [4 /*yield*/, preloadListing(scope$$1, "/t/" + spec.chatTopic + "/chat", {})];
-            case 3:
+                _b.label = 3;
+            case 3: return [4 /*yield*/, Promise.all(ids.map(function (id) { return Query.thingForDisplay(scope$$1, id, spec.tabulator || Config.tabulator); }))];
+            case 4:
                 _b.sent();
-                _b.label = 4;
-            case 4: return [2 /*return*/, scope$$1.getCache()];
+                if (!spec.chatTopic) return [3 /*break*/, 6];
+                chatPath = "/t/" + spec.chatTopic + "/chat";
+                if (!(chatPath !== path$$1)) return [3 /*break*/, 6];
+                return [4 /*yield*/, preloadListing(scope$$1, "/t/" + spec.chatTopic + "/chat", {})];
+            case 5:
+                _b.sent();
+                _b.label = 6;
+            case 6: return [2 /*return*/, scope$$1.getCache()];
         }
     });
 }); };

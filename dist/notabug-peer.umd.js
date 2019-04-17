@@ -2861,7 +2861,7 @@
         };
     };
     var preloadListing = function (scope, path, params) { return __awaiter(_this$2, void 0, void 0, function () {
-        var match, promise, _a, spec, ids, chatPath;
+        var match, promise, _a, spec, ids, opIds, chatPath;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -2876,17 +2876,25 @@
                     _a = (_b.sent()), spec = _a[0], ids = _a[1];
                     if (!spec)
                         spec = ListingSpec.fromSource('');
-                    return [4 /*yield*/, Promise.all(ids.map(function (id) { return Query.thingForDisplay(scope, id, spec.tabulator || Config.tabulator); }))];
+                    opIds = R.pathOr([], ['filters', 'allow', 'ops'], spec);
+                    if (!opIds.length) return [3 /*break*/, 3];
+                    return [4 /*yield*/, Promise.all(opIds.map(function (id) {
+                            return Query.thingForDisplay(scope, id, spec.tabulator || Config.tabulator);
+                        }))];
                 case 2:
                     _b.sent();
-                    if (!spec.chatTopic) return [3 /*break*/, 4];
-                    chatPath = "/t/" + spec.chatTopic + "/chat";
-                    if (!(chatPath !== path)) return [3 /*break*/, 4];
-                    return [4 /*yield*/, preloadListing(scope, "/t/" + spec.chatTopic + "/chat", {})];
-                case 3:
+                    _b.label = 3;
+                case 3: return [4 /*yield*/, Promise.all(ids.map(function (id) { return Query.thingForDisplay(scope, id, spec.tabulator || Config.tabulator); }))];
+                case 4:
                     _b.sent();
-                    _b.label = 4;
-                case 4: return [2 /*return*/, scope.getCache()];
+                    if (!spec.chatTopic) return [3 /*break*/, 6];
+                    chatPath = "/t/" + spec.chatTopic + "/chat";
+                    if (!(chatPath !== path)) return [3 /*break*/, 6];
+                    return [4 /*yield*/, preloadListing(scope, "/t/" + spec.chatTopic + "/chat", {})];
+                case 5:
+                    _b.sent();
+                    _b.label = 6;
+                case 6: return [2 /*return*/, scope.getCache()];
             }
         });
     }); };

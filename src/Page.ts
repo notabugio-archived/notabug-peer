@@ -46,6 +46,14 @@ const preloadListing = async (scope: GunScope, path: string, params?: any) => {
   let [spec, ids]: [ListingSpecType, string[]] = (await promise) as [ListingSpecType, string[]];
 
   if (!spec) spec = ListingSpec.fromSource('');
+  const opIds = R.pathOr([], ['filters', 'allow', 'ops'], spec);
+  if (opIds.length) {
+    await Promise.all(
+      opIds.map((id: string) =>
+        Query.thingForDisplay(scope, id, spec.tabulator || Config.tabulator)
+      )
+    );
+  }
 
   await Promise.all(
     ids.map(id => Query.thingForDisplay(scope, id, spec.tabulator || Config.tabulator))
