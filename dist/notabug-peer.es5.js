@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, uniq, pipe, match, mergeRight, identical, last, lte, gte, equals, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, uniq, identical, last, lte, gte, equals, pipe, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -1766,6 +1766,8 @@ var getFilteredRows = function (scope$$1, spec, sortedRows, params) { return __a
 }); };
 var getFilteredIds = compose(function (x) { return x.then(map(nth(ListingNode.POS_ID))); }, getFilteredRows);
 var thingFilter = curry(function (scope$$1, spec, thingId) {
+    if (spec.isIdSticky(thingId))
+        return resolve(true);
     return Query.thingMeta(scope$$1, {
         tabulator: spec.tabulator,
         thingSoul: Schema.Thing.route.reverse({ thingId: thingId }),

@@ -1766,6 +1766,8 @@
     }); };
     var getFilteredIds = R.compose(function (x) { return x.then(R.map(R.nth(ListingNode.POS_ID))); }, getFilteredRows);
     var thingFilter = R.curry(function (scope, spec, thingId) {
+        if (spec.isIdSticky(thingId))
+            return gunScope.resolve(true);
         return Query.thingMeta(scope, {
             tabulator: spec.tabulator,
             thingSoul: Schema.Thing.route.reverse({ thingId: thingId }),

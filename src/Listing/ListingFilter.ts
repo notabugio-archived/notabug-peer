@@ -226,13 +226,16 @@ const getFilteredIds: (
 );
 
 const thingFilter = R.curry(
-  (scope, spec, thingId): Promise<boolean> =>
-    Query.thingMeta(scope, {
+  (scope, spec, thingId): Promise<boolean> => {
+    if (spec.isIdSticky(thingId)) return resolve(true);
+
+    return Query.thingMeta(scope, {
       tabulator: spec.tabulator,
       thingSoul: Schema.Thing.route.reverse({ thingId }),
       scores: ListingDataSource.needsScores(spec),
       data: ListingDataSource.needsData(spec)
-    }).then(spec.thingFilter)
+    }).then(spec.thingFilter);
+  }
 );
 
 export const ListingFilter = {

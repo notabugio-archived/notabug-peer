@@ -210,6 +210,8 @@ var getFilteredRows = function (scope, spec, sortedRows, params) { return __awai
 }); };
 var getFilteredIds = R.compose(function (x) { return x.then(R.map(R.nth(ListingNode_1.ListingNode.POS_ID))); }, getFilteredRows);
 var thingFilter = R.curry(function (scope, spec, thingId) {
+    if (spec.isIdSticky(thingId))
+        return gun_scope_1.resolve(true);
     return Query_1.Query.thingMeta(scope, {
         tabulator: spec.tabulator,
         thingSoul: Schema_1.Schema.Thing.route.reverse({ thingId: thingId }),
