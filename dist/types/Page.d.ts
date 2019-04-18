@@ -109,7 +109,7 @@ export declare const Page: {
             query?: {} | undefined;
         }) => {
             space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ListingSpecType>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
             preload: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
         };
     };

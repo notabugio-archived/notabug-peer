@@ -78,7 +78,7 @@ var withListingMatch = function (path, params) {
             ids: gun_scope_1.query(R.always(gun_scope_1.resolve([])))
         };
     }
-    var view = new Listing_1.ListingView(path);
+    var view = new Listing_1.ListingQuery(path);
     var realQuery = gun_scope_1.query(view.ids.bind(view), "ids:" + path);
     return {
         preload: function (scope) { return preloadListing(scope, path, params); },
@@ -172,9 +172,11 @@ var spaceThingComments = function (_a) {
                 thingId: opId,
                 sort: sort
             });
+            var view = new Listing_1.ListingQuery(listingPath);
+            var idsQuery = gun_scope_1.query(view.ids.bind(view), "ids:" + listingPath);
             return {
                 space: gun_scope_1.query(function (scope) { return Listing_1.Listing.specFromPath(scope, spacePath, queryParams); }, "spec:" + spacePath),
-                ids: gun_scope_1.query(function (scope) { return Listing_1.Listing.fromPath(scope, listingPath, queryParams); }, listingPath),
+                ids: idsQuery,
                 preload: gun_scope_1.query(function (scope) { return preloadListing(scope, listingPath, queryParams); })
             };
         } }));

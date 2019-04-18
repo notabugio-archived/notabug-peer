@@ -1,13 +1,13 @@
 /// <reference types="ramda" />
+import { ListingQuery } from './ListingQuery';
 export { ListingDataSource } from './ListingDataSource';
 export { ListingDefinition } from './ListingDefinition';
 export { ListingFilter } from './ListingFilter';
 export { ListingNode } from './ListingNode';
-export { ListingQuery } from './ListingQuery';
 export { ListingSort } from './ListingSort';
 export { ListingSpec } from './ListingSpec';
 export { ListingType } from './ListingType';
-export { ListingView } from './ListingView';
+export { ListingQuery } from './ListingQuery';
 export { SpaceSpec } from './SpaceSpec';
 export declare const Listing: {
     ListingNode: {
@@ -42,11 +42,10 @@ export declare const Listing: {
         fromSource: (source: string, ownerId?: string | undefined, spaceName?: string | undefined) => import("../types").ListingSpecType;
         getSource: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<string>;
     };
+    ListingQuery: typeof ListingQuery;
     isValidSort: (sort: string) => boolean;
     idsToSouls: (ids: string[]) => string[];
     get: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<any>;
-    fromSpec: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<{} | string[]>;
-    fromPath: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<any>;
     typeFromPath: (path: string) => any;
     sidebarFromPath: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<import("../types").ThingDataNodeType | null>;
     specFromPath: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<import("../types").ListingSpecType>;

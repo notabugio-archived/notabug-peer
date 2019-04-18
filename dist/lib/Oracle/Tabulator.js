@@ -154,7 +154,7 @@ var TabulatorQueue = /** @class */ (function (_super) {
             var votesUpMatch = Schema_1.Schema.ThingVotesUp.route.match(soul);
             var votesDownMatch = Schema_1.Schema.ThingVotesDown.route.match(soul);
             var allCommentsMatch = Schema_1.Schema.ThingAllComments.route.match(soul);
-            var commentsMatch = Schema_1.Schema.ThingAllComments.route.match(soul);
+            var commentsMatch = Schema_1.Schema.ThingComments.route.match(soul);
             var thingId = R.propOr('', 'thingId', thingMatch || votesUpMatch || votesDownMatch || allCommentsMatch || commentsMatch);
             return [thingId, !(votesUpMatch || votesDownMatch || allCommentsMatch || commentsMatch)];
         }), R.keysIn, R.propOr({}, 'put'))(msg);

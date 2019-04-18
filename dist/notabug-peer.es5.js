@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, find, uniq, identical, last, lte, gte, equals, pipe, of, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, pipe, of, find, uniq, identical, last, lte, gte, equals, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -1494,6 +1494,130 @@ var Authentication = {
     onLogin: onLogin
 };
 
+var tokenize = function (source) {
+    var tokenMap = (source || '').split('\n').reduce(function (def, line) {
+        var tokens = line
+            .trim()
+            .split(' ')
+            .map(trim)
+            .filter(function (x) { return x; });
+        if (!tokens.length)
+            return def;
+        return assocPath(tokens, {}, def);
+    }, {});
+    var isPresent = function (p) {
+        var check = p;
+        if (typeof p === 'string')
+            check = p.split(' ');
+        return check && path(check, tokenMap);
+    };
+    var getValues = function (p) { return keysIn(isPresent(p)); };
+    var getValue = function (p) { return getValues(p)[0] || null; };
+    var getLastValue = function (p) { return getValues(p).pop() || null; };
+    var getValueChain = function (p) {
+        var keys$$1 = typeof p === 'string' ? p.split(' ') : p;
+        var values$$1 = [];
+        var next = 'start';
+        while (next) {
+            next = getValue(keys$$1.concat(values$$1)) || '';
+            next && values$$1.push(next);
+        }
+        return values$$1;
+    };
+    var getPairs = function (p) {
+        var keys$$1 = typeof p === 'string' ? p.split(' ') : p;
+        return getValues(keys$$1).reduce(function (pairs, key) {
+            var val = getValue(keys$$1.concat([key]));
+            return pairs.concat([[key, val]]);
+        }, []);
+    };
+    return {
+        source: source,
+        isPresent: isPresent,
+        getValue: getValue,
+        getValues: getValues,
+        getLastValue: getLastValue,
+        getValueChain: getValueChain,
+        getPairs: getPairs
+    };
+};
+var Tokenizer = { tokenize: tokenize };
+
+var fromSource = function (source, ownerId, spaceName) {
+    var _a, _b, _c;
+    if (ownerId === void 0) { ownerId = ''; }
+    if (spaceName === void 0) { spaceName = ''; }
+    var tokenized = Tokenizer.tokenize(source);
+    var obj = __assign({}, tokenized);
+    var isPresent = tokenized.isPresent, getValue = tokenized.getValue, getValues = tokenized.getValues, getValueChain = tokenized.getValueChain, getPairs = tokenized.getPairs;
+    _a = getValueChain('sourced from page'), _b = _a[0], obj.fromPageAuthor = _b === void 0 ? ownerId : _b, _c = _a[1], obj.fromPageName = _c === void 0 ? spaceName ? "space:" + spaceName : undefined : _c;
+    obj.displayName = tokenized.getValue('name') || spaceName;
+    obj.indexer = getValue('tabulator') || Config.indexer;
+    obj.tabulator = getValue('tabulator') || obj.indexer;
+    obj.tabs = getPairs('tab');
+    obj.sort = getValue('sort');
+    // TODO: breaks with custom names
+    if (obj.sort === 'default')
+        obj.sort = getValue('tab');
+    obj.uniqueByContent = !!isPresent('unique by content');
+    obj.curators = getValues('curator');
+    obj.moderators = getValues('mod');
+    obj.includeRanks = !!isPresent('show ranks');
+    obj.stickyIds = getValues('sticky');
+    obj.isIdSticky = function (id) { return !!tokenized.isPresent(['sticky', id]); };
+    obj.isChat = !!isPresent('display as chat');
+    obj.submitTopics = getValues('submit to');
+    obj.submitTopic = getValue('submit to');
+    obj.chatTopic = getValue('chat in');
+    if (ownerId && spaceName) {
+        obj.spaceName = spaceName;
+        obj.owner = ownerId;
+        obj.useForComments = !tokenized.isPresent('comments leave space');
+        obj.basePath = "/user/" + ownerId + "/spaces/" + spaceName;
+        if (obj.submitTopic)
+            obj.submitPath = obj.basePath + "/submit";
+        obj.defaultTab = tokenized.getValue('tab');
+        obj.defaultTabPath = obj.defaultTab ? tokenized.getValue(['tab', obj.defaultTab]) : null;
+    }
+    obj.filters = {
+        functions: [],
+        allow: {
+            repliesTo: getValue('replies to author'),
+            type: getValue('type'),
+            ops: getValues('op'),
+            aliases: getValues('alias'),
+            authors: getValues('author'),
+            domains: getValues('domain'),
+            topics: getValues('topic'),
+            listings: getValues('listing'),
+            kinds: getValues('kind'),
+            anon: !isPresent('require signed'),
+            signed: !isPresent('require anon')
+        },
+        deny: {
+            aliases: getValues('ban alias'),
+            authors: getValues('ban author'),
+            domains: getValues('ban domain'),
+            topics: getValues('ban topic'),
+            anon: !!isPresent('require signed'),
+            signed: !!isPresent('require anon'),
+            tags: getPairs('can remove')
+        }
+    };
+    obj.voteFilters = {
+        functions: [],
+        upsMin: parseInt(getValue('ups above') || '', 10) || null,
+        upsMax: parseInt(getValue('ups below') || '', 10) || null,
+        downsMin: parseInt(getValue('downs above') || '', 10) || null,
+        downsMax: parseInt(getValue('downs below') || '', 10) || null,
+        scoreMin: parseInt(getValue('score above') || '', 10) || null,
+        scoreMax: parseInt(getValue('score below') || '', 10) || null
+    };
+    obj.censors = uniq(map(nth(1), obj.filters.deny.tags));
+    return obj;
+};
+var ListingDefinition = { fromSource: fromSource };
+
 var needsScores = function (definition) {
     return !!find(definition.isPresent, [
         'sort hot',
@@ -1782,141 +1906,101 @@ var ListingFilter = {
     thingFilter: thingFilter
 };
 
-var splitDomains = compose(sortBy(identity), filter(identity), map(trim), split('+'), toLower, defaultTo(''));
-var splitTopics = compose(ifElse(prop('length'), identity, always(['all'])), splitDomains);
-var withRoute = function (obj) { return assoc('route', new Route(obj.path), obj); };
-var Path = { splitDomains: splitDomains, splitTopics: splitTopics, withRoute: withRoute };
-
-var tokenize = function (source) {
-    var tokenMap = (source || '').split('\n').reduce(function (def, line) {
-        var tokens = line
-            .trim()
-            .split(' ')
-            .map(trim)
-            .filter(function (x) { return x; });
-        if (!tokens.length)
-            return def;
-        return assocPath(tokens, {}, def);
-    }, {});
-    var isPresent = function (p) {
-        var check = p;
-        if (typeof p === 'string')
-            check = p.split(' ');
-        return check && path(check, tokenMap);
-    };
-    var getValues = function (p) { return keysIn(isPresent(p)); };
-    var getValue = function (p) { return getValues(p)[0] || null; };
-    var getLastValue = function (p) { return getValues(p).pop() || null; };
-    var getValueChain = function (p) {
-        var keys$$1 = typeof p === 'string' ? p.split(' ') : p;
-        var values$$1 = [];
-        var next = 'start';
-        while (next) {
-            next = getValue(keys$$1.concat(values$$1)) || '';
-            next && values$$1.push(next);
-        }
-        return values$$1;
-    };
-    var getPairs = function (p) {
-        var keys$$1 = typeof p === 'string' ? p.split(' ') : p;
-        return getValues(keys$$1).reduce(function (pairs, key) {
-            var val = getValue(keys$$1.concat([key]));
-            return pairs.concat([[key, val]]);
-        }, []);
-    };
-    return {
-        source: source,
-        isPresent: isPresent,
-        getValue: getValue,
-        getValues: getValues,
-        getLastValue: getLastValue,
-        getValueChain: getValueChain,
-        getPairs: getPairs
-    };
-};
-var Tokenizer = { tokenize: tokenize };
-
-var fromSource = function (source, ownerId, spaceName) {
-    var _a, _b, _c;
-    if (ownerId === void 0) { ownerId = ''; }
-    if (spaceName === void 0) { spaceName = ''; }
-    var tokenized = Tokenizer.tokenize(source);
-    var obj = __assign({}, tokenized);
-    var isPresent = tokenized.isPresent, getValue = tokenized.getValue, getValues = tokenized.getValues, getValueChain = tokenized.getValueChain, getPairs = tokenized.getPairs;
-    _a = getValueChain('sourced from page'), _b = _a[0], obj.fromPageAuthor = _b === void 0 ? ownerId : _b, _c = _a[1], obj.fromPageName = _c === void 0 ? spaceName ? "space:" + spaceName : undefined : _c;
-    obj.displayName = tokenized.getValue('name') || spaceName;
-    obj.indexer = getValue('tabulator') || Config.indexer;
-    obj.tabulator = getValue('tabulator') || obj.indexer;
-    obj.tabs = getPairs('tab');
-    obj.sort = getValue('sort');
-    // TODO: breaks with custom names
-    if (obj.sort === 'default')
-        obj.sort = getValue('tab');
-    obj.uniqueByContent = !!isPresent('unique by content');
-    obj.curators = getValues('curator');
-    obj.moderators = getValues('mod');
-    obj.includeRanks = !!isPresent('show ranks');
-    obj.stickyIds = getValues('sticky');
-    obj.isIdSticky = function (id) { return !!tokenized.isPresent(['sticky', id]); };
-    obj.isChat = !!isPresent('display as chat');
-    obj.submitTopics = getValues('submit to');
-    obj.submitTopic = getValue('submit to');
-    obj.chatTopic = getValue('chat in');
-    if (ownerId && spaceName) {
-        obj.spaceName = spaceName;
-        obj.owner = ownerId;
-        obj.useForComments = !tokenized.isPresent('comments leave space');
-        obj.basePath = "/user/" + ownerId + "/spaces/" + spaceName;
-        if (obj.submitTopic)
-            obj.submitPath = obj.basePath + "/submit";
-        obj.defaultTab = tokenized.getValue('tab');
-        obj.defaultTabPath = obj.defaultTab ? tokenized.getValue(['tab', obj.defaultTab]) : null;
-    }
-    obj.filters = {
-        functions: [],
-        allow: {
-            repliesTo: getValue('replies to author'),
-            type: getValue('type'),
-            ops: getValues('op'),
-            aliases: getValues('alias'),
-            authors: getValues('author'),
-            domains: getValues('domain'),
-            topics: getValues('topic'),
-            listings: getValues('listing'),
-            kinds: getValues('kind'),
-            anon: !isPresent('require signed'),
-            signed: !isPresent('require anon')
-        },
-        deny: {
-            aliases: getValues('ban alias'),
-            authors: getValues('ban author'),
-            domains: getValues('ban domain'),
-            topics: getValues('ban topic'),
-            anon: !!isPresent('require signed'),
-            signed: !!isPresent('require anon'),
-            tags: getPairs('can remove')
-        }
-    };
-    obj.voteFilters = {
-        functions: [],
-        upsMin: parseInt(getValue('ups above') || '', 10) || null,
-        upsMax: parseInt(getValue('ups below') || '', 10) || null,
-        downsMin: parseInt(getValue('downs above') || '', 10) || null,
-        downsMax: parseInt(getValue('downs below') || '', 10) || null,
-        scoreMin: parseInt(getValue('score above') || '', 10) || null,
-        scoreMax: parseInt(getValue('score below') || '', 10) || null
-    };
-    obj.censors = uniq(map(nth(1), obj.filters.deny.tags));
-    return obj;
-};
-var ListingDefinition = { fromSource: fromSource };
-
 var fromSource$1 = compose(apply(mergeLeft), juxt([ListingFilter.fromDefinition, identity]), apply(assoc('dataSource')), juxt([ListingDataSource.fromDefinition, identity]), ListingDefinition.fromSource);
 var getSource = query(function (scope$$1, authorId, name, extra) {
     if (extra === void 0) { extra = ''; }
     return Query.wikiPage(scope$$1, authorId, name).then(compose(function (body) { return body + "\n# added by indexer\n" + (extra || '') + "\nsourced from page " + authorId + " " + name + "\n"; }, ThingDataNode.body));
 });
 var ListingSpec = { fromSource: fromSource$1, getSource: getSource };
+
+var _a$1 = [0, 1], POS_ID$1 = _a$1[0], POS_VAL$1 = _a$1[1];
+var toIds = map(nth(POS_ID$1));
+var sortItems = sortBy(nth(POS_VAL$1));
+var voteSort = function (fn) {
+    return query(function (scope$$1, thingId, spec) {
+        if (spec.isIdSticky(thingId))
+            return resolve(-Infinity);
+        if (includes(thingId, spec.filters.allow.ops))
+            return resolve(-Infinity);
+        return Query.thingMeta(scope$$1, {
+            tabulator: spec.tabulator,
+            scores: true,
+            thingSoul: Schema.Thing.route.reverse({ thingId: thingId })
+        }).then(fn);
+    });
+};
+var timeSort = function (fn) {
+    return query(function (scope$$1, thingId, spec) {
+        return Query.thingMeta(scope$$1, {
+            tabulator: spec.tabulator,
+            thingSoul: Schema.Thing.route.reverse({ thingId: thingId })
+        }).then(fn);
+    });
+};
+var sorts = {
+    new: timeSort(compose(multiply(-1), parseInt, propOr(0, 'timestamp'))),
+    top: voteSort(compose(function (x) { return -1 * parseInt(x, 10); }, pathOr('0', ['votes', 'score']))),
+    comments: voteSort(compose(function (x) { return -1 * parseFloat(x); }, pathOr('0', ['votes', 'comment']))),
+    discussed: voteSort(function (thing) {
+        var timestamp = parseInt(propOr('', 'timestamp', thing), 10);
+        var score = parseInt(pathOr(0, ['votes', 'comment'], thing), 10);
+        var seconds = timestamp / 1000 - 1134028003;
+        var order = Math.log10(Math.max(Math.abs(score), 1));
+        if (!score)
+            return 1000000000 - seconds;
+        return -1 * (order + seconds / 45000);
+    }),
+    hot: voteSort(function (thing) {
+        var timestamp = parseInt(propOr('', 'timestamp', thing), 10);
+        var score = parseInt(pathOr(0, ['votes', 'score'], thing), 10);
+        var seconds = timestamp / 1000 - 1134028003;
+        var order = Math.log10(Math.max(Math.abs(score), 1));
+        var sign = 0;
+        if (score > 0) {
+            sign = 1;
+        }
+        else if (score < 0) {
+            sign = -1;
+        }
+        return -1 * (sign * order + seconds / 45000);
+    }),
+    best: voteSort(function (thing) {
+        var ups = parseInt(pathOr(0, ['votes', 'up'], thing), 10);
+        var downs = parseInt(pathOr(0, ['votes', 'down'], thing), 10);
+        var n = ups + downs;
+        if (n === 0)
+            return 0;
+        var z = 1.281551565545; // 80% confidence
+        var p = ups / n;
+        var left = p + (1 / (2 * n)) * z * z;
+        var right = z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n));
+        var under = 1 + (1 / n) * z * z;
+        return -1 * ((left - right) / under);
+    }),
+    controversial: voteSort(function (thing) {
+        var ups = parseInt(pathOr(0, ['votes', 'up'], thing), 10);
+        var downs = parseInt(pathOr(0, ['votes', 'down'], thing), 10);
+        if (ups <= 0 || downs <= 0)
+            return 0;
+        var magnitude = ups + downs;
+        var balance = ups > downs ? downs / ups : ups / downs;
+        return -1 * Math.pow(magnitude, balance);
+    })
+};
+var isValidSort = function (sort) { return !!(sort in sorts); };
+var ListingSort = {
+    POS_ID: POS_ID$1,
+    POS_VAL: POS_VAL$1,
+    sorts: sorts,
+    isValidSort: isValidSort,
+    toIds: toIds,
+    sortItems: sortItems
+};
+
+var splitDomains = compose(sortBy(identity), filter(identity), map(trim), split('+'), toLower, defaultTo(''));
+var splitTopics = compose(ifElse(prop('length'), identity, always(['all'])), splitDomains);
+var withRoute = function (obj) { return assoc('route', new Route(obj.path), obj); };
+var Path = { splitDomains: splitDomains, splitTopics: splitTopics, withRoute: withRoute };
 
 var path$1 = '/t/:topic/:sort';
 var tabs = ['hot', 'new', 'discussed', 'controversial', 'top', 'firehose'];
@@ -2171,124 +2255,8 @@ var ListingType = __assign({}, types, { types: types,
     sidebarFromPath: sidebarFromPath,
     specFromPath: specFromPath });
 
-var read$1 = query(function (scope$$1, spec, opts) {
-    if (opts === void 0) { opts = {}; }
-    var filterFn = ListingFilter.thingFilter(scope$$1, spec);
-    var paths = pathOr([], ['dataSource', 'listingPaths'], spec);
-    var stickyRows = map(function (id) { return [-1, id, -Infinity]; }, spec.stickyIds);
-    var souls = map(ListingNode.soulFromPath(opts.indexer || spec.indexer), paths);
-    return ListingNode.rowsFromSouls(scope$$1, souls).then(function (rows) {
-        return ListingFilter.getFilteredIds(scope$$1, spec, stickyRows.concat(rows), __assign({}, opts, { filterFn: filterFn }));
-    });
-});
-var fromSpec = query(function (scope$$1, spec, opts) {
-    if (opts === void 0) { opts = {}; }
-    return read$1(scope$$1, spec, opts);
-});
-var fromPath$1 = query(function (scope$$1, path$$1, opts) {
-    var type = ListingType.fromPath(path$$1);
-    if (!type)
-        return Promise.resolve([]);
-    return type.getSpec(scope$$1, type.match).then(function (spec) {
-        if (spec.hasIndexer && !opts.calculate) {
-            if (!type || !type.read)
-                return ListingNode.read(scope$$1, path$$1, opts);
-            return type.read(scope$$1, type.match, opts);
-        }
-        return fromSpec(scope$$1, spec, opts);
-    });
-});
-var ListingQuery = {
-    fromSpec: fromSpec,
-    fromPath: fromPath$1
-};
-
-var _a$1 = [0, 1], POS_ID$1 = _a$1[0], POS_VAL$1 = _a$1[1];
-var toIds = map(nth(POS_ID$1));
-var sortItems = sortBy(nth(POS_VAL$1));
-var voteSort = function (fn) {
-    return query(function (scope$$1, thingId, spec) {
-        if (spec.isIdSticky(thingId))
-            return resolve(-Infinity);
-        if (includes(thingId, spec.filters.allow.ops))
-            return resolve(-Infinity);
-        return Query.thingMeta(scope$$1, {
-            tabulator: spec.tabulator,
-            scores: true,
-            thingSoul: Schema.Thing.route.reverse({ thingId: thingId })
-        }).then(fn);
-    });
-};
-var timeSort = function (fn) {
-    return query(function (scope$$1, thingId, spec) {
-        return Query.thingMeta(scope$$1, {
-            tabulator: spec.tabulator,
-            thingSoul: Schema.Thing.route.reverse({ thingId: thingId })
-        }).then(fn);
-    });
-};
-var sorts = {
-    new: timeSort(compose(multiply(-1), parseInt, propOr(0, 'timestamp'))),
-    top: voteSort(compose(function (x) { return -1 * parseInt(x, 10); }, pathOr('0', ['votes', 'score']))),
-    comments: voteSort(compose(function (x) { return -1 * parseFloat(x); }, pathOr('0', ['votes', 'comment']))),
-    discussed: voteSort(function (thing) {
-        var timestamp = parseInt(propOr('', 'timestamp', thing), 10);
-        var score = parseInt(pathOr(0, ['votes', 'comment'], thing), 10);
-        var seconds = timestamp / 1000 - 1134028003;
-        var order = Math.log10(Math.max(Math.abs(score), 1));
-        if (!score)
-            return 1000000000 - seconds;
-        return -1 * (order + seconds / 45000);
-    }),
-    hot: voteSort(function (thing) {
-        var timestamp = parseInt(propOr('', 'timestamp', thing), 10);
-        var score = parseInt(pathOr(0, ['votes', 'score'], thing), 10);
-        var seconds = timestamp / 1000 - 1134028003;
-        var order = Math.log10(Math.max(Math.abs(score), 1));
-        var sign = 0;
-        if (score > 0) {
-            sign = 1;
-        }
-        else if (score < 0) {
-            sign = -1;
-        }
-        return -1 * (sign * order + seconds / 45000);
-    }),
-    best: voteSort(function (thing) {
-        var ups = parseInt(pathOr(0, ['votes', 'up'], thing), 10);
-        var downs = parseInt(pathOr(0, ['votes', 'down'], thing), 10);
-        var n = ups + downs;
-        if (n === 0)
-            return 0;
-        var z = 1.281551565545; // 80% confidence
-        var p = ups / n;
-        var left = p + (1 / (2 * n)) * z * z;
-        var right = z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n));
-        var under = 1 + (1 / n) * z * z;
-        return -1 * ((left - right) / under);
-    }),
-    controversial: voteSort(function (thing) {
-        var ups = parseInt(pathOr(0, ['votes', 'up'], thing), 10);
-        var downs = parseInt(pathOr(0, ['votes', 'down'], thing), 10);
-        if (ups <= 0 || downs <= 0)
-            return 0;
-        var magnitude = ups + downs;
-        var balance = ups > downs ? downs / ups : ups / downs;
-        return -1 * Math.pow(magnitude, balance);
-    })
-};
-var isValidSort = function (sort) { return !!(sort in sorts); };
-var ListingSort = {
-    POS_ID: POS_ID$1,
-    POS_VAL: POS_VAL$1,
-    sorts: sorts,
-    isValidSort: isValidSort,
-    toIds: toIds,
-    sortItems: sortItems
-};
-
-var ListingView = /** @class */ (function () {
-    function ListingView(path$$1, parent) {
+var ListingQuery = /** @class */ (function () {
+    function ListingQuery(path$$1, parent) {
         this.listings = [];
         this.viewCache = parent ? parent.viewCache : {};
         this.sourced = {};
@@ -2300,7 +2268,7 @@ var ListingView = /** @class */ (function () {
             ? parent.combineSourceRows
             : memoize(pipe(reduce(concat, []), ListingNode.sortRows, uniqBy(nth(ListingNode.POS_ID))));
     }
-    ListingView.prototype.unfilteredRows = function (scope$$1) {
+    ListingQuery.prototype.unfilteredRows = function (scope$$1) {
         var _this = this;
         if (!this.type)
             return Promise.resolve([]);
@@ -2310,7 +2278,7 @@ var ListingView = /** @class */ (function () {
             _this.spec = spec;
             var paths = pathOr([], ['dataSource', 'listingPaths'], spec);
             var listingPaths = without([_this.path], paths);
-            _this.listings = listingPaths.map(function (path$$1) { return _this.viewCache[path$$1] || (_this.viewCache[path$$1] = new ListingView(path$$1, _this)); });
+            _this.listings = listingPaths.map(function (path$$1) { return _this.viewCache[path$$1] || (_this.viewCache[path$$1] = new ListingQuery(path$$1, _this)); });
             if (!_this.listings.length) {
                 return scope$$1.get(ListingNode.soulFromPath(spec.indexer, _this.path)).then(pipe(_this.rowsFromNode, of, _this.combineSourceRows));
             }
@@ -2321,7 +2289,7 @@ var ListingView = /** @class */ (function () {
             return rows;
         });
     };
-    ListingView.prototype.checkId = function (scope$$1, id) {
+    ListingQuery.prototype.checkId = function (scope$$1, id) {
         return __awaiter(this, void 0, void 0, function () {
             var filterFn, listings, i;
             return __generator(this, function (_a) {
@@ -2356,7 +2324,7 @@ var ListingView = /** @class */ (function () {
             });
         });
     };
-    ListingView.prototype.ids = function (scope$$1, opts) {
+    ListingQuery.prototype.ids = function (scope$$1, opts) {
         var _this = this;
         if (opts === void 0) { opts = {}; }
         return this.unfilteredRows(scope$$1).then(function (rows) {
@@ -2365,11 +2333,12 @@ var ListingView = /** @class */ (function () {
             return ListingFilter.getFilteredIds(scope$$1, _this.spec, stickyRows.concat(rows), __assign({}, opts, { filterFn: filterFn }));
         });
     };
-    return ListingView;
+    return ListingQuery;
 }());
 
 var Listing = __assign({}, ListingType.types, { ListingNode: ListingNode,
-    ListingSpec: ListingSpec, isValidSort: ListingSort.isValidSort, idsToSouls: ListingNode.idsToSouls, get: ListingNode.get, fromSpec: ListingQuery.fromSpec, fromPath: ListingQuery.fromPath, typeFromPath: ListingType.fromPath, sidebarFromPath: ListingType.sidebarFromPath, specFromPath: ListingType.specFromPath });
+    ListingSpec: ListingSpec,
+    ListingQuery: ListingQuery, isValidSort: ListingSort.isValidSort, idsToSouls: ListingNode.idsToSouls, get: ListingNode.get, typeFromPath: ListingType.fromPath, sidebarFromPath: ListingType.sidebarFromPath, specFromPath: ListingType.specFromPath });
 
 var ThingQueue = /** @class */ (function () {
     function ThingQueue(peer, config, scopeOpts) {
@@ -2758,7 +2727,7 @@ var TabulatorQueue = /** @class */ (function (_super) {
             var votesUpMatch = Schema.ThingVotesUp.route.match(soul);
             var votesDownMatch = Schema.ThingVotesDown.route.match(soul);
             var allCommentsMatch = Schema.ThingAllComments.route.match(soul);
-            var commentsMatch = Schema.ThingAllComments.route.match(soul);
+            var commentsMatch = Schema.ThingComments.route.match(soul);
             var thingId = propOr('', 'thingId', thingMatch || votesUpMatch || votesDownMatch || allCommentsMatch || commentsMatch);
             return [thingId, !(votesUpMatch || votesDownMatch || allCommentsMatch || commentsMatch)];
         }), keysIn, propOr({}, 'put'))(msg);
@@ -2849,7 +2818,7 @@ var withListingMatch = function (path$$1, params) {
             ids: query(always(resolve([])))
         };
     }
-    var view = new ListingView(path$$1);
+    var view = new ListingQuery(path$$1);
     var realQuery = query(view.ids.bind(view), "ids:" + path$$1);
     return {
         preload: function (scope$$1) { return preloadListing(scope$$1, path$$1, params); },
@@ -2943,9 +2912,11 @@ var spaceThingComments = function (_a) {
                 thingId: opId,
                 sort: sort
             });
+            var view = new ListingQuery(listingPath);
+            var idsQuery = query(view.ids.bind(view), "ids:" + listingPath);
             return {
                 space: query(function (scope$$1) { return Listing.specFromPath(scope$$1, spacePath, queryParams); }, "spec:" + spacePath),
-                ids: query(function (scope$$1) { return Listing.fromPath(scope$$1, listingPath, queryParams); }, listingPath),
+                ids: idsQuery,
                 preload: query(function (scope$$1) { return preloadListing(scope$$1, listingPath, queryParams); })
             };
         } }));

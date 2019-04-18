@@ -71,7 +71,7 @@ class TabulatorQueue extends ThingQueue {
         const votesUpMatch = Schema.ThingVotesUp.route.match(soul);
         const votesDownMatch = Schema.ThingVotesDown.route.match(soul);
         const allCommentsMatch = Schema.ThingAllComments.route.match(soul);
-        const commentsMatch = Schema.ThingAllComments.route.match(soul);
+        const commentsMatch = Schema.ThingComments.route.match(soul);
         const thingId: string = R.propOr(
           '',
           'thingId',

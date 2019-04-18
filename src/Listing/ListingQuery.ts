@@ -1,40 +1,97 @@
 import * as R from 'ramda';
-import { query } from 'gun-scope';
+import memoize from 'fast-memoize';
+import { ListingSpecType, ListingNodeRow, GunScope, ListingNodeType } from '../types';
 import { ListingNode } from './ListingNode';
 import { ListingFilter } from './ListingFilter';
 import { ListingType } from './ListingType';
-import { ListingSpecType, ListingNodeRow } from '../types';
+import { ListingSpec } from './ListingSpec';
 
-const read = query((scope, spec, opts = {}) => {
-  const filterFn = ListingFilter.thingFilter(scope, spec);
-  const paths: string[] = R.pathOr([], ['dataSource', 'listingPaths'], spec);
-  const stickyRows: ListingNodeRow[] = R.map(id => [-1, id, -Infinity], spec.stickyIds);
-  const souls = R.map(ListingNode.soulFromPath(opts.indexer || spec.indexer), paths);
+export class ListingQuery {
+  path: string;
+  type: any;
+  spec: ListingSpecType;
+  rowsFromNode: (node: ListingNodeType) => ListingNodeRow[];
+  combineSourceRows: (rowsSets: ListingNodeRow[][]) => ListingNodeRow[];
+  viewCache: { [soul: string]: ListingQuery };
+  listings: ListingQuery[];
+  sourced: { [id: string]: ListingNodeRow };
 
-  return ListingNode.rowsFromSouls(scope, souls).then(rows =>
-    ListingFilter.getFilteredIds(scope, spec, [...stickyRows, ...rows], {
-      ...opts,
-      filterFn
-    })
-  );
-});
+  constructor(path: string, parent?: ListingQuery) {
+    this.listings = [];
+    this.viewCache = parent ? parent.viewCache : {};
+    this.sourced = {};
+    this.path = path;
+    this.type = ListingType.fromPath(path);
+    this.spec = ListingSpec.fromSource('');
+    this.rowsFromNode = parent ? parent.rowsFromNode : memoize(ListingNode.rows);
+    this.combineSourceRows = parent
+      ? parent.combineSourceRows
+      : memoize(
+          R.pipe(
+            R.reduce(
+              R.concat as (a: ListingNodeRow[], b: ListingNodeRow[]) => ListingNodeRow[],
+              [] as ListingNodeRow[]
+            ),
+            ListingNode.sortRows,
+            R.uniqBy(R.nth(ListingNode.POS_ID))
+          )
+        );
+  }
 
-const fromSpec = query((scope, spec, opts = {}) => read(scope, spec, opts));
+  unfilteredRows(scope: GunScope): Promise<ListingNodeRow[]> {
+    if (!this.type) return Promise.resolve([]);
+    return this.type
+      .getSpec(scope, this.type.match)
+      .then((spec: ListingSpecType) => {
+        this.spec = spec;
+        const paths = R.pathOr([], ['dataSource', 'listingPaths'], spec);
+        const listingPaths = R.without([this.path], paths);
+        this.listings = listingPaths.map(
+          path => this.viewCache[path] || (this.viewCache[path] = new ListingQuery(path, this))
+        );
+        if (!this.listings.length) {
+          return scope.get(ListingNode.soulFromPath(spec.indexer, this.path)).then(
+            R.pipe(
+              this.rowsFromNode,
+              R.of,
+              this.combineSourceRows
+            )
+          );
+        }
+        return Promise.all<ListingNodeRow[]>(this.listings.map(l => l.unfilteredRows(scope))).then(
+          this.combineSourceRows
+        );
+      })
+      .then((rows: ListingNodeRow[]) => {
+        this.sourced = R.indexBy(R.nth(ListingNode.POS_ID) as (row: any) => string, rows);
+        return rows;
+      });
+  }
 
-const fromPath = query((scope, path, opts) => {
-  const type = ListingType.fromPath(path);
+  async checkId(scope: GunScope, id: string): Promise<boolean> {
+    if (this.spec.isIdSticky(id)) return true;
+    if (!(id in this.sourced)) return false;
+    const filterFn = ListingFilter.thingFilter(scope, this.spec);
+    if (!(await filterFn(id))) return false;
 
-  if (!type) return Promise.resolve([]);
-  return type.getSpec(scope, type.match).then((spec: ListingSpecType) => {
-    if (spec.hasIndexer && !opts.calculate) {
-      if (!type || !type.read) return ListingNode.read(scope, path, opts);
-      return type.read(scope, type.match, opts);
+    const listings = this.listings.slice();
+    if (!listings.length) return true;
+    for (let i = 0; i < listings.length; i++) {
+      if (await listings[i].checkId(scope, id)) return true;
     }
-    return fromSpec(scope, spec, opts);
-  });
-});
 
-export const ListingQuery = {
-  fromSpec,
-  fromPath
-};
+    return false;
+  }
+
+  ids(scope: GunScope, opts = {}) {
+    return this.unfilteredRows(scope).then(rows => {
+      const stickyRows: ListingNodeRow[] = R.map(id => [-1, id, -Infinity], this.spec.stickyIds);
+      const filterFn = (id: string) => this.checkId(scope, id);
+
+      return ListingFilter.getFilteredIds(scope, this.spec, [...stickyRows, ...rows], {
+        ...opts,
+        filterFn
+      });
+    });
+  }
+}
