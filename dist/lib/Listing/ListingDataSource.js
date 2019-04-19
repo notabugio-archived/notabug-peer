@@ -55,7 +55,7 @@ var domainSource = function (definition) {
 var authorSource = function (definition) {
     var sort = definition.sort;
     var authorIds = R.pathOr([], ['filters', 'allow', 'authors'], definition);
-    var type = R.path(['filters', 'allow', 'type'], definition);
+    var type = R.path(['filters', 'allow', 'type'], definition) || 'overview';
     if (!authorIds.length)
         return topicSource(definition);
     var listingPaths = R.map(function (id) { return "/user/" + id + "/" + type + "/" + sort; }, authorIds);

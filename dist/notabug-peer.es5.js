@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, pipe, of, find, uniq, identical, last, lte, gte, equals, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, apply, juxt, identity, sortBy, includes, multiply, slice, filter, sortWith, ascend, cond, isNil, T, addIndex, indexBy, concat, pipe, of, find, uniq, identical, last, lte, gte, equals, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -1672,7 +1672,7 @@ var domainSource = function (definition) {
 var authorSource = function (definition) {
     var sort = definition.sort;
     var authorIds = pathOr([], ['filters', 'allow', 'authors'], definition);
-    var type = path(['filters', 'allow', 'type'], definition);
+    var type = path(['filters', 'allow', 'type'], definition) || 'overview';
     if (!authorIds.length)
         return topicSource(definition);
     var listingPaths = map(function (id) { return "/user/" + id + "/" + type + "/" + sort; }, authorIds);

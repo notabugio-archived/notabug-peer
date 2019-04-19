@@ -61,7 +61,7 @@ const domainSource = (definition: ListingDefinitionType) => {
 const authorSource = (definition: ListingDefinitionType) => {
   const { sort } = definition;
   const authorIds = R.pathOr([], ['filters', 'allow', 'authors'], definition);
-  const type = R.path(['filters', 'allow', 'type'], definition);
+  const type = R.path(['filters', 'allow', 'type'], definition) || 'overview';
 
   if (!authorIds.length) return topicSource(definition);
   const listingPaths = R.map(id => `/user/${id}/${type}/${sort}`, authorIds);
