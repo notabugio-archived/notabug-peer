@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, apply, juxt, identity, sortBy, includes, multiply, slice, filter, sortWith, ascend, cond, isNil, T, addIndex, indexBy, concat, pipe, of, find, uniq, identical, last, lte, gte, equals, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, pipe, of, uniq, find, identical, last, lte, gte, equals, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -1420,7 +1420,7 @@ var wikiPageId = query(function (scope$$1, authorId, name) {
 }, 'wikiPageId');
 var wikiPage = query(function (scope$$1, authorId, name) {
     return wikiPageId(scope$$1, authorId, name)
-        .then(function (id) { return id && thingForDisplay(scope$$1, id); })
+        .then(function (id) { return id && thingForDisplay(scope$$1, id, Config.tabulator); })
         .then(propOr(null, 'data'));
 });
 var userMeta = query(function (scope$$1, id) {

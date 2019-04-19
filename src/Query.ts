@@ -122,7 +122,7 @@ const wikiPageId = query((scope, authorId, name) => {
 
 const wikiPage = query<ThingDataNodeType | null>((scope, authorId, name) =>
   wikiPageId(scope, authorId, name)
-    .then(id => id && thingForDisplay(scope, id))
+    .then(id => id && thingForDisplay(scope, id, Config.tabulator))
     .then(R.propOr(null, 'data') as (x: any) => ThingDataNodeType | null)
 );
 

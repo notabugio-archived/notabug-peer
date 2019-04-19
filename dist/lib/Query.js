@@ -108,7 +108,7 @@ var wikiPageId = gun_scope_1.query(function (scope, authorId, name) {
 }, 'wikiPageId');
 var wikiPage = gun_scope_1.query(function (scope, authorId, name) {
     return wikiPageId(scope, authorId, name)
-        .then(function (id) { return id && thingForDisplay(scope, id); })
+        .then(function (id) { return id && thingForDisplay(scope, id, Config_1.Config.tabulator); })
         .then(R.propOr(null, 'data'));
 });
 var userMeta = gun_scope_1.query(function (scope, id) {

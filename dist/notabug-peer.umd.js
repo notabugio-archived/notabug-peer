@@ -1420,7 +1420,7 @@
     }, 'wikiPageId');
     var wikiPage = gunScope.query(function (scope, authorId, name) {
         return wikiPageId(scope, authorId, name)
-            .then(function (id) { return id && thingForDisplay(scope, id); })
+            .then(function (id) { return id && thingForDisplay(scope, id, Config.tabulator); })
             .then(R.propOr(null, 'data'));
     });
     var userMeta = gunScope.query(function (scope, id) {
