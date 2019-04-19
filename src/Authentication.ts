@@ -5,21 +5,19 @@ const signup = R.curry(
     new Promise((ok, fail) => {
       if (peer && peer.gun && peer.gun.user) {
         const user = peer.gun.user();
-        ok(
-          user.create(
-            username,
-            password,
-            (ack: any) => {
-              if (ack.err) {
-                fail(ack.err);
-                user.leave();
-                peer.gun.user().leave();
-              } else {
-                peer.login(username, password).then(ok);
-              }
-            },
-            opts
-          )
+        user.create(
+          username,
+          password,
+          (ack: any) => {
+            if (ack.err) {
+              fail(ack.err);
+              user.leave();
+              peer.gun.user().leave();
+            } else {
+              peer.login(username, password).then(ok);
+            }
+          },
+          opts
         );
       } else {
         fail('SEA is not loaded');

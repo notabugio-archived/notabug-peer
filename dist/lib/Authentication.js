@@ -6,7 +6,7 @@ var signup = R.curry(function (peer, username, password, opts) {
     return new Promise(function (ok, fail) {
         if (peer && peer.gun && peer.gun.user) {
             var user_1 = peer.gun.user();
-            ok(user_1.create(username, password, function (ack) {
+            user_1.create(username, password, function (ack) {
                 if (ack.err) {
                     fail(ack.err);
                     user_1.leave();
@@ -15,7 +15,7 @@ var signup = R.curry(function (peer, username, password, opts) {
                 else {
                     peer.login(username, password).then(ok);
                 }
-            }, opts));
+            }, opts);
         }
         else {
             fail('SEA is not loaded');
