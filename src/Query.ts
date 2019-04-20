@@ -55,11 +55,11 @@ const thingScores = query((scope, thingId, tabulator = '') => {
       })
     )
     .then();
-});
+}, 'thingScores');
 
 const thingData = query<ThingDataNodeType | null>((scope, thingId) => {
   return thingId ? scope.get(Schema.Thing.route.reverse({ thingId })).get('data') : resolve(null);
-});
+}, 'thingData');
 
 const thingMeta = query<CombinedThingType | null>(
   (scope, { thingSoul, tabulator, data = false, scores = false }) => {
@@ -75,22 +75,6 @@ const thingMeta = query<CombinedThingType | null>(
       return { ...meta, votes, data };
     });
   }
-);
-
-const thingForDisplay = query(
-  (scope, thingId, tabulator = null) =>
-    Promise.all([thingData(scope, thingId), thingScores(scope, thingId, tabulator)]).then(
-      ([data, scores]) => {
-        const opId = ThingDataNode.opId(data);
-        if (!opId) return { data, scores };
-        return thingData(scope, opId).then(opData => ({
-          data,
-          scores,
-          opData
-        }));
-      }
-    ),
-  'thing'
 );
 
 const multiThingMeta = query((scope, params) =>
@@ -114,6 +98,7 @@ const userPages = query(
 
 const wikiPageId = query((scope, authorId, name) => {
   if (!authorId || !name) return resolve(null);
+
   return scope
     .get(Schema.AuthorPages.route.reverse({ authorId }))
     .get(name)
@@ -121,9 +106,7 @@ const wikiPageId = query((scope, authorId, name) => {
 }, 'wikiPageId');
 
 const wikiPage = query<ThingDataNodeType | null>((scope, authorId, name) =>
-  wikiPageId(scope, authorId, name)
-    .then(id => id && thingForDisplay(scope, id, Config.tabulator))
-    .then(R.propOr(null, 'data') as (x: any) => ThingDataNodeType | null)
+  wikiPageId(scope, authorId, name).then(id => id && thingData(scope, id))
 );
 
 const userMeta = query((scope, id) => {
@@ -142,7 +125,6 @@ export const Query = {
   thingScores,
   thingData,
   thingDataFromSouls,
-  thingForDisplay,
   userPages,
   wikiPageId,
   wikiPage,

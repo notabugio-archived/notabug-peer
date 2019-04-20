@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, sortBy, includes, multiply, apply, juxt, identity, slice, filter, sortWith, ascend, cond, isNil, T, addIndex, indexBy, concat, uniq, find, identical, last, lte, gte, equals, match, mergeRight, pipe, of, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, pipe, equals, of, find, pathEq, identical, last, lte, gte, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -772,12 +772,15 @@ var initAjv$1 = compose(function (ajv) {
     });
     return ajv;
 }, initAjv);
-var suppressor = createSuppressor({
-    definitions: Schema.definitions,
-    init: initAjv$1
-});
+var create = function () {
+    return createSuppressor({
+        definitions: Schema.definitions,
+        init: initAjv$1
+    });
+};
 var gunWireInput = curry(function (peer, context) {
-    return context.on('in', function wireInput(msg) {
+    var suppressor = create();
+    context.on('in', function wireInput(msg) {
         var _this = this;
         var _ = msg['_'];
         delete msg['_'];
@@ -797,6 +800,7 @@ var gunWireInput = curry(function (peer, context) {
     });
 });
 var Validation = {
+    createSuppressor: create,
     isLegacyThing: isLegacyThing,
     thingHashMatchesSoul: thingHashMatchesSoul,
     signedThingDataMatches: signedThingDataMatches,
@@ -806,7 +810,6 @@ var Validation = {
     isVoteValid: isVoteValid,
     keysAreProofsOfWork: keysAreProofsOfWork,
     initAjv: initAjv$1,
-    suppressor: suppressor,
     gunWireInput: gunWireInput
 };
 
@@ -1022,6 +1025,106 @@ var ListingNode = {
     read: read,
     diff: diff,
     unionRows: unionRows
+};
+
+var thing = query(function (scope$$1, thingSoul) {
+    return scope$$1.get(thingSoul).then(function (meta) {
+        if (!meta || !meta.id)
+            return null;
+        var result = {
+            id: meta.id,
+            timestamp: parseFloat(meta.timestamp)
+        };
+        var replyToSoul = pathOr('', ['replyTo', '#'], meta);
+        var opSoul = pathOr('', ['op', '#'], meta);
+        var opId = propOr('', 'thingId', opSoul && Schema.Thing.route.match(opSoul));
+        var replyToId = propOr('', 'thingId', replyToSoul && Schema.Thing.route.match(replyToSoul));
+        if (opId)
+            result.opId = opId;
+        if (replyToId)
+            result.replyToId = replyToId;
+        return result;
+    });
+});
+var thingDataFromSouls = curry(function (scope$$1, souls) {
+    var ids = ListingNode.soulsToIds(souls || []);
+    return all(map(function (id) { return thingData(scope$$1, id).then(function (data) { return [id, data]; }); }, ids)).then(function (pairs) {
+        return pairs.reduce(function (res, _a) {
+            var id = _a[0], data = _a[1];
+            return assoc(id, data, res);
+        }, {});
+    });
+});
+var thingScores = query(function (scope$$1, thingId, tabulator) {
+    if (tabulator === void 0) { tabulator = ''; }
+    if (!thingId)
+        return resolve(null);
+    return scope$$1
+        .get(Schema.ThingVoteCounts.route.reverse({
+        thingId: thingId,
+        tabulator: tabulator || Config.tabulator
+    }))
+        .then();
+}, 'thingScores');
+var thingData = query(function (scope$$1, thingId) {
+    return thingId ? scope$$1.get(Schema.Thing.route.reverse({ thingId: thingId })).get('data') : resolve(null);
+}, 'thingData');
+var thingMeta = query(function (scope$$1, _a) {
+    var thingSoul = _a.thingSoul, tabulator = _a.tabulator, _b = _a.data, data = _b === void 0 ? false : _b, _c = _a.scores, scores = _c === void 0 ? false : _c;
+    if (!thingSoul)
+        return resolve(null);
+    var id = ListingNode.soulToId(thingSoul);
+    return all([
+        thing(scope$$1, thingSoul),
+        scores ? thingScores(scope$$1, id, tabulator) : resolve(null),
+        data ? thingData(scope$$1, id) : resolve(null)
+    ]).then(function (_a) {
+        var meta = _a[0], votes = _a[1], data = _a[2];
+        if (!meta || !meta.id)
+            return null;
+        return __assign({}, meta, { votes: votes, data: data });
+    });
+});
+var multiThingMeta = query(function (scope$$1, params) {
+    return all(reduce(function (promises, thingSoul) {
+        if (!thingSoul)
+            return promises;
+        promises.push(thingMeta(scope$$1, __assign({}, params, { thingSoul: thingSoul })));
+        return promises;
+    }, [], propOr([], 'thingSouls', params)));
+});
+var userPages = query(function (scope$$1, authorId) { return scope$$1.get(Schema.AuthorPages.route.reverse({ authorId: authorId })); }, 'userPages');
+var wikiPageId = query(function (scope$$1, authorId, name) {
+    if (!authorId || !name)
+        return resolve(null);
+    return scope$$1
+        .get(Schema.AuthorPages.route.reverse({ authorId: authorId }))
+        .get(name)
+        .get('id');
+}, 'wikiPageId');
+var wikiPage = query(function (scope$$1, authorId, name) {
+    return wikiPageId(scope$$1, authorId, name).then(function (id) { return id && thingData(scope$$1, id); });
+});
+var userMeta = query(function (scope$$1, id) {
+    if (!id)
+        return resolve(null);
+    return scope$$1.get("~" + id).then(function (meta) { return ({
+        alias: prop('alias', meta),
+        createdAt: path(['_', '>', 'pub'], meta)
+    }); });
+}, 'userMeta');
+var createScope = curry(function (nab, opts) { return scope(assoc('gun', nab.gun, opts || {})); });
+var Query = {
+    thingMeta: thingMeta,
+    multiThingMeta: multiThingMeta,
+    thingScores: thingScores,
+    thingData: thingData,
+    thingDataFromSouls: thingDataFromSouls,
+    userPages: userPages,
+    wikiPageId: wikiPageId,
+    wikiPage: wikiPage,
+    userMeta: userMeta,
+    createScope: createScope
 };
 
 var soul = pathOr('', ['_', '#']);
@@ -1329,123 +1432,6 @@ var Thing = {
     index: index
 };
 
-var thing = query(function (scope$$1, thingSoul) {
-    return scope$$1.get(thingSoul).then(function (meta) {
-        if (!meta || !meta.id)
-            return null;
-        var result = {
-            id: meta.id,
-            timestamp: parseFloat(meta.timestamp)
-        };
-        var replyToSoul = pathOr('', ['replyTo', '#'], meta);
-        var opSoul = pathOr('', ['op', '#'], meta);
-        var opId = propOr('', 'thingId', opSoul && Schema.Thing.route.match(opSoul));
-        var replyToId = propOr('', 'thingId', replyToSoul && Schema.Thing.route.match(replyToSoul));
-        if (opId)
-            result.opId = opId;
-        if (replyToId)
-            result.replyToId = replyToId;
-        return result;
-    });
-});
-var thingDataFromSouls = curry(function (scope$$1, souls) {
-    var ids = ListingNode.soulsToIds(souls || []);
-    return all(map(function (id) { return thingData(scope$$1, id).then(function (data) { return [id, data]; }); }, ids)).then(function (pairs) {
-        return pairs.reduce(function (res, _a) {
-            var id = _a[0], data = _a[1];
-            return assoc(id, data, res);
-        }, {});
-    });
-});
-var thingScores = query(function (scope$$1, thingId, tabulator) {
-    if (tabulator === void 0) { tabulator = ''; }
-    if (!thingId)
-        return resolve(null);
-    return scope$$1
-        .get(Schema.ThingVoteCounts.route.reverse({
-        thingId: thingId,
-        tabulator: tabulator || Config.tabulator
-    }))
-        .then();
-});
-var thingData = query(function (scope$$1, thingId) {
-    return thingId ? scope$$1.get(Schema.Thing.route.reverse({ thingId: thingId })).get('data') : resolve(null);
-});
-var thingMeta = query(function (scope$$1, _a) {
-    var thingSoul = _a.thingSoul, tabulator = _a.tabulator, _b = _a.data, data = _b === void 0 ? false : _b, _c = _a.scores, scores = _c === void 0 ? false : _c;
-    if (!thingSoul)
-        return resolve(null);
-    var id = ListingNode.soulToId(thingSoul);
-    return all([
-        thing(scope$$1, thingSoul),
-        scores ? thingScores(scope$$1, id, tabulator) : resolve(null),
-        data ? thingData(scope$$1, id) : resolve(null)
-    ]).then(function (_a) {
-        var meta = _a[0], votes = _a[1], data = _a[2];
-        if (!meta || !meta.id)
-            return null;
-        return __assign({}, meta, { votes: votes, data: data });
-    });
-});
-var thingForDisplay = query(function (scope$$1, thingId, tabulator) {
-    if (tabulator === void 0) { tabulator = null; }
-    return Promise.all([thingData(scope$$1, thingId), thingScores(scope$$1, thingId, tabulator)]).then(function (_a) {
-        var data = _a[0], scores = _a[1];
-        var opId = ThingDataNode.opId(data);
-        if (!opId)
-            return { data: data, scores: scores };
-        return thingData(scope$$1, opId).then(function (opData) { return ({
-            data: data,
-            scores: scores,
-            opData: opData
-        }); });
-    });
-}, 'thing');
-var multiThingMeta = query(function (scope$$1, params) {
-    return all(reduce(function (promises, thingSoul) {
-        if (!thingSoul)
-            return promises;
-        promises.push(thingMeta(scope$$1, __assign({}, params, { thingSoul: thingSoul })));
-        return promises;
-    }, [], propOr([], 'thingSouls', params)));
-});
-var userPages = query(function (scope$$1, authorId) { return scope$$1.get(Schema.AuthorPages.route.reverse({ authorId: authorId })); }, 'userPages');
-var wikiPageId = query(function (scope$$1, authorId, name) {
-    if (!authorId || !name)
-        return resolve(null);
-    return scope$$1
-        .get(Schema.AuthorPages.route.reverse({ authorId: authorId }))
-        .get(name)
-        .get('id');
-}, 'wikiPageId');
-var wikiPage = query(function (scope$$1, authorId, name) {
-    return wikiPageId(scope$$1, authorId, name)
-        .then(function (id) { return id && thingForDisplay(scope$$1, id, Config.tabulator); })
-        .then(propOr(null, 'data'));
-});
-var userMeta = query(function (scope$$1, id) {
-    if (!id)
-        return resolve(null);
-    return scope$$1.get("~" + id).then(function (meta) { return ({
-        alias: prop('alias', meta),
-        createdAt: path(['_', '>', 'pub'], meta)
-    }); });
-}, 'userMeta');
-var createScope = curry(function (nab, opts) { return scope(assoc('gun', nab.gun, opts || {})); });
-var Query = {
-    thingMeta: thingMeta,
-    multiThingMeta: multiThingMeta,
-    thingScores: thingScores,
-    thingData: thingData,
-    thingDataFromSouls: thingDataFromSouls,
-    thingForDisplay: thingForDisplay,
-    userPages: userPages,
-    wikiPageId: wikiPageId,
-    wikiPage: wikiPage,
-    userMeta: userMeta,
-    createScope: createScope
-};
-
 var signup = curry(function (peer, username, password, opts) {
     if (opts === void 0) { opts = {}; }
     return new Promise(function (ok, fail) {
@@ -1503,7 +1489,7 @@ var tokenize = function (source) {
             .filter(function (x) { return x; });
         if (!tokens.length)
             return def;
-        return assocPath(tokens, {}, def);
+        return assocPath(tokens.slice(0, 10), {}, def);
     }, {});
     var isPresent = function (p) {
         var check = p;
@@ -1738,6 +1724,16 @@ var fromDefinition$1 = function (definition) {
         }
         return filterFunctions.push(compose.apply(R, fns));
     };
+    var addSubmissionFilter = function () {
+        var fns = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            fns[_i] = arguments[_i];
+        }
+        return addFilter(cond([
+            [pathEq(['data', 'kind'], 'submission'), compose.apply(R, fns)],
+            [T, T]
+        ]));
+    };
     var addVoteFilter = function () {
         var fns = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -1752,7 +1748,7 @@ var fromDefinition$1 = function (definition) {
         addFilter(function (t) { return !!isPresent(['author', t]); }, path(['data', 'authorId']));
     }
     if (filters.allow.domains.length) {
-        addFilter(function (t) { return !!isPresent(['domain', t]); }, ThingDataNode.domain, prop('data'));
+        addSubmissionFilter(function (t) { return !!isPresent(['domain', t]); }, ThingDataNode.domain, prop('data'));
     }
     if (filters.allow.topics.length &&
         !find(compose(identical('all'), last, split(':')), filters.allow.topics)) {
@@ -1779,7 +1775,7 @@ var fromDefinition$1 = function (definition) {
         addFilter(function (authorId) { return !isPresent(['ban', 'author', authorId]); }, path(['data', 'authorId']));
     }
     if (filters.deny.domains.length) {
-        addFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, ThingDataNode.domain, prop('data'));
+        addSubmissionFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, ThingDataNode.domain, prop('data'));
     }
     if (filters.deny.topics.length) {
         addFilter(function (topic) { return !isPresent(['ban', 'topic', topic]); }, path(['data', 'topic']));
@@ -2166,21 +2162,36 @@ var SpaceListing = Path.withRoute({
     getSpec: getSpec$7
 });
 
-var path$8 = '/user/:authorId/replies/:type/:sort';
+var path$8 = '/user/:authorId/spaces/:name/comments/:thingId/:sort';
 var getSource$9 = query(function (scope$$1, _a) {
-    var authorId = _a.authorId, type = _a.type, _b = _a.sort, sort = _b === void 0 ? 'new' : _b;
-    return ListingSpec.getSource(scope$$1, Config.indexer, 'listing:inbox', ["replies to author " + authorId, 'kind comment', "type " + type, "sort " + sort].join('\n'));
+    var thingId = _a.thingId, authorId = _a.authorId, name = _a.name, sort = _a.sort;
+    return SpaceSpec.getSource(scope$$1, authorId, name, ["op " + thingId, "sort " + sort].join('\n'));
 });
-var getSpec$8 = query(function (scope$$1, match$$1) { return getSource$9(scope$$1, match$$1).then(ListingSpec.fromSource); });
-var InboxListing = Path.withRoute({
+var getSpec$8 = query(function (scope$$1, _a) {
+    var thingId = _a.thingId, authorId = _a.authorId, name = _a.name, sort = _a.sort;
+    return SpaceSpec.getSpec(scope$$1, authorId, name, ["op " + thingId, "sort " + sort].join('\n'));
+});
+var SpaceCommentListing = Path.withRoute({
     path: path$8,
     getSource: getSource$9,
     getSpec: getSpec$8
 });
 
-var path$9 = '/user/:authorId/:type/:sort';
-var tabs$5 = ['overview', 'comments', 'submitted', 'commands'];
+var path$9 = '/user/:authorId/replies/:type/:sort';
 var getSource$a = query(function (scope$$1, _a) {
+    var authorId = _a.authorId, type = _a.type, _b = _a.sort, sort = _b === void 0 ? 'new' : _b;
+    return ListingSpec.getSource(scope$$1, Config.indexer, 'listing:inbox', ["replies to author " + authorId, 'kind comment', "type " + type, "sort " + sort].join('\n'));
+});
+var getSpec$9 = query(function (scope$$1, match$$1) { return getSource$a(scope$$1, match$$1).then(ListingSpec.fromSource); });
+var InboxListing = Path.withRoute({
+    path: path$9,
+    getSource: getSource$a,
+    getSpec: getSpec$9
+});
+
+var path$a = '/user/:authorId/:type/:sort';
+var tabs$5 = ['overview', 'comments', 'submitted', 'commands'];
+var getSource$b = query(function (scope$$1, _a) {
     var authorId = _a.authorId, type = _a.type, sort = _a.sort;
     return ListingSpec.getSource(scope$$1, Config.indexer, 'listing:profile', [
         "author " + authorId,
@@ -2188,19 +2199,19 @@ var getSource$a = query(function (scope$$1, _a) {
         "sort " + sort
     ].concat(map(function (tab) { return "tab " + tab + " /user/" + authorId + "/" + tab; }, tabs$5)).join('\n'));
 });
-var getSpec$9 = query(function (scope$$1, match$$1) {
+var getSpec$a = query(function (scope$$1, match$$1) {
     return Query.userMeta(scope$$1, match$$1.authorId).then(function (meta) {
-        return getSource$a(scope$$1, match$$1).then(pipe(ListingSpec.fromSource, mergeLeft({
+        return getSource$b(scope$$1, match$$1).then(pipe(ListingSpec.fromSource, mergeLeft({
             profileId: match$$1.authorId,
             displayName: propOr('', 'alias', meta)
         })));
     });
 });
 var ProfileListing = Path.withRoute({
-    path: path$9,
+    path: path$a,
     tabs: tabs$5,
-    getSource: getSource$a,
-    getSpec: getSpec$9
+    getSource: getSource$b,
+    getSpec: getSpec$a
 });
 
 var types = {
@@ -2209,6 +2220,7 @@ var types = {
     TopicListing: TopicListing,
     DomainListing: DomainListing,
     CommentListing: CommentListing,
+    SpaceCommentListing: SpaceCommentListing,
     SpaceListing: SpaceListing,
     InboxListing: InboxListing,
     CommentedListing: CommentedListing,
@@ -2224,58 +2236,59 @@ var fromPath = function (path$$1) {
     }
     return null;
 };
-var sidebarFromPath = query(function (scope$$1, path$$1) {
-    return specFromPath(scope$$1, path$$1).then(function (spec) {
-        var _a = spec || {}, _b = _a.fromPageAuthor, fromPageAuthor = _b === void 0 ? '' : _b, _c = _a.fromPageName, fromPageName = _c === void 0 ? '' : _c;
-        if (!fromPageAuthor || !fromPageName)
-            return null;
-        return Query.wikiPage(scope$$1, fromPageAuthor, fromPageName + ":sidebar");
-    });
-});
-var specFromPath = query(function (scope$$1, path$$1) {
-    var type = fromPath(path$$1);
-    if (!type)
-        throw new Error("Can't find type for path: " + path$$1);
-    return type.getSpec(scope$$1, type.match).then(function (baseSpec) {
-        var spec = baseSpec;
-        if (type.match.sort === 'default') {
-            spec = assoc('path', type.route.reverse(assoc('sort', spec.sort, type.match)), spec);
-        }
-        else {
-            spec = assoc('path', path$$1, baseSpec);
-        }
-        if (spec.submitTopic && !spec.submitPath) {
-            spec = assoc('submitPath', "/t/" + spec.submitTopic + "/submit", spec);
-        }
-        return spec;
-    });
-});
 var ListingType = __assign({}, types, { types: types,
-    fromPath: fromPath,
-    sidebarFromPath: sidebarFromPath,
-    specFromPath: specFromPath });
+    fromPath: fromPath });
 
 var ListingQuery = /** @class */ (function () {
     function ListingQuery(path$$1, parent) {
         this.listings = [];
         this.viewCache = parent ? parent.viewCache : {};
         this.sourced = {};
+        this.checked = {};
         this.path = path$$1;
         this.type = ListingType.fromPath(path$$1);
+        if (!this.type)
+            throw new Error("Can't find type for path: " + path$$1);
         this.spec = ListingSpec.fromSource('');
         this.rowsFromNode = parent ? parent.rowsFromNode : memoize(ListingNode.rows);
         this.combineSourceRows = parent
             ? parent.combineSourceRows
             : memoize(pipe(reduce(concat, []), ListingNode.sortRows, uniqBy(nth(ListingNode.POS_ID))));
     }
+    ListingQuery.prototype.space = function (scope$$1) {
+        var _this = this;
+        return this.type.getSpec(scope$$1, this.type.match).then(function (baseSpec) {
+            var spec = baseSpec;
+            if (_this.type.match.sort === 'default') {
+                spec = assoc('path', _this.type.route.reverse(assoc('sort', spec.sort, _this.type.match)), spec);
+            }
+            else {
+                spec = assoc('path', _this.path, baseSpec);
+            }
+            if (spec.submitTopic && !spec.submitPath) {
+                spec = assoc('submitPath', "/t/" + spec.submitTopic + "/submit", spec);
+            }
+            if (!equals(_this.spec, spec)) {
+                _this.spec = spec;
+                _this.checked = {};
+            }
+            return _this.spec;
+        });
+    };
+    ListingQuery.prototype.sidebar = function (scope$$1) {
+        return this.space(scope$$1).then(function (spec) {
+            var _a = spec || {}, _b = _a.fromPageAuthor, fromPageAuthor = _b === void 0 ? '' : _b, _c = _a.fromPageName, fromPageName = _c === void 0 ? '' : _c;
+            if (!fromPageAuthor || !fromPageName)
+                return null;
+            return Query.wikiPage(scope$$1, fromPageAuthor, fromPageName + ":sidebar");
+        });
+    };
     ListingQuery.prototype.unfilteredRows = function (scope$$1) {
         var _this = this;
         if (!this.type)
             return Promise.resolve([]);
-        return this.type
-            .getSpec(scope$$1, this.type.match)
+        return this.space(scope$$1)
             .then(function (spec) {
-            _this.spec = spec;
             var paths = pathOr([], ['dataSource', 'listingPaths'], spec);
             var listingPaths = without([_this.path], paths);
             _this.listings = listingPaths.map(function (path$$1) { return _this.viewCache[path$$1] || (_this.viewCache[path$$1] = new ListingQuery(path$$1, _this)); });
@@ -2289,37 +2302,44 @@ var ListingQuery = /** @class */ (function () {
             return rows;
         });
     };
+    ListingQuery.prototype._setChecked = function (id, checked) {
+        this.checked[id] = checked;
+        return checked;
+    };
     ListingQuery.prototype.checkId = function (scope$$1, id) {
         return __awaiter(this, void 0, void 0, function () {
             var filterFn, listings, i;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (this.spec.isIdSticky(id))
+                        if (this.checked[id])
                             return [2 /*return*/, true];
+                        if (this.spec.isIdSticky(id))
+                            return [2 /*return*/, this._setChecked(id, true)];
                         if (!(id in this.sourced))
-                            return [2 /*return*/, false];
+                            return [2 /*return*/, this._setChecked(id, false)];
                         filterFn = ListingFilter.thingFilter(scope$$1, this.spec);
                         return [4 /*yield*/, filterFn(id)];
                     case 1:
                         if (!(_a.sent()))
-                            return [2 /*return*/, false];
+                            return [2 /*return*/, this._setChecked(id, false)];
                         listings = this.listings.slice();
                         if (!listings.length)
-                            return [2 /*return*/, true];
+                            return [2 /*return*/, this._setChecked(id, true)];
                         i = 0;
                         _a.label = 2;
                     case 2:
                         if (!(i < listings.length)) return [3 /*break*/, 5];
                         return [4 /*yield*/, listings[i].checkId(scope$$1, id)];
                     case 3:
-                        if (_a.sent())
-                            return [2 /*return*/, true];
+                        if (_a.sent()) {
+                            return [2 /*return*/, this._setChecked(id, true)];
+                        }
                         _a.label = 4;
                     case 4:
                         i++;
                         return [3 /*break*/, 2];
-                    case 5: return [2 /*return*/, false];
+                    case 5: return [2 /*return*/, this._setChecked(id, false)];
                 }
             });
         });
@@ -2338,7 +2358,7 @@ var ListingQuery = /** @class */ (function () {
 
 var Listing = __assign({}, ListingType.types, { ListingNode: ListingNode,
     ListingSpec: ListingSpec,
-    ListingQuery: ListingQuery, isValidSort: ListingSort.isValidSort, idsToSouls: ListingNode.idsToSouls, get: ListingNode.get, typeFromPath: ListingType.fromPath, sidebarFromPath: ListingType.sidebarFromPath, specFromPath: ListingType.specFromPath });
+    ListingQuery: ListingQuery, isValidSort: ListingSort.isValidSort, idsToSouls: ListingNode.idsToSouls, get: ListingNode.get, typeFromPath: ListingType.fromPath });
 
 var ThingQueue = /** @class */ (function () {
     function ThingQueue(peer, config, scopeOpts) {
@@ -2698,7 +2718,7 @@ var TabulatorQueue = /** @class */ (function (_super) {
                         return [3 /*break*/, 5];
                     case 4:
                         e_1 = _a.sent();
-                        console.error('Tabulator error', e_1.stack || e_1);
+                        console.error('Tabulator error', thingId, e_1.stack || e_1);
                         return [3 /*break*/, 5];
                     case 5:
                         this.processingId = '';
@@ -2822,8 +2842,8 @@ var withListingMatch = function (path$$1, params) {
     var realQuery = query(view.ids.bind(view), "ids:" + path$$1);
     return {
         preload: function (scope$$1) { return preloadListing(scope$$1, path$$1, params); },
-        sidebar: query(function (scope$$1) { return Listing.sidebarFromPath(scope$$1, path$$1); }, "sidebar:" + path$$1),
-        space: query(function (scope$$1) { return Listing.specFromPath(scope$$1, path$$1); }),
+        sidebar: query(view.sidebar.bind(view)),
+        space: query(view.space.bind(view)),
         ids: query(function (scope$$1, opts) {
             if (opts === void 0) { opts = {}; }
             return realQuery(scope$$1, mergeLeft(opts, params));
@@ -2831,7 +2851,7 @@ var withListingMatch = function (path$$1, params) {
     };
 };
 var preloadListing = function (scope$$1, path$$1, params) { return __awaiter(_this$2, void 0, void 0, function () {
-    var match$$1, promise, _a, spec, ids, opIds, chatPath;
+    var match$$1, promise, _a, spec, ids, thingSouls, things, opIds, opSouls, chatPath;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -2846,17 +2866,29 @@ var preloadListing = function (scope$$1, path$$1, params) { return __awaiter(_th
                 _a = (_b.sent()), spec = _a[0], ids = _a[1];
                 if (!spec)
                     spec = ListingSpec.fromSource('');
-                opIds = pathOr([], ['filters', 'allow', 'ops'], spec);
-                if (!opIds.length) return [3 /*break*/, 3];
-                return [4 /*yield*/, Promise.all(opIds.map(function (id) {
-                        return Query.thingForDisplay(scope$$1, id, spec.tabulator || Config.tabulator);
-                    }))];
+                thingSouls = Listing.idsToSouls(ids);
+                return [4 /*yield*/, Promise.all([
+                        Query.multiThingMeta(scope$$1, {
+                            thingSouls: thingSouls,
+                            tabulator: spec.tabulator || Config.tabulator,
+                            scores: true,
+                            data: true
+                        })
+                    ].concat(map(function (id) { return Query.userMeta(scope$$1, id); }, uniq([spec && spec.indexer, spec && spec.owner, spec && spec.tabulator]))))];
             case 2:
+                things = (_b.sent())[0];
+                opIds = compose(without(ids), function (ids) { return ids.filter(function (x) { return !!x; }); }, uniq, map(pathOr(null, ['data', 'opId'])))(things);
+                if (!opIds.length) return [3 /*break*/, 4];
+                opSouls = Listing.idsToSouls(opIds);
+                return [4 /*yield*/, Query.multiThingMeta(scope$$1, {
+                        thingSouls: opSouls,
+                        tabulator: spec.tabulator || Config.tabulator,
+                        data: true
+                    })];
+            case 3:
                 _b.sent();
-                _b.label = 3;
-            case 3: return [4 /*yield*/, Promise.all(ids.map(function (id) { return Query.thingForDisplay(scope$$1, id, spec.tabulator || Config.tabulator); }))];
+                _b.label = 4;
             case 4:
-                _b.sent();
                 if (!spec.chatTopic) return [3 /*break*/, 6];
                 chatPath = "/t/" + spec.chatTopic + "/chat";
                 if (!(chatPath !== path$$1)) return [3 /*break*/, 6];
@@ -2903,22 +2935,12 @@ var spaceThingComments = function (_a) {
     var _b = _a.name, defaultName = _b === void 0 ? 'default' : _b, _c = _a.authorId, defaultAuthorId = _c === void 0 ? '' : _c, _d = _a.sort, defaultSort = _d === void 0 ? 'hot' : _d, rest = __rest(_a, ["name", "authorId", "sort"]);
     return (__assign({}, rest, { withMatch: function (_a) {
             var _b = _a.params, _c = _b.opId, opId = _c === void 0 ? '' : _c, _d = _b.authorId, authorId = _d === void 0 ? defaultAuthorId : _d, _e = _b.name, name = _e === void 0 ? defaultName : _e, _f = _b.sort, sort = _f === void 0 ? defaultSort : _f, _g = _a.query, queryParams = _g === void 0 ? {} : _g;
-            var spacePath = ListingType.SpaceListing.route.reverse({
+            return withListingMatch(ListingType.SpaceCommentListing.route.reverse({
                 authorId: authorId || Config.owner,
                 name: name,
-                sort: sort
-            });
-            var listingPath = ListingType.CommentListing.route.reverse({
-                thingId: opId,
-                sort: sort
-            });
-            var view = new ListingQuery(listingPath);
-            var idsQuery = query(view.ids.bind(view), "ids:" + listingPath);
-            return {
-                space: query(function (scope$$1) { return Listing.specFromPath(scope$$1, spacePath, queryParams); }, "spec:" + spacePath),
-                ids: idsQuery,
-                preload: query(function (scope$$1) { return preloadListing(scope$$1, listingPath, queryParams); })
-            };
+                sort: sort,
+                thingId: opId
+            }), assoc('limit', 1000, queryParams));
         } }));
 };
 var profile = function (_a) {

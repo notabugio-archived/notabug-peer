@@ -22,7 +22,5 @@ export const Listing = {
   isValidSort: ListingSort.isValidSort,
   idsToSouls: ListingNode.idsToSouls,
   get: ListingNode.get,
-  typeFromPath: ListingType.fromPath,
-  sidebarFromPath: ListingType.sidebarFromPath,
-  specFromPath: ListingType.specFromPath
+  typeFromPath: ListingType.fromPath
 };

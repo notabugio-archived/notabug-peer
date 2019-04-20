@@ -12,8 +12,14 @@ export declare class ListingQuery {
     sourced: {
         [id: string]: ListingNodeRow;
     };
+    checked: {
+        [id: string]: boolean;
+    };
     constructor(path: string, parent?: ListingQuery);
+    space(scope: GunScope): any;
+    sidebar(scope: GunScope): any;
     unfilteredRows(scope: GunScope): Promise<ListingNodeRow[]>;
+    _setChecked(id: string, checked: boolean): boolean;
     checkId(scope: GunScope, id: string): Promise<boolean>;
     ids(scope: GunScope, opts?: {}): Promise<string[]>;
 }

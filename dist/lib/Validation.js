@@ -148,12 +148,15 @@ var initAjv = R.compose(function (ajv) {
     });
     return ajv;
 }, sea.initAjv);
-exports.suppressor = gun_suppressor_1.createSuppressor({
-    definitions: Schema_1.Schema.definitions,
-    init: initAjv
-});
+var create = function () {
+    return gun_suppressor_1.createSuppressor({
+        definitions: Schema_1.Schema.definitions,
+        init: initAjv
+    });
+};
 var gunWireInput = R.curry(function (peer, context) {
-    return context.on('in', function wireInput(msg) {
+    var suppressor = create();
+    context.on('in', function wireInput(msg) {
         var _this = this;
         var _ = msg['_'];
         delete msg['_'];
@@ -161,7 +164,7 @@ var gunWireInput = R.curry(function (peer, context) {
             return;
         if (msg.put && !R.keys(msg.put).length)
             return;
-        var promise = peer.config.disableValidation ? Promise.resolve(msg) : exports.suppressor.validate(msg);
+        var promise = peer.config.disableValidation ? Promise.resolve(msg) : suppressor.validate(msg);
         promise
             .then(function (validated) {
             if (!validated)
@@ -173,6 +176,7 @@ var gunWireInput = R.curry(function (peer, context) {
     });
 });
 exports.Validation = {
+    createSuppressor: create,
     isLegacyThing: isLegacyThing,
     thingHashMatchesSoul: thingHashMatchesSoul,
     signedThingDataMatches: signedThingDataMatches,
@@ -182,7 +186,6 @@ exports.Validation = {
     isVoteValid: isVoteValid,
     keysAreProofsOfWork: keysAreProofsOfWork,
     initAjv: initAjv,
-    suppressor: exports.suppressor,
     gunWireInput: gunWireInput
 };
 //# sourceMappingURL=Validation.js.map

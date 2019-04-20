@@ -6,11 +6,6 @@ export declare const Query: {
     thingScores: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
     thingData: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ThingDataNodeType | null>;
     thingDataFromSouls: Curry.Curry<(scope: GunScope, souls: string[] | null) => Promise<ThingDataMap>>;
-    thingForDisplay: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<{} | {
-        data: ThingDataNodeType | null;
-        scores: any;
-        opData: ThingDataNodeType | null;
-    }>;
     userPages: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
     wikiPageId: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
     wikiPage: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<ThingDataNodeType | null>;

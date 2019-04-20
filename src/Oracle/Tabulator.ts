@@ -47,7 +47,7 @@ class TabulatorQueue extends ThingQueue {
       const diff = GunNode.diff(existingCounts, updatedCounts);
       if (R.keysIn(diff).length) this.peer.gun.get(countsSoul).put(diff);
     } catch (e) {
-      console.error('Tabulator error', e.stack || e);
+      console.error('Tabulator error', thingId, e.stack || e);
     }
 
     this.processingId = '';

@@ -58,6 +58,16 @@ var fromDefinition = function (definition) {
         }
         return filterFunctions.push(R.compose.apply(R, fns));
     };
+    var addSubmissionFilter = function () {
+        var fns = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            fns[_i] = arguments[_i];
+        }
+        return addFilter(R.cond([
+            [R.pathEq(['data', 'kind'], 'submission'), R.compose.apply(R, fns)],
+            [R.T, R.T]
+        ]));
+    };
     var addVoteFilter = function () {
         var fns = [];
         for (var _i = 0; _i < arguments.length; _i++) {
@@ -72,7 +82,7 @@ var fromDefinition = function (definition) {
         addFilter(function (t) { return !!isPresent(['author', t]); }, R.path(['data', 'authorId']));
     }
     if (filters.allow.domains.length) {
-        addFilter(function (t) { return !!isPresent(['domain', t]); }, Thing_1.ThingDataNode.domain, R.prop('data'));
+        addSubmissionFilter(function (t) { return !!isPresent(['domain', t]); }, Thing_1.ThingDataNode.domain, R.prop('data'));
     }
     if (filters.allow.topics.length &&
         !R.find(R.compose(R.identical('all'), R.last, R.split(':')), filters.allow.topics)) {
@@ -99,7 +109,7 @@ var fromDefinition = function (definition) {
         addFilter(function (authorId) { return !isPresent(['ban', 'author', authorId]); }, R.path(['data', 'authorId']));
     }
     if (filters.deny.domains.length) {
-        addFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, Thing_1.ThingDataNode.domain, R.prop('data'));
+        addSubmissionFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, Thing_1.ThingDataNode.domain, R.prop('data'));
     }
     if (filters.deny.topics.length) {
         addFilter(function (topic) { return !isPresent(['ban', 'topic', topic]); }, R.path(['data', 'topic']));

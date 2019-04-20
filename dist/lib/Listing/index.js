@@ -36,5 +36,5 @@ var SpaceSpec_1 = require("./SpaceSpec");
 exports.SpaceSpec = SpaceSpec_1.SpaceSpec;
 exports.Listing = __assign({}, ListingType_1.ListingType.types, { ListingNode: ListingNode_1.ListingNode,
     ListingSpec: ListingSpec_1.ListingSpec,
-    ListingQuery: ListingQuery_1.ListingQuery, isValidSort: ListingSort_1.ListingSort.isValidSort, idsToSouls: ListingNode_1.ListingNode.idsToSouls, get: ListingNode_1.ListingNode.get, typeFromPath: ListingType_1.ListingType.fromPath, sidebarFromPath: ListingType_1.ListingType.sidebarFromPath, specFromPath: ListingType_1.ListingType.specFromPath });
+    ListingQuery: ListingQuery_1.ListingQuery, isValidSort: ListingSort_1.ListingSort.isValidSort, idsToSouls: ListingNode_1.ListingNode.idsToSouls, get: ListingNode_1.ListingNode.get, typeFromPath: ListingType_1.ListingType.fromPath });
 //# sourceMappingURL=index.js.map

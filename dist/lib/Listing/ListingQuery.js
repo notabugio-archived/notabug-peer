@@ -48,6 +48,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var R = require("ramda");
 var fast_memoize_1 = require("fast-memoize");
+var Query_1 = require("../Query");
 var ListingNode_1 = require("./ListingNode");
 var ListingFilter_1 = require("./ListingFilter");
 var ListingType_1 = require("./ListingType");
@@ -57,22 +58,51 @@ var ListingQuery = /** @class */ (function () {
         this.listings = [];
         this.viewCache = parent ? parent.viewCache : {};
         this.sourced = {};
+        this.checked = {};
         this.path = path;
         this.type = ListingType_1.ListingType.fromPath(path);
+        if (!this.type)
+            throw new Error("Can't find type for path: " + path);
         this.spec = ListingSpec_1.ListingSpec.fromSource('');
         this.rowsFromNode = parent ? parent.rowsFromNode : fast_memoize_1.default(ListingNode_1.ListingNode.rows);
         this.combineSourceRows = parent
             ? parent.combineSourceRows
             : fast_memoize_1.default(R.pipe(R.reduce(R.concat, []), ListingNode_1.ListingNode.sortRows, R.uniqBy(R.nth(ListingNode_1.ListingNode.POS_ID))));
     }
+    ListingQuery.prototype.space = function (scope) {
+        var _this = this;
+        return this.type.getSpec(scope, this.type.match).then(function (baseSpec) {
+            var spec = baseSpec;
+            if (_this.type.match.sort === 'default') {
+                spec = R.assoc('path', _this.type.route.reverse(R.assoc('sort', spec.sort, _this.type.match)), spec);
+            }
+            else {
+                spec = R.assoc('path', _this.path, baseSpec);
+            }
+            if (spec.submitTopic && !spec.submitPath) {
+                spec = R.assoc('submitPath', "/t/" + spec.submitTopic + "/submit", spec);
+            }
+            if (!R.equals(_this.spec, spec)) {
+                _this.spec = spec;
+                _this.checked = {};
+            }
+            return _this.spec;
+        });
+    };
+    ListingQuery.prototype.sidebar = function (scope) {
+        return this.space(scope).then(function (spec) {
+            var _a = spec || {}, _b = _a.fromPageAuthor, fromPageAuthor = _b === void 0 ? '' : _b, _c = _a.fromPageName, fromPageName = _c === void 0 ? '' : _c;
+            if (!fromPageAuthor || !fromPageName)
+                return null;
+            return Query_1.Query.wikiPage(scope, fromPageAuthor, fromPageName + ":sidebar");
+        });
+    };
     ListingQuery.prototype.unfilteredRows = function (scope) {
         var _this = this;
         if (!this.type)
             return Promise.resolve([]);
-        return this.type
-            .getSpec(scope, this.type.match)
+        return this.space(scope)
             .then(function (spec) {
-            _this.spec = spec;
             var paths = R.pathOr([], ['dataSource', 'listingPaths'], spec);
             var listingPaths = R.without([_this.path], paths);
             _this.listings = listingPaths.map(function (path) { return _this.viewCache[path] || (_this.viewCache[path] = new ListingQuery(path, _this)); });
@@ -86,37 +116,44 @@ var ListingQuery = /** @class */ (function () {
             return rows;
         });
     };
+    ListingQuery.prototype._setChecked = function (id, checked) {
+        this.checked[id] = checked;
+        return checked;
+    };
     ListingQuery.prototype.checkId = function (scope, id) {
         return __awaiter(this, void 0, void 0, function () {
             var filterFn, listings, i;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (this.spec.isIdSticky(id))
+                        if (this.checked[id])
                             return [2 /*return*/, true];
+                        if (this.spec.isIdSticky(id))
+                            return [2 /*return*/, this._setChecked(id, true)];
                         if (!(id in this.sourced))
-                            return [2 /*return*/, false];
+                            return [2 /*return*/, this._setChecked(id, false)];
                         filterFn = ListingFilter_1.ListingFilter.thingFilter(scope, this.spec);
                         return [4 /*yield*/, filterFn(id)];
                     case 1:
                         if (!(_a.sent()))
-                            return [2 /*return*/, false];
+                            return [2 /*return*/, this._setChecked(id, false)];
                         listings = this.listings.slice();
                         if (!listings.length)
-                            return [2 /*return*/, true];
+                            return [2 /*return*/, this._setChecked(id, true)];
                         i = 0;
                         _a.label = 2;
                     case 2:
                         if (!(i < listings.length)) return [3 /*break*/, 5];
                         return [4 /*yield*/, listings[i].checkId(scope, id)];
                     case 3:
-                        if (_a.sent())
-                            return [2 /*return*/, true];
+                        if (_a.sent()) {
+                            return [2 /*return*/, this._setChecked(id, true)];
+                        }
                         _a.label = 4;
                     case 4:
                         i++;
                         return [3 /*break*/, 2];
-                    case 5: return [2 /*return*/, false];
+                    case 5: return [2 /*return*/, this._setChecked(id, false)];
                 }
             });
         });

@@ -30,8 +30,8 @@ const withListingMatch = (path: string, params?: any) => {
 
   return {
     preload: (scope: GunScope) => preloadListing(scope, path, params),
-    sidebar: query(scope => Listing.sidebarFromPath(scope, path), `sidebar:${path}`),
-    space: query(scope => Listing.specFromPath(scope, path)),
+    sidebar: query(view.sidebar.bind(view)),
+    space: query(view.space.bind(view)),
     ids: query((scope, opts = {}) => realQuery(scope, R.mergeLeft(opts, params)))
   };
 };
@@ -46,18 +46,35 @@ const preloadListing = async (scope: GunScope, path: string, params?: any) => {
   let [spec, ids]: [ListingSpecType, string[]] = (await promise) as [ListingSpecType, string[]];
 
   if (!spec) spec = ListingSpec.fromSource('');
-  const opIds = R.pathOr([], ['filters', 'allow', 'ops'], spec);
-  if (opIds.length) {
-    await Promise.all(
-      opIds.map((id: string) =>
-        Query.thingForDisplay(scope, id, spec.tabulator || Config.tabulator)
-      )
-    );
-  }
+  const thingSouls = Listing.idsToSouls(ids);
+  const [things] = await Promise.all([
+    Query.multiThingMeta(scope, {
+      thingSouls,
+      tabulator: spec.tabulator || Config.tabulator,
+      scores: true,
+      data: true
+    }),
+    ...R.map(
+      id => Query.userMeta(scope, id),
+      R.uniq([spec && spec.indexer, spec && spec.owner, spec && spec.tabulator])
+    )
+  ]);
+  const opIds = R.compose(
+    R.without(ids),
+    (ids: string[]) => ids.filter(x => !!x),
+    R.uniq,
+    R.map(R.pathOr(null, ['data', 'opId']))
+  )(things);
 
-  await Promise.all(
-    ids.map(id => Query.thingForDisplay(scope, id, spec.tabulator || Config.tabulator))
-  );
+  if (opIds.length) {
+    const opSouls = Listing.idsToSouls(opIds);
+
+    await Query.multiThingMeta(scope, {
+      thingSouls: opSouls,
+      tabulator: spec.tabulator || Config.tabulator,
+      data: true
+    });
+  }
 
   if (spec.chatTopic) {
     const chatPath = `/t/${spec.chatTopic}/chat`;
@@ -129,29 +146,16 @@ const spaceThingComments = ({
   withMatch: ({
     params: { opId = '', authorId = defaultAuthorId, name = defaultName, sort = defaultSort },
     query: queryParams = {}
-  }) => {
-    const spacePath = ListingType.SpaceListing.route.reverse({
-      authorId: authorId || Config.owner,
-      name,
-      sort
-    });
-    const listingPath = ListingType.CommentListing.route.reverse({
-      thingId: opId,
-      sort
-    });
-
-    const view = new ListingQuery(listingPath);
-    const idsQuery = query(view.ids.bind(view), `ids:${listingPath}`);
-
-    return {
-      space: query(
-        scope => Listing.specFromPath(scope, spacePath, queryParams),
-        `spec:${spacePath}`
-      ),
-      ids: idsQuery,
-      preload: query(scope => preloadListing(scope, listingPath, queryParams))
-    };
-  }
+  }) =>
+    withListingMatch(
+      ListingType.SpaceCommentListing.route.reverse({
+        authorId: authorId || Config.owner,
+        name,
+        sort,
+        thingId: opId
+      }),
+      R.assoc('limit', 1000, queryParams)
+    )
 });
 
 const profile = ({ sort: defaultSort = 'new', type: defaultType = 'overview', ...rest } = {}) => ({

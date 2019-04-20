@@ -9,7 +9,8 @@ const tokenize = (source: string) => {
       .filter(x => x);
 
     if (!tokens.length) return def;
-    return R.assocPath(tokens, {}, def);
+
+    return R.assocPath(tokens.slice(0, 10), {}, def);
   }, {});
 
   const isPresent = (p: string | string[]) => {

@@ -213,12 +213,15 @@ const initAjv = R.compose(
   sea.initAjv
 );
 
-export const suppressor = createSuppressor({
-  definitions: Schema.definitions,
-  init: initAjv
-});
+const create = () =>
+  createSuppressor({
+    definitions: Schema.definitions,
+    init: initAjv
+  });
 
-const gunWireInput = R.curry((peer, context) =>
+const gunWireInput = R.curry((peer, context) => {
+  const suppressor = create();
+
   context.on('in', function wireInput(this: any, msg: NabProtocolMsg) {
     const _ = msg['_'];
 
@@ -234,10 +237,11 @@ const gunWireInput = R.curry((peer, context) =>
         return this.to.next(msg);
       })
       .catch((err: Error) => console.error('validate err', msg, err.stack || err));
-  })
-);
+  });
+});
 
 export const Validation = {
+  createSuppressor: create,
   isLegacyThing,
   thingHashMatchesSoul,
   signedThingDataMatches,
@@ -247,6 +251,5 @@ export const Validation = {
   isVoteValid,
   keysAreProofsOfWork,
   initAjv,
-  suppressor,
   gunWireInput
 };

@@ -125,7 +125,7 @@ var TabulatorQueue = /** @class */ (function (_super) {
                         return [3 /*break*/, 5];
                     case 4:
                         e_1 = _a.sent();
-                        console.error('Tabulator error', e_1.stack || e_1);
+                        console.error('Tabulator error', thingId, e_1.stack || e_1);
                         return [3 /*break*/, 5];
                     case 5:
                         this.processingId = '';

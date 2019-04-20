@@ -47,13 +47,12 @@ export declare const Listing: {
     idsToSouls: (ids: string[]) => string[];
     get: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<any>;
     typeFromPath: (path: string) => any;
-    sidebarFromPath: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<import("../types").ThingDataNodeType | null>;
-    specFromPath: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<import("../types").ListingSpecType>;
     ChatListing: any;
     FirehoseListing: any;
     TopicListing: any;
     DomainListing: any;
     CommentListing: any;
+    SpaceCommentListing: any;
     SpaceListing: any;
     InboxListing: any;
     CommentedListing: any;

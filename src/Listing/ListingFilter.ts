@@ -28,6 +28,14 @@ const fromDefinition = (definition: ListingDefinitionType) => {
   const voteFilterFunctions: FilterFunction[] = [];
   const addFilter = (...fns: Function[]) =>
     filterFunctions.push(R.compose(...(fns as [FilterFunction])));
+
+  const addSubmissionFilter = (...fns: Function[]) =>
+    addFilter(
+      R.cond([
+        [R.pathEq(['data', 'kind'], 'submission'), R.compose(...(fns as [FilterFunction]))],
+        [R.T, R.T]
+      ])
+    );
   const addVoteFilter = (...fns: Function[]) =>
     voteFilterFunctions.push(R.compose(...(fns as [FilterFunction])));
 
@@ -38,7 +46,11 @@ const fromDefinition = (definition: ListingDefinitionType) => {
     addFilter((t: string) => !!isPresent(['author', t]), R.path(['data', 'authorId']));
   }
   if (filters.allow.domains.length) {
-    addFilter((t: string) => !!isPresent(['domain', t]), ThingDataNode.domain, R.prop('data'));
+    addSubmissionFilter(
+      (t: string) => !!isPresent(['domain', t]),
+      ThingDataNode.domain,
+      R.prop('data')
+    );
   }
 
   if (
@@ -84,7 +96,7 @@ const fromDefinition = (definition: ListingDefinitionType) => {
     );
   }
   if (filters.deny.domains.length) {
-    addFilter(
+    addSubmissionFilter(
       (domain: string) => !domain || !isPresent(['ban', 'domain', domain]),
       ThingDataNode.domain,
       R.prop('data')

@@ -1,5 +1,6 @@
 import * as R from 'ramda';
 import memoize from 'fast-memoize';
+import { Query } from '../Query';
 import { ListingSpecType, ListingNodeRow, GunScope, ListingNodeType } from '../types';
 import { ListingNode } from './ListingNode';
 import { ListingFilter } from './ListingFilter';
@@ -15,13 +16,16 @@ export class ListingQuery {
   viewCache: { [soul: string]: ListingQuery };
   listings: ListingQuery[];
   sourced: { [id: string]: ListingNodeRow };
+  checked: { [id: string]: boolean };
 
   constructor(path: string, parent?: ListingQuery) {
     this.listings = [];
     this.viewCache = parent ? parent.viewCache : {};
     this.sourced = {};
+    this.checked = {};
     this.path = path;
     this.type = ListingType.fromPath(path);
+    if (!this.type) throw new Error(`Can't find type for path: ${path}`);
     this.spec = ListingSpec.fromSource('');
     this.rowsFromNode = parent ? parent.rowsFromNode : memoize(ListingNode.rows);
     this.combineSourceRows = parent
@@ -38,12 +42,44 @@ export class ListingQuery {
         );
   }
 
+  space(scope: GunScope) {
+    return this.type.getSpec(scope, this.type.match).then((baseSpec: ListingSpecType) => {
+      let spec = baseSpec;
+
+      if (this.type.match.sort === 'default') {
+        spec = R.assoc(
+          'path',
+          this.type.route.reverse(R.assoc('sort', spec.sort, this.type.match)),
+          spec
+        );
+      } else {
+        spec = R.assoc('path', this.path, baseSpec);
+      }
+
+      if (spec.submitTopic && !spec.submitPath) {
+        spec = R.assoc('submitPath', `/t/${spec.submitTopic}/submit`, spec);
+      }
+
+      if (!R.equals(this.spec, spec)) {
+        this.spec = spec;
+        this.checked = {};
+      }
+      return this.spec;
+    });
+  }
+
+  sidebar(scope: GunScope) {
+    return this.space(scope).then((spec: ListingSpecType) => {
+      const { fromPageAuthor = '', fromPageName = '' } = spec || {};
+      if (!fromPageAuthor || !fromPageName) return null;
+      return Query.wikiPage(scope, fromPageAuthor, `${fromPageName}:sidebar`);
+    });
+  }
+
   unfilteredRows(scope: GunScope): Promise<ListingNodeRow[]> {
     if (!this.type) return Promise.resolve([]);
-    return this.type
-      .getSpec(scope, this.type.match)
+    return this.space(scope)
       .then((spec: ListingSpecType) => {
-        this.spec = spec;
         const paths = R.pathOr([], ['dataSource', 'listingPaths'], spec);
         const listingPaths = R.without([this.path], paths);
         this.listings = listingPaths.map(
@@ -68,19 +104,28 @@ export class ListingQuery {
       });
   }
 
+  _setChecked(id: string, checked: boolean) {
+    this.checked[id] = checked;
+    return checked;
+  }
+
   async checkId(scope: GunScope, id: string): Promise<boolean> {
-    if (this.spec.isIdSticky(id)) return true;
-    if (!(id in this.sourced)) return false;
+    if (this.checked[id]) return true;
+
+    if (this.spec.isIdSticky(id)) return this._setChecked(id, true);
+    if (!(id in this.sourced)) return this._setChecked(id, false);
     const filterFn = ListingFilter.thingFilter(scope, this.spec);
-    if (!(await filterFn(id))) return false;
+    if (!(await filterFn(id))) return this._setChecked(id, false);
 
     const listings = this.listings.slice();
-    if (!listings.length) return true;
+    if (!listings.length) return this._setChecked(id, true);
     for (let i = 0; i < listings.length; i++) {
-      if (await listings[i].checkId(scope, id)) return true;
+      if (await listings[i].checkId(scope, id)) {
+        return this._setChecked(id, true);
+      }
     }
 
-    return false;
+    return this._setChecked(id, false);
   }
 
   ids(scope: GunScope, opts = {}) {

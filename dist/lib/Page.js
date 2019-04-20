@@ -82,8 +82,8 @@ var withListingMatch = function (path, params) {
     var realQuery = gun_scope_1.query(view.ids.bind(view), "ids:" + path);
     return {
         preload: function (scope) { return preloadListing(scope, path, params); },
-        sidebar: gun_scope_1.query(function (scope) { return Listing_1.Listing.sidebarFromPath(scope, path); }, "sidebar:" + path),
-        space: gun_scope_1.query(function (scope) { return Listing_1.Listing.specFromPath(scope, path); }),
+        sidebar: gun_scope_1.query(view.sidebar.bind(view)),
+        space: gun_scope_1.query(view.space.bind(view)),
         ids: gun_scope_1.query(function (scope, opts) {
             if (opts === void 0) { opts = {}; }
             return realQuery(scope, R.mergeLeft(opts, params));
@@ -91,7 +91,7 @@ var withListingMatch = function (path, params) {
     };
 };
 var preloadListing = function (scope, path, params) { return __awaiter(_this, void 0, void 0, function () {
-    var match, promise, _a, spec, ids, opIds, chatPath;
+    var match, promise, _a, spec, ids, thingSouls, things, opIds, opSouls, chatPath;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -106,17 +106,29 @@ var preloadListing = function (scope, path, params) { return __awaiter(_this, vo
                 _a = (_b.sent()), spec = _a[0], ids = _a[1];
                 if (!spec)
                     spec = Listing_1.ListingSpec.fromSource('');
-                opIds = R.pathOr([], ['filters', 'allow', 'ops'], spec);
-                if (!opIds.length) return [3 /*break*/, 3];
-                return [4 /*yield*/, Promise.all(opIds.map(function (id) {
-                        return Query_1.Query.thingForDisplay(scope, id, spec.tabulator || Config_1.Config.tabulator);
-                    }))];
+                thingSouls = Listing_1.Listing.idsToSouls(ids);
+                return [4 /*yield*/, Promise.all([
+                        Query_1.Query.multiThingMeta(scope, {
+                            thingSouls: thingSouls,
+                            tabulator: spec.tabulator || Config_1.Config.tabulator,
+                            scores: true,
+                            data: true
+                        })
+                    ].concat(R.map(function (id) { return Query_1.Query.userMeta(scope, id); }, R.uniq([spec && spec.indexer, spec && spec.owner, spec && spec.tabulator]))))];
             case 2:
+                things = (_b.sent())[0];
+                opIds = R.compose(R.without(ids), function (ids) { return ids.filter(function (x) { return !!x; }); }, R.uniq, R.map(R.pathOr(null, ['data', 'opId'])))(things);
+                if (!opIds.length) return [3 /*break*/, 4];
+                opSouls = Listing_1.Listing.idsToSouls(opIds);
+                return [4 /*yield*/, Query_1.Query.multiThingMeta(scope, {
+                        thingSouls: opSouls,
+                        tabulator: spec.tabulator || Config_1.Config.tabulator,
+                        data: true
+                    })];
+            case 3:
                 _b.sent();
-                _b.label = 3;
-            case 3: return [4 /*yield*/, Promise.all(ids.map(function (id) { return Query_1.Query.thingForDisplay(scope, id, spec.tabulator || Config_1.Config.tabulator); }))];
+                _b.label = 4;
             case 4:
-                _b.sent();
                 if (!spec.chatTopic) return [3 /*break*/, 6];
                 chatPath = "/t/" + spec.chatTopic + "/chat";
                 if (!(chatPath !== path)) return [3 /*break*/, 6];
@@ -163,22 +175,12 @@ var spaceThingComments = function (_a) {
     var _b = _a.name, defaultName = _b === void 0 ? 'default' : _b, _c = _a.authorId, defaultAuthorId = _c === void 0 ? '' : _c, _d = _a.sort, defaultSort = _d === void 0 ? 'hot' : _d, rest = __rest(_a, ["name", "authorId", "sort"]);
     return (__assign({}, rest, { withMatch: function (_a) {
             var _b = _a.params, _c = _b.opId, opId = _c === void 0 ? '' : _c, _d = _b.authorId, authorId = _d === void 0 ? defaultAuthorId : _d, _e = _b.name, name = _e === void 0 ? defaultName : _e, _f = _b.sort, sort = _f === void 0 ? defaultSort : _f, _g = _a.query, queryParams = _g === void 0 ? {} : _g;
-            var spacePath = Listing_1.ListingType.SpaceListing.route.reverse({
+            return withListingMatch(Listing_1.ListingType.SpaceCommentListing.route.reverse({
                 authorId: authorId || Config_1.Config.owner,
                 name: name,
-                sort: sort
-            });
-            var listingPath = Listing_1.ListingType.CommentListing.route.reverse({
-                thingId: opId,
-                sort: sort
-            });
-            var view = new Listing_1.ListingQuery(listingPath);
-            var idsQuery = gun_scope_1.query(view.ids.bind(view), "ids:" + listingPath);
-            return {
-                space: gun_scope_1.query(function (scope) { return Listing_1.Listing.specFromPath(scope, spacePath, queryParams); }, "spec:" + spacePath),
-                ids: idsQuery,
-                preload: gun_scope_1.query(function (scope) { return preloadListing(scope, listingPath, queryParams); })
-            };
+                sort: sort,
+                thingId: opId
+            }), R.assoc('limit', 1000, queryParams));
         } }));
 };
 var profile = function (_a) {

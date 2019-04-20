@@ -772,12 +772,15 @@
         });
         return ajv;
     }, sea.initAjv);
-    var suppressor = gunSuppressor.createSuppressor({
-        definitions: Schema.definitions,
-        init: initAjv
-    });
+    var create = function () {
+        return gunSuppressor.createSuppressor({
+            definitions: Schema.definitions,
+            init: initAjv
+        });
+    };
     var gunWireInput = R.curry(function (peer, context) {
-        return context.on('in', function wireInput(msg) {
+        var suppressor = create();
+        context.on('in', function wireInput(msg) {
             var _this = this;
             var _ = msg['_'];
             delete msg['_'];
@@ -797,6 +800,7 @@
         });
     });
     var Validation = {
+        createSuppressor: create,
         isLegacyThing: isLegacyThing,
         thingHashMatchesSoul: thingHashMatchesSoul,
         signedThingDataMatches: signedThingDataMatches,
@@ -806,7 +810,6 @@
         isVoteValid: isVoteValid,
         keysAreProofsOfWork: keysAreProofsOfWork,
         initAjv: initAjv,
-        suppressor: suppressor,
         gunWireInput: gunWireInput
     };
 
@@ -1022,6 +1025,106 @@
         read: read,
         diff: diff,
         unionRows: unionRows
+    };
+
+    var thing = gunScope.query(function (scope, thingSoul) {
+        return scope.get(thingSoul).then(function (meta) {
+            if (!meta || !meta.id)
+                return null;
+            var result = {
+                id: meta.id,
+                timestamp: parseFloat(meta.timestamp)
+            };
+            var replyToSoul = R.pathOr('', ['replyTo', '#'], meta);
+            var opSoul = R.pathOr('', ['op', '#'], meta);
+            var opId = R.propOr('', 'thingId', opSoul && Schema.Thing.route.match(opSoul));
+            var replyToId = R.propOr('', 'thingId', replyToSoul && Schema.Thing.route.match(replyToSoul));
+            if (opId)
+                result.opId = opId;
+            if (replyToId)
+                result.replyToId = replyToId;
+            return result;
+        });
+    });
+    var thingDataFromSouls = R.curry(function (scope, souls) {
+        var ids = ListingNode.soulsToIds(souls || []);
+        return gunScope.all(R.map(function (id) { return thingData(scope, id).then(function (data) { return [id, data]; }); }, ids)).then(function (pairs) {
+            return pairs.reduce(function (res, _a) {
+                var id = _a[0], data = _a[1];
+                return R.assoc(id, data, res);
+            }, {});
+        });
+    });
+    var thingScores = gunScope.query(function (scope, thingId, tabulator) {
+        if (tabulator === void 0) { tabulator = ''; }
+        if (!thingId)
+            return gunScope.resolve(null);
+        return scope
+            .get(Schema.ThingVoteCounts.route.reverse({
+            thingId: thingId,
+            tabulator: tabulator || Config.tabulator
+        }))
+            .then();
+    }, 'thingScores');
+    var thingData = gunScope.query(function (scope, thingId) {
+        return thingId ? scope.get(Schema.Thing.route.reverse({ thingId: thingId })).get('data') : gunScope.resolve(null);
+    }, 'thingData');
+    var thingMeta = gunScope.query(function (scope, _a) {
+        var thingSoul = _a.thingSoul, tabulator = _a.tabulator, _b = _a.data, data = _b === void 0 ? false : _b, _c = _a.scores, scores = _c === void 0 ? false : _c;
+        if (!thingSoul)
+            return gunScope.resolve(null);
+        var id = ListingNode.soulToId(thingSoul);
+        return gunScope.all([
+            thing(scope, thingSoul),
+            scores ? thingScores(scope, id, tabulator) : gunScope.resolve(null),
+            data ? thingData(scope, id) : gunScope.resolve(null)
+        ]).then(function (_a) {
+            var meta = _a[0], votes = _a[1], data = _a[2];
+            if (!meta || !meta.id)
+                return null;
+            return __assign({}, meta, { votes: votes, data: data });
+        });
+    });
+    var multiThingMeta = gunScope.query(function (scope, params) {
+        return gunScope.all(R.reduce(function (promises, thingSoul) {
+            if (!thingSoul)
+                return promises;
+            promises.push(thingMeta(scope, __assign({}, params, { thingSoul: thingSoul })));
+            return promises;
+        }, [], R.propOr([], 'thingSouls', params)));
+    });
+    var userPages = gunScope.query(function (scope, authorId) { return scope.get(Schema.AuthorPages.route.reverse({ authorId: authorId })); }, 'userPages');
+    var wikiPageId = gunScope.query(function (scope, authorId, name) {
+        if (!authorId || !name)
+            return gunScope.resolve(null);
+        return scope
+            .get(Schema.AuthorPages.route.reverse({ authorId: authorId }))
+            .get(name)
+            .get('id');
+    }, 'wikiPageId');
+    var wikiPage = gunScope.query(function (scope, authorId, name) {
+        return wikiPageId(scope, authorId, name).then(function (id) { return id && thingData(scope, id); });
+    });
+    var userMeta = gunScope.query(function (scope, id) {
+        if (!id)
+            return gunScope.resolve(null);
+        return scope.get("~" + id).then(function (meta) { return ({
+            alias: R.prop('alias', meta),
+            createdAt: R.path(['_', '>', 'pub'], meta)
+        }); });
+    }, 'userMeta');
+    var createScope = R.curry(function (nab, opts) { return gunScope.scope(R.assoc('gun', nab.gun, opts || {})); });
+    var Query = {
+        thingMeta: thingMeta,
+        multiThingMeta: multiThingMeta,
+        thingScores: thingScores,
+        thingData: thingData,
+        thingDataFromSouls: thingDataFromSouls,
+        userPages: userPages,
+        wikiPageId: wikiPageId,
+        wikiPage: wikiPage,
+        userMeta: userMeta,
+        createScope: createScope
     };
 
     var soul = R.pathOr('', ['_', '#']);
@@ -1329,123 +1432,6 @@
         index: index
     };
 
-    var thing = gunScope.query(function (scope, thingSoul) {
-        return scope.get(thingSoul).then(function (meta) {
-            if (!meta || !meta.id)
-                return null;
-            var result = {
-                id: meta.id,
-                timestamp: parseFloat(meta.timestamp)
-            };
-            var replyToSoul = R.pathOr('', ['replyTo', '#'], meta);
-            var opSoul = R.pathOr('', ['op', '#'], meta);
-            var opId = R.propOr('', 'thingId', opSoul && Schema.Thing.route.match(opSoul));
-            var replyToId = R.propOr('', 'thingId', replyToSoul && Schema.Thing.route.match(replyToSoul));
-            if (opId)
-                result.opId = opId;
-            if (replyToId)
-                result.replyToId = replyToId;
-            return result;
-        });
-    });
-    var thingDataFromSouls = R.curry(function (scope, souls) {
-        var ids = ListingNode.soulsToIds(souls || []);
-        return gunScope.all(R.map(function (id) { return thingData(scope, id).then(function (data) { return [id, data]; }); }, ids)).then(function (pairs) {
-            return pairs.reduce(function (res, _a) {
-                var id = _a[0], data = _a[1];
-                return R.assoc(id, data, res);
-            }, {});
-        });
-    });
-    var thingScores = gunScope.query(function (scope, thingId, tabulator) {
-        if (tabulator === void 0) { tabulator = ''; }
-        if (!thingId)
-            return gunScope.resolve(null);
-        return scope
-            .get(Schema.ThingVoteCounts.route.reverse({
-            thingId: thingId,
-            tabulator: tabulator || Config.tabulator
-        }))
-            .then();
-    });
-    var thingData = gunScope.query(function (scope, thingId) {
-        return thingId ? scope.get(Schema.Thing.route.reverse({ thingId: thingId })).get('data') : gunScope.resolve(null);
-    });
-    var thingMeta = gunScope.query(function (scope, _a) {
-        var thingSoul = _a.thingSoul, tabulator = _a.tabulator, _b = _a.data, data = _b === void 0 ? false : _b, _c = _a.scores, scores = _c === void 0 ? false : _c;
-        if (!thingSoul)
-            return gunScope.resolve(null);
-        var id = ListingNode.soulToId(thingSoul);
-        return gunScope.all([
-            thing(scope, thingSoul),
-            scores ? thingScores(scope, id, tabulator) : gunScope.resolve(null),
-            data ? thingData(scope, id) : gunScope.resolve(null)
-        ]).then(function (_a) {
-            var meta = _a[0], votes = _a[1], data = _a[2];
-            if (!meta || !meta.id)
-                return null;
-            return __assign({}, meta, { votes: votes, data: data });
-        });
-    });
-    var thingForDisplay = gunScope.query(function (scope, thingId, tabulator) {
-        if (tabulator === void 0) { tabulator = null; }
-        return Promise.all([thingData(scope, thingId), thingScores(scope, thingId, tabulator)]).then(function (_a) {
-            var data = _a[0], scores = _a[1];
-            var opId = ThingDataNode.opId(data);
-            if (!opId)
-                return { data: data, scores: scores };
-            return thingData(scope, opId).then(function (opData) { return ({
-                data: data,
-                scores: scores,
-                opData: opData
-            }); });
-        });
-    }, 'thing');
-    var multiThingMeta = gunScope.query(function (scope, params) {
-        return gunScope.all(R.reduce(function (promises, thingSoul) {
-            if (!thingSoul)
-                return promises;
-            promises.push(thingMeta(scope, __assign({}, params, { thingSoul: thingSoul })));
-            return promises;
-        }, [], R.propOr([], 'thingSouls', params)));
-    });
-    var userPages = gunScope.query(function (scope, authorId) { return scope.get(Schema.AuthorPages.route.reverse({ authorId: authorId })); }, 'userPages');
-    var wikiPageId = gunScope.query(function (scope, authorId, name) {
-        if (!authorId || !name)
-            return gunScope.resolve(null);
-        return scope
-            .get(Schema.AuthorPages.route.reverse({ authorId: authorId }))
-            .get(name)
-            .get('id');
-    }, 'wikiPageId');
-    var wikiPage = gunScope.query(function (scope, authorId, name) {
-        return wikiPageId(scope, authorId, name)
-            .then(function (id) { return id && thingForDisplay(scope, id, Config.tabulator); })
-            .then(R.propOr(null, 'data'));
-    });
-    var userMeta = gunScope.query(function (scope, id) {
-        if (!id)
-            return gunScope.resolve(null);
-        return scope.get("~" + id).then(function (meta) { return ({
-            alias: R.prop('alias', meta),
-            createdAt: R.path(['_', '>', 'pub'], meta)
-        }); });
-    }, 'userMeta');
-    var createScope = R.curry(function (nab, opts) { return gunScope.scope(R.assoc('gun', nab.gun, opts || {})); });
-    var Query = {
-        thingMeta: thingMeta,
-        multiThingMeta: multiThingMeta,
-        thingScores: thingScores,
-        thingData: thingData,
-        thingDataFromSouls: thingDataFromSouls,
-        thingForDisplay: thingForDisplay,
-        userPages: userPages,
-        wikiPageId: wikiPageId,
-        wikiPage: wikiPage,
-        userMeta: userMeta,
-        createScope: createScope
-    };
-
     var signup = R.curry(function (peer, username, password, opts) {
         if (opts === void 0) { opts = {}; }
         return new Promise(function (ok, fail) {
@@ -1503,7 +1489,7 @@
                 .filter(function (x) { return x; });
             if (!tokens.length)
                 return def;
-            return R.assocPath(tokens, {}, def);
+            return R.assocPath(tokens.slice(0, 10), {}, def);
         }, {});
         var isPresent = function (p) {
             var check = p;
@@ -1738,6 +1724,16 @@
             }
             return filterFunctions.push(R.compose.apply(R, fns));
         };
+        var addSubmissionFilter = function () {
+            var fns = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                fns[_i] = arguments[_i];
+            }
+            return addFilter(R.cond([
+                [R.pathEq(['data', 'kind'], 'submission'), R.compose.apply(R, fns)],
+                [R.T, R.T]
+            ]));
+        };
         var addVoteFilter = function () {
             var fns = [];
             for (var _i = 0; _i < arguments.length; _i++) {
@@ -1752,7 +1748,7 @@
             addFilter(function (t) { return !!isPresent(['author', t]); }, R.path(['data', 'authorId']));
         }
         if (filters.allow.domains.length) {
-            addFilter(function (t) { return !!isPresent(['domain', t]); }, ThingDataNode.domain, R.prop('data'));
+            addSubmissionFilter(function (t) { return !!isPresent(['domain', t]); }, ThingDataNode.domain, R.prop('data'));
         }
         if (filters.allow.topics.length &&
             !R.find(R.compose(R.identical('all'), R.last, R.split(':')), filters.allow.topics)) {
@@ -1779,7 +1775,7 @@
             addFilter(function (authorId) { return !isPresent(['ban', 'author', authorId]); }, R.path(['data', 'authorId']));
         }
         if (filters.deny.domains.length) {
-            addFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, ThingDataNode.domain, R.prop('data'));
+            addSubmissionFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, ThingDataNode.domain, R.prop('data'));
         }
         if (filters.deny.topics.length) {
             addFilter(function (topic) { return !isPresent(['ban', 'topic', topic]); }, R.path(['data', 'topic']));
@@ -2166,21 +2162,36 @@
         getSpec: getSpec$7
     });
 
-    var path$7 = '/user/:authorId/replies/:type/:sort';
+    var path$7 = '/user/:authorId/spaces/:name/comments/:thingId/:sort';
     var getSource$9 = gunScope.query(function (scope, _a) {
-        var authorId = _a.authorId, type = _a.type, _b = _a.sort, sort = _b === void 0 ? 'new' : _b;
-        return ListingSpec.getSource(scope, Config.indexer, 'listing:inbox', ["replies to author " + authorId, 'kind comment', "type " + type, "sort " + sort].join('\n'));
+        var thingId = _a.thingId, authorId = _a.authorId, name = _a.name, sort = _a.sort;
+        return SpaceSpec.getSource(scope, authorId, name, ["op " + thingId, "sort " + sort].join('\n'));
     });
-    var getSpec$8 = gunScope.query(function (scope, match) { return getSource$9(scope, match).then(ListingSpec.fromSource); });
-    var InboxListing = Path.withRoute({
+    var getSpec$8 = gunScope.query(function (scope, _a) {
+        var thingId = _a.thingId, authorId = _a.authorId, name = _a.name, sort = _a.sort;
+        return SpaceSpec.getSpec(scope, authorId, name, ["op " + thingId, "sort " + sort].join('\n'));
+    });
+    var SpaceCommentListing = Path.withRoute({
         path: path$7,
         getSource: getSource$9,
         getSpec: getSpec$8
     });
 
-    var path$8 = '/user/:authorId/:type/:sort';
-    var tabs$5 = ['overview', 'comments', 'submitted', 'commands'];
+    var path$8 = '/user/:authorId/replies/:type/:sort';
     var getSource$a = gunScope.query(function (scope, _a) {
+        var authorId = _a.authorId, type = _a.type, _b = _a.sort, sort = _b === void 0 ? 'new' : _b;
+        return ListingSpec.getSource(scope, Config.indexer, 'listing:inbox', ["replies to author " + authorId, 'kind comment', "type " + type, "sort " + sort].join('\n'));
+    });
+    var getSpec$9 = gunScope.query(function (scope, match) { return getSource$a(scope, match).then(ListingSpec.fromSource); });
+    var InboxListing = Path.withRoute({
+        path: path$8,
+        getSource: getSource$a,
+        getSpec: getSpec$9
+    });
+
+    var path$9 = '/user/:authorId/:type/:sort';
+    var tabs$5 = ['overview', 'comments', 'submitted', 'commands'];
+    var getSource$b = gunScope.query(function (scope, _a) {
         var authorId = _a.authorId, type = _a.type, sort = _a.sort;
         return ListingSpec.getSource(scope, Config.indexer, 'listing:profile', [
             "author " + authorId,
@@ -2188,19 +2199,19 @@
             "sort " + sort
         ].concat(R.map(function (tab) { return "tab " + tab + " /user/" + authorId + "/" + tab; }, tabs$5)).join('\n'));
     });
-    var getSpec$9 = gunScope.query(function (scope, match) {
+    var getSpec$a = gunScope.query(function (scope, match) {
         return Query.userMeta(scope, match.authorId).then(function (meta) {
-            return getSource$a(scope, match).then(R.pipe(ListingSpec.fromSource, R.mergeLeft({
+            return getSource$b(scope, match).then(R.pipe(ListingSpec.fromSource, R.mergeLeft({
                 profileId: match.authorId,
                 displayName: R.propOr('', 'alias', meta)
             })));
         });
     });
     var ProfileListing = Path.withRoute({
-        path: path$8,
+        path: path$9,
         tabs: tabs$5,
-        getSource: getSource$a,
-        getSpec: getSpec$9
+        getSource: getSource$b,
+        getSpec: getSpec$a
     });
 
     var types = {
@@ -2209,6 +2220,7 @@
         TopicListing: TopicListing,
         DomainListing: DomainListing,
         CommentListing: CommentListing,
+        SpaceCommentListing: SpaceCommentListing,
         SpaceListing: SpaceListing,
         InboxListing: InboxListing,
         CommentedListing: CommentedListing,
@@ -2224,58 +2236,59 @@
         }
         return null;
     };
-    var sidebarFromPath = gunScope.query(function (scope, path) {
-        return specFromPath(scope, path).then(function (spec) {
-            var _a = spec || {}, _b = _a.fromPageAuthor, fromPageAuthor = _b === void 0 ? '' : _b, _c = _a.fromPageName, fromPageName = _c === void 0 ? '' : _c;
-            if (!fromPageAuthor || !fromPageName)
-                return null;
-            return Query.wikiPage(scope, fromPageAuthor, fromPageName + ":sidebar");
-        });
-    });
-    var specFromPath = gunScope.query(function (scope, path) {
-        var type = fromPath(path);
-        if (!type)
-            throw new Error("Can't find type for path: " + path);
-        return type.getSpec(scope, type.match).then(function (baseSpec) {
-            var spec = baseSpec;
-            if (type.match.sort === 'default') {
-                spec = R.assoc('path', type.route.reverse(R.assoc('sort', spec.sort, type.match)), spec);
-            }
-            else {
-                spec = R.assoc('path', path, baseSpec);
-            }
-            if (spec.submitTopic && !spec.submitPath) {
-                spec = R.assoc('submitPath', "/t/" + spec.submitTopic + "/submit", spec);
-            }
-            return spec;
-        });
-    });
     var ListingType = __assign({}, types, { types: types,
-        fromPath: fromPath,
-        sidebarFromPath: sidebarFromPath,
-        specFromPath: specFromPath });
+        fromPath: fromPath });
 
     var ListingQuery = /** @class */ (function () {
         function ListingQuery(path, parent) {
             this.listings = [];
             this.viewCache = parent ? parent.viewCache : {};
             this.sourced = {};
+            this.checked = {};
             this.path = path;
             this.type = ListingType.fromPath(path);
+            if (!this.type)
+                throw new Error("Can't find type for path: " + path);
             this.spec = ListingSpec.fromSource('');
             this.rowsFromNode = parent ? parent.rowsFromNode : memoize(ListingNode.rows);
             this.combineSourceRows = parent
                 ? parent.combineSourceRows
                 : memoize(R.pipe(R.reduce(R.concat, []), ListingNode.sortRows, R.uniqBy(R.nth(ListingNode.POS_ID))));
         }
+        ListingQuery.prototype.space = function (scope) {
+            var _this = this;
+            return this.type.getSpec(scope, this.type.match).then(function (baseSpec) {
+                var spec = baseSpec;
+                if (_this.type.match.sort === 'default') {
+                    spec = R.assoc('path', _this.type.route.reverse(R.assoc('sort', spec.sort, _this.type.match)), spec);
+                }
+                else {
+                    spec = R.assoc('path', _this.path, baseSpec);
+                }
+                if (spec.submitTopic && !spec.submitPath) {
+                    spec = R.assoc('submitPath', "/t/" + spec.submitTopic + "/submit", spec);
+                }
+                if (!R.equals(_this.spec, spec)) {
+                    _this.spec = spec;
+                    _this.checked = {};
+                }
+                return _this.spec;
+            });
+        };
+        ListingQuery.prototype.sidebar = function (scope) {
+            return this.space(scope).then(function (spec) {
+                var _a = spec || {}, _b = _a.fromPageAuthor, fromPageAuthor = _b === void 0 ? '' : _b, _c = _a.fromPageName, fromPageName = _c === void 0 ? '' : _c;
+                if (!fromPageAuthor || !fromPageName)
+                    return null;
+                return Query.wikiPage(scope, fromPageAuthor, fromPageName + ":sidebar");
+            });
+        };
         ListingQuery.prototype.unfilteredRows = function (scope) {
             var _this = this;
             if (!this.type)
                 return Promise.resolve([]);
-            return this.type
-                .getSpec(scope, this.type.match)
+            return this.space(scope)
                 .then(function (spec) {
-                _this.spec = spec;
                 var paths = R.pathOr([], ['dataSource', 'listingPaths'], spec);
                 var listingPaths = R.without([_this.path], paths);
                 _this.listings = listingPaths.map(function (path) { return _this.viewCache[path] || (_this.viewCache[path] = new ListingQuery(path, _this)); });
@@ -2289,37 +2302,44 @@
                 return rows;
             });
         };
+        ListingQuery.prototype._setChecked = function (id, checked) {
+            this.checked[id] = checked;
+            return checked;
+        };
         ListingQuery.prototype.checkId = function (scope, id) {
             return __awaiter(this, void 0, void 0, function () {
                 var filterFn, listings, i;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
-                            if (this.spec.isIdSticky(id))
+                            if (this.checked[id])
                                 return [2 /*return*/, true];
+                            if (this.spec.isIdSticky(id))
+                                return [2 /*return*/, this._setChecked(id, true)];
                             if (!(id in this.sourced))
-                                return [2 /*return*/, false];
+                                return [2 /*return*/, this._setChecked(id, false)];
                             filterFn = ListingFilter.thingFilter(scope, this.spec);
                             return [4 /*yield*/, filterFn(id)];
                         case 1:
                             if (!(_a.sent()))
-                                return [2 /*return*/, false];
+                                return [2 /*return*/, this._setChecked(id, false)];
                             listings = this.listings.slice();
                             if (!listings.length)
-                                return [2 /*return*/, true];
+                                return [2 /*return*/, this._setChecked(id, true)];
                             i = 0;
                             _a.label = 2;
                         case 2:
                             if (!(i < listings.length)) return [3 /*break*/, 5];
                             return [4 /*yield*/, listings[i].checkId(scope, id)];
                         case 3:
-                            if (_a.sent())
-                                return [2 /*return*/, true];
+                            if (_a.sent()) {
+                                return [2 /*return*/, this._setChecked(id, true)];
+                            }
                             _a.label = 4;
                         case 4:
                             i++;
                             return [3 /*break*/, 2];
-                        case 5: return [2 /*return*/, false];
+                        case 5: return [2 /*return*/, this._setChecked(id, false)];
                     }
                 });
             });
@@ -2338,7 +2358,7 @@
 
     var Listing = __assign({}, ListingType.types, { ListingNode: ListingNode,
         ListingSpec: ListingSpec,
-        ListingQuery: ListingQuery, isValidSort: ListingSort.isValidSort, idsToSouls: ListingNode.idsToSouls, get: ListingNode.get, typeFromPath: ListingType.fromPath, sidebarFromPath: ListingType.sidebarFromPath, specFromPath: ListingType.specFromPath });
+        ListingQuery: ListingQuery, isValidSort: ListingSort.isValidSort, idsToSouls: ListingNode.idsToSouls, get: ListingNode.get, typeFromPath: ListingType.fromPath });
 
     var ThingQueue = /** @class */ (function () {
         function ThingQueue(peer, config, scopeOpts) {
@@ -2698,7 +2718,7 @@
                             return [3 /*break*/, 5];
                         case 4:
                             e_1 = _a.sent();
-                            console.error('Tabulator error', e_1.stack || e_1);
+                            console.error('Tabulator error', thingId, e_1.stack || e_1);
                             return [3 /*break*/, 5];
                         case 5:
                             this.processingId = '';
@@ -2822,8 +2842,8 @@
         var realQuery = gunScope.query(view.ids.bind(view), "ids:" + path);
         return {
             preload: function (scope) { return preloadListing(scope, path, params); },
-            sidebar: gunScope.query(function (scope) { return Listing.sidebarFromPath(scope, path); }, "sidebar:" + path),
-            space: gunScope.query(function (scope) { return Listing.specFromPath(scope, path); }),
+            sidebar: gunScope.query(view.sidebar.bind(view)),
+            space: gunScope.query(view.space.bind(view)),
             ids: gunScope.query(function (scope, opts) {
                 if (opts === void 0) { opts = {}; }
                 return realQuery(scope, R.mergeLeft(opts, params));
@@ -2831,7 +2851,7 @@
         };
     };
     var preloadListing = function (scope, path, params) { return __awaiter(_this$2, void 0, void 0, function () {
-        var match, promise, _a, spec, ids, opIds, chatPath;
+        var match, promise, _a, spec, ids, thingSouls, things, opIds, opSouls, chatPath;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -2846,17 +2866,29 @@
                     _a = (_b.sent()), spec = _a[0], ids = _a[1];
                     if (!spec)
                         spec = ListingSpec.fromSource('');
-                    opIds = R.pathOr([], ['filters', 'allow', 'ops'], spec);
-                    if (!opIds.length) return [3 /*break*/, 3];
-                    return [4 /*yield*/, Promise.all(opIds.map(function (id) {
-                            return Query.thingForDisplay(scope, id, spec.tabulator || Config.tabulator);
-                        }))];
+                    thingSouls = Listing.idsToSouls(ids);
+                    return [4 /*yield*/, Promise.all([
+                            Query.multiThingMeta(scope, {
+                                thingSouls: thingSouls,
+                                tabulator: spec.tabulator || Config.tabulator,
+                                scores: true,
+                                data: true
+                            })
+                        ].concat(R.map(function (id) { return Query.userMeta(scope, id); }, R.uniq([spec && spec.indexer, spec && spec.owner, spec && spec.tabulator]))))];
                 case 2:
+                    things = (_b.sent())[0];
+                    opIds = R.compose(R.without(ids), function (ids) { return ids.filter(function (x) { return !!x; }); }, R.uniq, R.map(R.pathOr(null, ['data', 'opId'])))(things);
+                    if (!opIds.length) return [3 /*break*/, 4];
+                    opSouls = Listing.idsToSouls(opIds);
+                    return [4 /*yield*/, Query.multiThingMeta(scope, {
+                            thingSouls: opSouls,
+                            tabulator: spec.tabulator || Config.tabulator,
+                            data: true
+                        })];
+                case 3:
                     _b.sent();
-                    _b.label = 3;
-                case 3: return [4 /*yield*/, Promise.all(ids.map(function (id) { return Query.thingForDisplay(scope, id, spec.tabulator || Config.tabulator); }))];
+                    _b.label = 4;
                 case 4:
-                    _b.sent();
                     if (!spec.chatTopic) return [3 /*break*/, 6];
                     chatPath = "/t/" + spec.chatTopic + "/chat";
                     if (!(chatPath !== path)) return [3 /*break*/, 6];
@@ -2903,22 +2935,12 @@
         var _b = _a.name, defaultName = _b === void 0 ? 'default' : _b, _c = _a.authorId, defaultAuthorId = _c === void 0 ? '' : _c, _d = _a.sort, defaultSort = _d === void 0 ? 'hot' : _d, rest = __rest(_a, ["name", "authorId", "sort"]);
         return (__assign({}, rest, { withMatch: function (_a) {
                 var _b = _a.params, _c = _b.opId, opId = _c === void 0 ? '' : _c, _d = _b.authorId, authorId = _d === void 0 ? defaultAuthorId : _d, _e = _b.name, name = _e === void 0 ? defaultName : _e, _f = _b.sort, sort = _f === void 0 ? defaultSort : _f, _g = _a.query, queryParams = _g === void 0 ? {} : _g;
-                var spacePath = ListingType.SpaceListing.route.reverse({
+                return withListingMatch(ListingType.SpaceCommentListing.route.reverse({
                     authorId: authorId || Config.owner,
                     name: name,
-                    sort: sort
-                });
-                var listingPath = ListingType.CommentListing.route.reverse({
-                    thingId: opId,
-                    sort: sort
-                });
-                var view = new ListingQuery(listingPath);
-                var idsQuery = gunScope.query(view.ids.bind(view), "ids:" + listingPath);
-                return {
-                    space: gunScope.query(function (scope) { return Listing.specFromPath(scope, spacePath, queryParams); }, "spec:" + spacePath),
-                    ids: idsQuery,
-                    preload: gunScope.query(function (scope) { return preloadListing(scope, listingPath, queryParams); })
-                };
+                    sort: sort,
+                    thingId: opId
+                }), R.assoc('limit', 1000, queryParams));
             } }));
     };
     var profile = function (_a) {
