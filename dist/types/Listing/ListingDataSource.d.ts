@@ -1,18 +1,18 @@
 import * as R from 'ramda';
 export declare const ListingDataSource: {
     fromDefinition: (definition: any) => R.Merge<{
-        name: "listing" | "replies" | "op" | "curator" | "author" | "domain" | "topic";
+        name: "op" | "listing" | "replies" | "curator" | "author" | "domain" | "topic";
     }, {
         listingPaths: string[];
     }>;
     sources: {
+        op: (definition: any) => {
+            listingPaths: string[];
+        };
         listing: (definition: any) => {
             listingPaths: string[];
         };
         replies: (definition: any) => {
-            listingPaths: string[];
-        };
-        op: (definition: any) => {
             listingPaths: string[];
         };
         curator: (definition: any) => {

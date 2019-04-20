@@ -85,9 +85,9 @@ var repliesSource = function (definition) {
     return { listingPaths: listingPaths };
 };
 var sources = {
+    op: opSource,
     listing: listingSource,
     replies: repliesSource,
-    op: opSource,
     curator: curatorSource,
     author: authorSource,
     domain: domainSource,

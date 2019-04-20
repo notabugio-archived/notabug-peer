@@ -100,9 +100,9 @@ const repliesSource = (definition: ListingDefinitionType) => {
 };
 
 const sources = {
+  op: opSource,
   listing: listingSource,
   replies: repliesSource,
-  op: opSource,
   curator: curatorSource,
   author: authorSource,
   domain: domainSource,
