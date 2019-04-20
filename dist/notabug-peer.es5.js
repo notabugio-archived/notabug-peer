@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, pipe, of, uniq, find, identical, last, lte, gte, equals, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, assoc, curry, prop, path, dissoc, difference, omit, sortBy, includes, multiply, apply, juxt, identity, slice, filter, sortWith, ascend, cond, isNil, T, addIndex, indexBy, concat, uniq, find, identical, last, lte, gte, equals, match, mergeRight, pipe, of, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from 'gun-scope';
 
 /*! *****************************************************************************
@@ -1779,7 +1779,7 @@ var fromDefinition$1 = function (definition) {
         addFilter(function (authorId) { return !isPresent(['ban', 'author', authorId]); }, path(['data', 'authorId']));
     }
     if (filters.deny.domains.length) {
-        addFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, ThingDataNode.domain);
+        addFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, ThingDataNode.domain, prop('data'));
     }
     if (filters.deny.topics.length) {
         addFilter(function (topic) { return !isPresent(['ban', 'topic', topic]); }, path(['data', 'topic']));

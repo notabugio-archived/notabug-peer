@@ -1779,7 +1779,7 @@
             addFilter(function (authorId) { return !isPresent(['ban', 'author', authorId]); }, R.path(['data', 'authorId']));
         }
         if (filters.deny.domains.length) {
-            addFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, ThingDataNode.domain);
+            addFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, ThingDataNode.domain, R.prop('data'));
         }
         if (filters.deny.topics.length) {
             addFilter(function (topic) { return !isPresent(['ban', 'topic', topic]); }, R.path(['data', 'topic']));

@@ -99,7 +99,7 @@ var fromDefinition = function (definition) {
         addFilter(function (authorId) { return !isPresent(['ban', 'author', authorId]); }, R.path(['data', 'authorId']));
     }
     if (filters.deny.domains.length) {
-        addFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, Thing_1.ThingDataNode.domain);
+        addFilter(function (domain) { return !domain || !isPresent(['ban', 'domain', domain]); }, Thing_1.ThingDataNode.domain, R.prop('data'));
     }
     if (filters.deny.topics.length) {
         addFilter(function (topic) { return !isPresent(['ban', 'topic', topic]); }, R.path(['data', 'topic']));

@@ -86,7 +86,8 @@ const fromDefinition = (definition: ListingDefinitionType) => {
   if (filters.deny.domains.length) {
     addFilter(
       (domain: string) => !domain || !isPresent(['ban', 'domain', domain]),
-      ThingDataNode.domain
+      ThingDataNode.domain,
+      R.prop('data')
     );
   }
   if (filters.deny.topics.length) {
