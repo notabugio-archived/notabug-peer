@@ -10,7 +10,7 @@ var tokenize = function (source) {
             .filter(function (x) { return x; });
         if (!tokens.length)
             return def;
-        return R.assocPath(tokens.slice(0, 10), {}, def);
+        return R.assocPath(tokens.slice(0, 6), {}, def);
     }, {});
     var isPresent = function (p) {
         var check = p;

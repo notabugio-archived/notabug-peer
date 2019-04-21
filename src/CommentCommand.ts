@@ -21,7 +21,7 @@ const map = (thingData: ThingDataMap): CommandMap =>
       if (!R.test(Constants.COMMAND_RE, body)) return cmdMap;
       const tokenized = [authorId, ...tokenize(body), id];
 
-      return R.assocPath(tokenized, timestamp || 0, cmdMap);
+      return R.assocPath(tokenized.slice(0, 6), timestamp || 0, cmdMap);
     },
     {},
     R.keys(thingData)

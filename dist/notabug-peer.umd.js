@@ -1489,7 +1489,7 @@
                 .filter(function (x) { return x; });
             if (!tokens.length)
                 return def;
-            return R.assocPath(tokens.slice(0, 10), {}, def);
+            return R.assocPath(tokens.slice(0, 6), {}, def);
         }, {});
         var isPresent = function (p) {
             var check = p;
@@ -2644,7 +2644,7 @@
             if (!R.test(Constants.COMMAND_RE, body))
                 return cmdMap;
             var tokenized = [authorId].concat(tokenize$1(body), [id]);
-            return R.assocPath(tokenized, timestamp || 0, cmdMap);
+            return R.assocPath(tokenized.slice(0, 6), timestamp || 0, cmdMap);
         }, {}, R.keys(thingData));
     };
     var CommentCommand = { tokenize: tokenize$1, map: map };

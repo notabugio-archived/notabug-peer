@@ -11,7 +11,7 @@ var map = function (thingData) {
         if (!R.test(Constants_1.Constants.COMMAND_RE, body))
             return cmdMap;
         var tokenized = [authorId].concat(tokenize(body), [id]);
-        return R.assocPath(tokenized, timestamp || 0, cmdMap);
+        return R.assocPath(tokenized.slice(0, 6), timestamp || 0, cmdMap);
     }, {}, R.keys(thingData));
 };
 exports.CommentCommand = { tokenize: tokenize, map: map };
