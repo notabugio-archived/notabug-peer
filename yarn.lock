@@ -798,10 +798,10 @@
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.3.tgz#2b5a3ab3f918cca48a8c754c08168e3f03eba61b"
   integrity sha512-shAmDyaQC4H92APFoIaVDHCx5bStIocgvbwQyxPRrbUY20V1EYTbSDchWbuwlMG3V17cprZhA6+78JfB+3DTPw==
 
-"@notabug/gun-scope@^0.4.3":
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/@notabug/gun-scope/-/gun-scope-0.4.3.tgz#d54ae395bd54ee89034974b9c02ef5d49cd93b79"
-  integrity sha512-KTX02J1KDKwvb4XGduS91SL67/xqZETus5XeW6Dv2yZXpcu5e7kMFSQPd9V1y6U5eTGhwks71geaJ1DPqhQYwg==
+"@notabug/gun-scope@^0.4.4":
+  version "0.4.4"
+  resolved "https://registry.yarnpkg.com/@notabug/gun-scope/-/gun-scope-0.4.4.tgz#464c30ee9b3bdf58e297a1f41d42ff7a11bd6718"
+  integrity sha512-fK1fMzTezo4BXJ+BenUYX/3A7q1NmxRxQ/8iQ9UKEkNKJsArJab0C8odty4kaQU+MuuxhLkapQc8Kp/JX7prKg==
   dependencies:
     abab "^1.0.4"
     abbrev "^1.1.1"

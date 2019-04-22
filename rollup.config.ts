@@ -19,7 +19,7 @@ export default {
   external: [
     'argon2',
     'fast-memoize',
-    'gun-scope',
+    '@notabug/gun-scope',
     'gun-suppressor',
     'gun-suppressor-sear',
     'object-hash',

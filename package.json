@@ -1,6 +1,6 @@
 {
   "name": "notabug-peer",
-  "version": "0.20.0",
+  "version": "0.20.1",
   "description": "",
   "keywords": [],
   "main": "dist/notabug-peer.umd.js",
@@ -123,7 +123,7 @@
     "typescript": "^3.4.3"
   },
   "dependencies": {
-    "@notabug/gun-scope": "^0.4.3",
+    "@notabug/gun-scope": "^0.4.4",
     "argon2": "^0.21.0",
     "fast-memoize": "^2.5.1",
     "gun-suppressor": "git+https://github.com/notabugio/gun-suppressor.git",
