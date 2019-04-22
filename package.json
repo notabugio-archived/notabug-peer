@@ -1,6 +1,6 @@
 {
   "name": "@notabug/peer",
-  "version": "0.21.0",
+  "version": "0.21.1",
   "description": "",
   "keywords": [],
   "main": "dist/@notabug/peer.umd.js",
@@ -125,7 +125,7 @@
   "dependencies": {
     "@notabug/gun-scope": "^0.4.4",
     "@notabug/gun-suppressor": "^0.1.0",
-    "@notabug/gun-suppressor-sear": "^0.1.0",
+    "@notabug/gun-suppressor-sear": "^0.1.1",
     "argon2": "^0.21.0",
     "fast-memoize": "^2.5.1",
     "object-hash": "^1.3.1",
