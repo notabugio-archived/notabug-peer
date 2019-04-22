@@ -6,6 +6,6 @@ declare class TabulatorQueue extends ThingQueue {
 }
 export declare const Tabulator: {
     Queue: typeof TabulatorQueue;
-    query: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<ThingVoteCountsType | null>;
+    query: (scope: any, ...args: any[]) => import("../../types/@notabug/gun-scope").GunScopePromise<ThingVoteCountsType | null>;
 };
 export {};

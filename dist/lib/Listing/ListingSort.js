@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var R = require("ramda");
-var gun_scope_1 = require("gun-scope");
+var gun_scope_1 = require("@notabug/gun-scope");
 var Schema_1 = require("../Schema");
 var Query_1 = require("../Query");
 var _a = [0, 1], POS_ID = _a[0], POS_VAL = _a[1];

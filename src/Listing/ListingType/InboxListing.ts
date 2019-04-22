@@ -1,4 +1,4 @@
-import { query } from 'gun-scope';
+import { query } from '@notabug/gun-scope';
 import { Config } from '../../Config';
 import { Path } from '../Path';
 import { ListingSpec } from '../ListingSpec';

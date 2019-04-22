@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { Promise } from 'gun-scope';
+import { Promise } from '@notabug/gun-scope';
 import objHash from 'object-hash';
 import { parse as parseURI } from 'uri-js';
 import { Schema } from '../Schema';

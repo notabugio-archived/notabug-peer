@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var R = require("ramda");
-var gun_scope_1 = require("gun-scope");
+var gun_scope_1 = require("@notabug/gun-scope");
 var Constants_1 = require("../Constants");
 var Config_1 = require("../Config");
 var Schema_1 = require("../Schema");

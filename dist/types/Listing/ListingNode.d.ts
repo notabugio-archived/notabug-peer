@@ -10,7 +10,7 @@ export declare const ListingNode: {
     POS_ID: number;
     POS_VAL: number;
     source: <U, V>(obj: U) => V;
-    get: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<any>;
+    get: (scope: any, ...args: any[]) => import("../../types/@notabug/gun-scope").GunScopePromise<any>;
     getRow: typeof getRow;
     itemKeys: (x0: any) => string[];
     rows: typeof rows;
@@ -26,8 +26,8 @@ export declare const ListingNode: {
     sortedIds: (x: any) => (string | undefined)[];
     soulFromPath: Curry.Curry<(indexer: any, path: any) => string>;
     pathFromSoul: (x0: string) => string;
-    rowsFromSouls: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<[number | null, string | null, number | null][]>;
-    read: (scope: any, ...args: any[]) => import("../../types/gun-scope").GunScopePromise<{} | string[]>;
+    rowsFromSouls: (scope: any, ...args: any[]) => import("../../types/@notabug/gun-scope").GunScopePromise<[number | null, string | null, number | null][]>;
+    read: (scope: any, ...args: any[]) => import("../../types/@notabug/gun-scope").GunScopePromise<{} | string[]>;
     diff: typeof diff;
     unionRows: (x: readonly any[]) => [number | null, string | null, number | null][];
 };

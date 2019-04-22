@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { query } from 'gun-scope';
+import { query } from '@notabug/gun-scope';
 import { Config } from '../Config';
 import { Tokenizer } from '../Tokenizer';
 import { Query } from '../Query';

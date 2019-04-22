@@ -57,7 +57,7 @@ var __rest = (this && this.__rest) || function (s, e) {
 var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var R = require("ramda");
-var gun_scope_1 = require("gun-scope");
+var gun_scope_1 = require("@notabug/gun-scope");
 var Config_1 = require("./Config");
 var Query_1 = require("./Query");
 var Listing_1 = require("./Listing");

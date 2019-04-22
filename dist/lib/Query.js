@@ -12,7 +12,7 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var R = require("ramda");
-var gun_scope_1 = require("gun-scope");
+var gun_scope_1 = require("@notabug/gun-scope");
 var Config_1 = require("./Config");
 var Schema_1 = require("./Schema");
 var ListingNode_1 = require("./Listing/ListingNode");

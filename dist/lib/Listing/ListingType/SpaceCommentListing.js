@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var gun_scope_1 = require("gun-scope");
+var gun_scope_1 = require("@notabug/gun-scope");
 var Path_1 = require("../Path");
 var SpaceSpec_1 = require("../SpaceSpec");
 var path = '/user/:authorId/spaces/:name/comments/:thingId/:sort';

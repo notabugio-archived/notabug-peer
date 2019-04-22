@@ -3,9 +3,9 @@ import { GunScope } from './types';
 export declare const Page: {
     withListingMatch: (path: string, params?: any) => {
         preload: (scope: GunScope) => Promise<any>;
-        sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-        space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-        ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
+        sidebar: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+        space: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+        ids: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<string[]>;
     };
     preloadListing: (scope: GunScope, path: string, params?: any) => Promise<any>;
     wikiPage: <T2>(b: T2) => R.Merge<{
@@ -15,7 +15,7 @@ export declare const Page: {
                 name: string;
             };
         }) => {
-            preload: (scope: GunScope) => import("../types/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
+            preload: (scope: GunScope) => import("../types/@notabug/gun-scope").GunScopePromise<import("./types").ThingDataNodeType | null>;
         };
     }, T2>;
     thingComments: ({ prefix: defaultPrefix, identifier: defaultIdentifier, sort: defaultSort, ...rest }?: {
@@ -30,9 +30,9 @@ export declare const Page: {
             query?: {} | undefined;
         }) => {
             preload: (scope: GunScope) => Promise<any>;
-            sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
+            sidebar: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            space: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<string[]>;
         };
     };
     listing: ({ prefix: defaultPrefix, identifier: defaultIdentifier, sort: defaultSort, ...rest }?: {
@@ -49,9 +49,9 @@ export declare const Page: {
             query?: {} | undefined;
         }) => {
             preload: (scope: GunScope) => Promise<any>;
-            sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
+            sidebar: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            space: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<string[]>;
         };
     };
     spaceListing: ({ name: defaultName, authorId: defaultAuthorId, sort: defaultSort, ...rest }?: {
@@ -68,9 +68,9 @@ export declare const Page: {
             query?: {} | undefined;
         }) => {
             preload: (scope: GunScope) => Promise<any>;
-            sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
+            sidebar: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            space: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<string[]>;
         };
     };
     spaceThingComments: ({ name: defaultName, authorId: defaultAuthorId, sort: defaultSort, ...rest }: {
@@ -89,9 +89,9 @@ export declare const Page: {
             query?: {} | undefined;
         }) => {
             preload: (scope: GunScope) => Promise<any>;
-            sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
+            sidebar: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            space: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<string[]>;
         };
     };
     profile: ({ sort: defaultSort, type: defaultType, ...rest }?: {
@@ -107,9 +107,9 @@ export declare const Page: {
             query?: {} | undefined;
         }) => {
             preload: (scope: GunScope) => Promise<any>;
-            sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
+            sidebar: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            space: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<string[]>;
         };
     };
     inbox: ({ sort: defaultSort, type: defaultType, ...rest }?: {
@@ -125,9 +125,9 @@ export declare const Page: {
             query?: {} | undefined;
         }) => {
             preload: (scope: GunScope) => Promise<any>;
-            sidebar: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            space: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<any>;
-            ids: (scope: any, ...args: any[]) => import("../types/gun-scope").GunScopePromise<string[]>;
+            sidebar: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            space: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<any>;
+            ids: (scope: any, ...args: any[]) => import("../types/@notabug/gun-scope").GunScopePromise<string[]>;
         };
     };
 };

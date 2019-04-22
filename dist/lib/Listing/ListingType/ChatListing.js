@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var R = require("ramda");
-var gun_scope_1 = require("gun-scope");
+var gun_scope_1 = require("@notabug/gun-scope");
 var Config_1 = require("../../Config");
 var Path_1 = require("../Path");
 var ListingSpec_1 = require("../ListingSpec");
