@@ -13,7 +13,7 @@ var __assign = (this && this.__assign) || function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var R = require("ramda");
 var route_parser_1 = require("route-parser");
-var gun_suppressor_sear_1 = require("gun-suppressor-sear");
+var gun_suppressor_sear_1 = require("@notabug/gun-suppressor-sear");
 var Constants_1 = require("./Constants");
 var definitions = __assign({}, gun_suppressor_sear_1.AUTH_SCHEMA, { topicName: {
         type: 'string',

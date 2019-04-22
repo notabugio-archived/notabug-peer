@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import objHash from 'object-hash';
-import { createSuppressor } from 'gun-suppressor';
-import * as sea from 'gun-suppressor-sear';
+import { createSuppressor } from '@notabug/gun-suppressor';
+import * as sea from '@notabug/gun-suppressor-sear';
 import { NabProtocolMsg, GunNodeType, SchemaNodeType, ThingDataNodeType } from './types';
 import { Schema } from './Schema';
 

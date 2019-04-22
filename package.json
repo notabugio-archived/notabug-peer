@@ -1,11 +1,11 @@
 {
-  "name": "notabug-peer",
-  "version": "0.20.1",
+  "name": "@notabug/peer",
+  "version": "0.21.0",
   "description": "",
   "keywords": [],
-  "main": "dist/notabug-peer.umd.js",
-  "module": "dist/notabug-peer.es5.js",
-  "typings": "dist/types/notabug-peer.d.ts",
+  "main": "dist/@notabug/peer.umd.js",
+  "module": "dist/@notabug/peer.es5.js",
+  "typings": "dist/types/@notabug/peer.d.ts",
   "files": [
     "dist"
   ],
@@ -124,10 +124,10 @@
   },
   "dependencies": {
     "@notabug/gun-scope": "^0.4.4",
+    "@notabug/gun-suppressor": "^0.1.0",
+    "@notabug/gun-suppressor-sear": "^0.1.0",
     "argon2": "^0.21.0",
     "fast-memoize": "^2.5.1",
-    "gun-suppressor": "git+https://github.com/notabugio/gun-suppressor.git",
-    "gun-suppressor-sear": "git+https://github.com/notabugio/gun-suppressor-sear.git",
     "object-hash": "^1.3.1",
     "query-string": "^6.4.2",
     "ramda": "^0.26.1",

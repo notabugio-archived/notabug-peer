@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import Route from 'route-parser';
 import { SchemaNodeTypeMap } from './types';
-import { AUTH_SCHEMA } from 'gun-suppressor-sear';
+import { AUTH_SCHEMA } from '@notabug/gun-suppressor-sear';
 import { Constants } from './Constants';
 
 const definitions = {

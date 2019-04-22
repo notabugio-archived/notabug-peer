@@ -7,7 +7,7 @@ import json from 'rollup-plugin-json';
 
 const pkg = require('./package.json');
 
-const libraryName = 'notabug-peer';
+const libraryName = '@notabug/peer';
 
 export default {
   input: `src/${libraryName}.ts`,
@@ -20,8 +20,8 @@ export default {
     'argon2',
     'fast-memoize',
     '@notabug/gun-scope',
-    'gun-suppressor',
-    'gun-suppressor-sear',
+    '@notabug/gun-suppressor',
+    '@notabug/gun-suppressor-sear',
     'object-hash',
     'query-string',
     'ramda',

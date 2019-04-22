@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var R = require("ramda");
 var object_hash_1 = require("object-hash");
-var gun_suppressor_1 = require("gun-suppressor");
-var sea = require("gun-suppressor-sear");
+var gun_suppressor_1 = require("@notabug/gun-suppressor");
+var sea = require("@notabug/gun-suppressor-sear");
 var Schema_1 = require("./Schema");
 var isLegacyThing = function (_schema, data) {
     var dataSoul = R.pathOr('', ['data', '#'], data);

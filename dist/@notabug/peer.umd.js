@@ -1,6 +1,6 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('gun-suppressor'), require('gun-suppressor-sear'), require('object-hash'), require('uri-js'), require('route-parser'), require('fast-memoize'), require('ramda'), require('@notabug/gun-scope')) :
-    typeof define === 'function' && define.amd ? define(['exports', 'gun-suppressor', 'gun-suppressor-sear', 'object-hash', 'uri-js', 'route-parser', 'fast-memoize', 'ramda', '@notabug/gun-scope'], factory) :
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@notabug/gun-suppressor'), require('@notabug/gun-suppressor-sear'), require('object-hash'), require('uri-js'), require('route-parser'), require('fast-memoize'), require('ramda'), require('@notabug/gun-scope')) :
+    typeof define === 'function' && define.amd ? define(['exports', '@notabug/gun-suppressor', '@notabug/gun-suppressor-sear', 'object-hash', 'uri-js', 'route-parser', 'fast-memoize', 'ramda', '@notabug/gun-scope'], factory) :
     (factory((global.notabugPeer = {}),global.gunSuppressor,global.sea,global.objHash,global.uriJs,global.Route,global.memoize,global.R,global.gunScope));
 }(this, (function (exports,gunSuppressor,sea,objHash,uriJs,Route,memoize,R,gunScope) { 'use strict';
 
@@ -2971,9 +2971,9 @@
         inbox: inbox
     };
 
-    var notabugPeer = Peer.init;
+    var peer = Peer.init;
 
-    exports.default = notabugPeer;
+    exports.default = peer;
     exports.Config = Config;
     exports.Constants = Constants;
     exports.CommentCommand = CommentCommand;
@@ -2993,4 +2993,4 @@
     Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
-//# sourceMappingURL=notabug-peer.umd.js.map
+//# sourceMappingURL=peer.umd.js.map
