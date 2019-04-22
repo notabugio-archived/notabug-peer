@@ -1,6 +1,6 @@
 {
   "name": "@notabug/peer",
-  "version": "0.21.1",
+  "version": "0.21.3",
   "description": "",
   "keywords": [],
   "main": "dist/@notabug/peer.umd.js",
@@ -95,7 +95,6 @@
     "coveralls": "^3.0.2",
     "cross-env": "^5.2.0",
     "cz-conventional-changelog": "^2.1.0",
-    "gun": "^0.2019.331",
     "husky": "^1.0.1",
     "jest": "^23.6.0",
     "jest-config": "^23.6.0",
@@ -125,7 +124,7 @@
   "dependencies": {
     "@notabug/gun-scope": "^0.4.4",
     "@notabug/gun-suppressor": "^0.1.0",
-    "@notabug/gun-suppressor-sear": "^0.1.1",
+    "@notabug/gun-suppressor-sear": "^0.2.0",
     "argon2": "^0.21.0",
     "fast-memoize": "^2.5.1",
     "object-hash": "^1.3.1",

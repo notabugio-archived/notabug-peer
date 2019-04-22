@@ -39,6 +39,7 @@ function init(Gun, config) {
             Gun.on('opt', Validation_1.Validation.gunWireInput(peer));
         if (cfg.storeFn)
             cfg.store = cfg.storeFn(cfg); // for indexeddb
+        peer.Gun = Gun;
         peer.gun = Gun(cfg);
         if (cfg.localStorage)
             peer.gun.on('localStorage:error', function (a) { return a.retry({}); });

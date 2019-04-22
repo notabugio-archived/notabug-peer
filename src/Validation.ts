@@ -176,51 +176,52 @@ const deleteMetaForMissing = (schema: any, data: any) => {
   return true;
 };
 
-const initAjv = R.compose(
-  (ajv: any) => {
-    ajv.addKeyword('isLegacyThing', {
-      validate: isLegacyThing
-    });
-    ajv.addKeyword('thingHashMatchesSoul', {
-      validate: thingHashMatchesSoul
-    });
-    ajv.addKeyword('signedThingDataMatchesThing', {
-      validate: signedThingDataMatches
-    });
-    ajv.addKeyword('thingDataMatchesOriginalHash', {
-      validate: thingDataMatchesOriginalHash
-    });
-    ajv.addKeyword('thingRelatedEdge', {
-      validate: getIsThingRelatedEdge(ajv)
-    });
-    ajv.addKeyword('thingDataHashMatchesSoul', {
-      validate: thingDataHashMatches
-    });
-    ajv.addKeyword('keysAreProofsOfWork', {
-      validate: keysAreProofsOfWork,
-      modifying: true
-    });
-    ajv.addKeyword('deleteNonNumericKeys', {
-      validate: deleteNonNumericKeys,
-      modifying: true
-    });
-    ajv.addKeyword('deleteMetaForMissing', {
-      validate: deleteMetaForMissing,
-      modifying: true
-    });
-    return ajv;
-  },
-  sea.initAjv
-);
+const initAjv = (Gun: any) =>
+  R.compose(
+    (ajv: any) => {
+      ajv.addKeyword('isLegacyThing', {
+        validate: isLegacyThing
+      });
+      ajv.addKeyword('thingHashMatchesSoul', {
+        validate: thingHashMatchesSoul
+      });
+      ajv.addKeyword('signedThingDataMatchesThing', {
+        validate: signedThingDataMatches
+      });
+      ajv.addKeyword('thingDataMatchesOriginalHash', {
+        validate: thingDataMatchesOriginalHash
+      });
+      ajv.addKeyword('thingRelatedEdge', {
+        validate: getIsThingRelatedEdge(ajv)
+      });
+      ajv.addKeyword('thingDataHashMatchesSoul', {
+        validate: thingDataHashMatches
+      });
+      ajv.addKeyword('keysAreProofsOfWork', {
+        validate: keysAreProofsOfWork,
+        modifying: true
+      });
+      ajv.addKeyword('deleteNonNumericKeys', {
+        validate: deleteNonNumericKeys,
+        modifying: true
+      });
+      ajv.addKeyword('deleteMetaForMissing', {
+        validate: deleteMetaForMissing,
+        modifying: true
+      });
+      return ajv;
+    },
+    (conf: any) => sea.initAjv(conf, Gun)
+  );
 
-const create = () =>
+const create = (Gun: any) =>
   createSuppressor({
     definitions: Schema.definitions,
-    init: initAjv
+    init: initAjv(Gun)
   });
 
 const gunWireInput = R.curry((peer, context) => {
-  const suppressor = create();
+  const suppressor = create(peer.Gun);
 
   context.on('in', function wireInput(this: any, msg: NabProtocolMsg) {
     const _ = msg['_'];

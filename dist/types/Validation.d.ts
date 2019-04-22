@@ -1,6 +1,6 @@
 /// <reference types="ramda" />
 export declare const Validation: {
-    createSuppressor: () => any;
+    createSuppressor: (Gun: any) => any;
     isLegacyThing: (_schema: any, data: any) => boolean | undefined;
     thingHashMatchesSoul: (_schema: any, data: any) => boolean;
     signedThingDataMatches: (_schema: any, data: any) => boolean;
@@ -9,6 +9,6 @@ export declare const Validation: {
     thingDataHashMatches: (_schema: any, data: any) => boolean;
     isVoteValid: (argon2: any, schema: any, prefix: string, vote: string) => boolean;
     keysAreProofsOfWork: (schema: any, data: any) => boolean;
-    initAjv: () => any;
+    initAjv: (Gun: any) => (x0: any) => any;
     gunWireInput: Curry.Curry<(peer: any, context: any) => void>;
 };

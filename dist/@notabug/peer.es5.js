@@ -739,47 +739,49 @@ var deleteMetaForMissing = function (schema, data) {
         data['_']['>'] = omit(missing, meta);
     return true;
 };
-var initAjv$1 = compose(function (ajv) {
-    ajv.addKeyword('isLegacyThing', {
-        validate: isLegacyThing
-    });
-    ajv.addKeyword('thingHashMatchesSoul', {
-        validate: thingHashMatchesSoul
-    });
-    ajv.addKeyword('signedThingDataMatchesThing', {
-        validate: signedThingDataMatches
-    });
-    ajv.addKeyword('thingDataMatchesOriginalHash', {
-        validate: thingDataMatchesOriginalHash
-    });
-    ajv.addKeyword('thingRelatedEdge', {
-        validate: getIsThingRelatedEdge(ajv)
-    });
-    ajv.addKeyword('thingDataHashMatchesSoul', {
-        validate: thingDataHashMatches
-    });
-    ajv.addKeyword('keysAreProofsOfWork', {
-        validate: keysAreProofsOfWork,
-        modifying: true
-    });
-    ajv.addKeyword('deleteNonNumericKeys', {
-        validate: deleteNonNumericKeys,
-        modifying: true
-    });
-    ajv.addKeyword('deleteMetaForMissing', {
-        validate: deleteMetaForMissing,
-        modifying: true
-    });
-    return ajv;
-}, initAjv);
-var create = function () {
+var initAjv$1 = function (Gun) {
+    return compose(function (ajv) {
+        ajv.addKeyword('isLegacyThing', {
+            validate: isLegacyThing
+        });
+        ajv.addKeyword('thingHashMatchesSoul', {
+            validate: thingHashMatchesSoul
+        });
+        ajv.addKeyword('signedThingDataMatchesThing', {
+            validate: signedThingDataMatches
+        });
+        ajv.addKeyword('thingDataMatchesOriginalHash', {
+            validate: thingDataMatchesOriginalHash
+        });
+        ajv.addKeyword('thingRelatedEdge', {
+            validate: getIsThingRelatedEdge(ajv)
+        });
+        ajv.addKeyword('thingDataHashMatchesSoul', {
+            validate: thingDataHashMatches
+        });
+        ajv.addKeyword('keysAreProofsOfWork', {
+            validate: keysAreProofsOfWork,
+            modifying: true
+        });
+        ajv.addKeyword('deleteNonNumericKeys', {
+            validate: deleteNonNumericKeys,
+            modifying: true
+        });
+        ajv.addKeyword('deleteMetaForMissing', {
+            validate: deleteMetaForMissing,
+            modifying: true
+        });
+        return ajv;
+    }, function (conf) { return initAjv(conf, Gun); });
+};
+var create = function (Gun) {
     return createSuppressor({
         definitions: Schema.definitions,
-        init: initAjv$1
+        init: initAjv$1(Gun)
     });
 };
 var gunWireInput = curry(function (peer, context) {
-    var suppressor = create();
+    var suppressor = create(peer.Gun);
     context.on('in', function wireInput(msg) {
         var _this = this;
         var _ = msg['_'];
@@ -2784,6 +2786,7 @@ function init(Gun, config) {
             Gun.on('opt', Validation.gunWireInput(peer));
         if (cfg.storeFn)
             cfg.store = cfg.storeFn(cfg); // for indexeddb
+        peer.Gun = Gun;
         peer.gun = Gun(cfg);
         if (cfg.localStorage)
             peer.gun.on('localStorage:error', function (a) { return a.retry({}); });
