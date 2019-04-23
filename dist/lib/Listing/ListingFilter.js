@@ -89,6 +89,8 @@ var fromDefinition = function (definition) {
         addFilter(function (item) {
             var topic = R.path(['data', 'topic'], item);
             var kind = R.path(['data', 'kind'], item);
+            if (kind === 'chatmsg')
+                topic = "chat:" + topic;
             return !!isPresent(['topic', topic]);
         });
     }

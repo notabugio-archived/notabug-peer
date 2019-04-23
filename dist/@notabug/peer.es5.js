@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, slice, filter, sortWith, ascend, cond, isNil, T, identity, addIndex, indexBy, concat, apply, juxt, sortBy, includes, multiply, pipe, equals, of, find, pathEq, identical, last, lte, gte, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, sortBy, includes, multiply, apply, juxt, identity, slice, filter, sortWith, ascend, cond, isNil, T, addIndex, indexBy, concat, pipe, equals, of, find, pathEq, identical, last, lte, gte, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from '@notabug/gun-scope';
 
 /*! *****************************************************************************
@@ -1756,6 +1756,8 @@ var fromDefinition$1 = function (definition) {
         addFilter(function (item) {
             var topic = path(['data', 'topic'], item);
             var kind = path(['data', 'kind'], item);
+            if (kind === 'chatmsg')
+                topic = "chat:" + topic;
             return !!isPresent(['topic', topic]);
         });
     }
