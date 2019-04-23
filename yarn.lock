@@ -806,10 +806,10 @@
     ramda "^0.26.1"
     zalgo-promise "1.0.28"
 
-"@notabug/gun-suppressor-sear@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@notabug/gun-suppressor-sear/-/gun-suppressor-sear-0.2.1.tgz#d7fb472ba5455d56e9307afe04de5a8b2c404dd0"
-  integrity sha512-xp6VhT7RgP5SFw1Kavjt+0Zk3zrtzn5Tag015+SsSbMdrLc2YUZczvLpx+LMtSXIAQ/Ou7qoPVgkCsL5czpd7g==
+"@notabug/gun-suppressor-sear@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@notabug/gun-suppressor-sear/-/gun-suppressor-sear-0.2.2.tgz#d854757af8322433c0bdd7f3af2ab2ea8bb5ad42"
+  integrity sha512-2kk+GL6oE6r/cwIoRfANMe9t5ur+RnQxX8koalTrBWduijDd/nKP0nk5Sq9vFt1BS4yVt8S0eaImrEUCLyYyag==
   dependencies:
     "@notabug/gun-suppressor" "^0.1.0"
     ajv "^6.6.2"
