@@ -1756,10 +1756,6 @@ var fromDefinition$1 = function (definition) {
         addFilter(function (item) {
             var topic = path(['data', 'topic'], item);
             var kind = path(['data', 'kind'], item);
-            if (kind === 'chatmsg')
-                topic = "chat:" + topic;
-            if (kind === 'comment')
-                topic = "comments:" + topic;
             return !!isPresent(['topic', topic]);
         });
     }

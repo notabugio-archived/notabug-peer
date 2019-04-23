@@ -68,8 +68,6 @@ const fromDefinition = (definition: ListingDefinitionType) => {
       let topic = R.path(['data', 'topic'], item);
       const kind = R.path(['data', 'kind'], item);
 
-      if (kind === 'chatmsg') topic = `chat:${topic}`;
-      if (kind === 'comment') topic = `comments:${topic}`;
       return !!isPresent(['topic', topic]);
     });
   }
