@@ -510,7 +510,6 @@ const definitions = {
     },
     additionalProperties: {
       sea: {
-        edgeMatchesKey: true,
         anyOf: [{ $ref: 'schema.json#/definitions/ThingEdge' }]
       }
     }

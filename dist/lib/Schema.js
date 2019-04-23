@@ -455,7 +455,6 @@ var definitions = __assign({}, gun_suppressor_sear_1.AUTH_SCHEMA, { topicName: {
         },
         additionalProperties: {
             sea: {
-                edgeMatchesKey: true,
                 anyOf: [{ $ref: 'schema.json#/definitions/ThingEdge' }]
             }
         }
