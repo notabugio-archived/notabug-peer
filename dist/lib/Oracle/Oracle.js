@@ -2,9 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var Oracle = /** @class */ (function () {
     function Oracle(peer) {
+        var onPut = this.onPut.bind(this);
         this.features = [];
         this.peer = peer;
-        this.peer.gun.on('put', this.onPut.bind(this));
+        this.peer.gun.on('put', function (msg) {
+            this.to.next(msg);
+            onPut(msg);
+        });
     }
     Oracle.prototype.use = function (feature) {
         this.features.push(feature);

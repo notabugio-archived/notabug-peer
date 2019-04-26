@@ -7,9 +7,13 @@ export class Oracle {
   features: OracleFeature[];
 
   constructor(peer: any) {
+    const onPut = this.onPut.bind(this);
     this.features = [];
     this.peer = peer;
-    this.peer.gun.on('put', this.onPut.bind(this));
+    this.peer.gun.on('put', function(this: any, msg: any) {
+      this.to.next(msg);
+      onPut(msg);
+    });
   }
 
   use(feature: OracleFeature) {

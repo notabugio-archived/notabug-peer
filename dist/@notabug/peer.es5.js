@@ -5,7 +5,7 @@ import { parse } from 'uri-js';
 import Route from 'route-parser';
 import memoize from 'fast-memoize';
 import * as R from 'ramda';
-import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, sortBy, includes, multiply, apply, juxt, identity, slice, filter, sortWith, ascend, cond, isNil, T, addIndex, indexBy, concat, pipe, equals, of, find, pathEq, identical, last, lte, gte, match, mergeRight, pick, toLower, ifElse } from 'ramda';
+import { compose, map, toPairs, trim, split, replace, defaultTo, nth, reduce, pathOr, test, assocPath, keys, without, keysIn, propOr, tap, uniqBy, values, mergeLeft, always, uniq, assoc, curry, prop, path, dissoc, difference, omit, apply, juxt, identity, sortBy, includes, multiply, pipe, concat, equals, of, indexBy, slice, filter, sortWith, ascend, cond, isNil, T, addIndex, find, pathEq, identical, last, lte, gte, match, mergeRight, pick, toLower, ifElse } from 'ramda';
 import { query, resolve, scope, all } from '@notabug/gun-scope';
 
 /*! *****************************************************************************
@@ -2757,9 +2757,13 @@ var Tabulator = { Queue: TabulatorQueue, query: tabulate };
 
 var Oracle = /** @class */ (function () {
     function Oracle(peer) {
+        var onPut = this.onPut.bind(this);
         this.features = [];
         this.peer = peer;
-        this.peer.gun.on('put', this.onPut.bind(this));
+        this.peer.gun.on('put', function (msg) {
+            this.to.next(msg);
+            onPut(msg);
+        });
     }
     Oracle.prototype.use = function (feature) {
         this.features.push(feature);
