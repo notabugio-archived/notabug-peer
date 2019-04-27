@@ -821,6 +821,15 @@
   resolved "https://registry.yarnpkg.com/@notabug/gun-suppressor/-/gun-suppressor-0.1.0.tgz#d3e4e9bb44b1058a0b56a201117b24cee80de7e7"
   integrity sha512-p2sPTl+cvxxWGlKSFg5B8TEbDMd6jbtD8XHBKB8SCBZSjdwH/E9VG/opeM+0luF90kYoHKsAlUY2eP7NtVoyUw==
 
+"@notabug/gun-suppressor@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@notabug/gun-suppressor/-/gun-suppressor-0.2.0.tgz#b950b98c712b95658db87dae3eca66dc7df05431"
+  integrity sha512-MHhuWyBphjnVU4dHGXA4/7NE6ZPTA6v6Yzuri+9vMYdnmXk3/PNXGbITsLUvdGR3z4CswftxOfCm2N9LltkS6Q==
+  dependencies:
+    ajv "^6.10.0"
+    ramda "^0.26.1"
+    route-parser "^0.0.5"
+
 "@octokit/endpoint@^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@octokit/endpoint/-/endpoint-4.0.0.tgz#97032a6690ef1cf9576ab1b1582c0ac837e3b5b6"
@@ -1113,7 +1122,7 @@ aggregate-error@^2.0.0:
     clean-stack "^2.0.0"
     indent-string "^3.0.0"
 
-ajv@^6.5.5, ajv@^6.6.2:
+ajv@^6.10.0, ajv@^6.5.5, ajv@^6.6.2:
   version "6.10.0"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.10.0.tgz#90d0d54439da587cd7e843bfb7045f50bd22bdf1"
   integrity sha512-nffhOpkymDECQyR0mnsUtoCE8RlX38G0rYP+wgLWFyZuUyuuojSSvi/+euOiQBIn63whYwYVIIH1TvE3tu4OEg==
