@@ -450,6 +450,23 @@ const definitions = {
     allOf: [{ $ref: '#/definitions/ListingData' }]
   },
 
+  AuthorPages: {
+    title: 'Author Page Map',
+    description: 'Mapping of page names to things',
+    soul: {
+      pattern: `${Constants.PREFIX}/pages~:authorId.`,
+      properties: {
+        authorId: { $ref: 'schema.json#/definitions/seaAuthorId' }
+      },
+      required: ['authorId']
+    },
+    additionalProperties: {
+      sea: {
+        anyOf: [{ $ref: 'schema.json#/definitions/ThingEdge' }]
+      }
+    }
+  },
+
   AuthorComments: {
     title: "Author's Comments",
     description: 'All of an authors comments should be linked here',
@@ -493,23 +510,6 @@ const definitions = {
     additionalProperties: {
       sea: {
         edgeMatchesKey: true,
-        anyOf: [{ $ref: 'schema.json#/definitions/ThingEdge' }]
-      }
-    }
-  },
-
-  AuthorPages: {
-    title: 'Author Page Map',
-    description: 'Mapping of page names to things',
-    soul: {
-      pattern: `${Constants.PREFIX}/pages~:authorId.`,
-      properties: {
-        authorId: { $ref: 'schema.json#/definitions/seaAuthorId' }
-      },
-      required: ['authorId']
-    },
-    additionalProperties: {
-      sea: {
         anyOf: [{ $ref: 'schema.json#/definitions/ThingEdge' }]
       }
     }
