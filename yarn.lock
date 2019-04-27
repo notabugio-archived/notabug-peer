@@ -798,33 +798,27 @@
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.3.tgz#2b5a3ab3f918cca48a8c754c08168e3f03eba61b"
   integrity sha512-shAmDyaQC4H92APFoIaVDHCx5bStIocgvbwQyxPRrbUY20V1EYTbSDchWbuwlMG3V17cprZhA6+78JfB+3DTPw==
 
-"@notabug/gun-scope@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@notabug/gun-scope/-/gun-scope-0.5.0.tgz#f87be1f6188df145685bd54f4dd9af626c67aeaa"
-  integrity sha512-Jk2aqwLjqi6FNeBw+DPT5gRk0qZ7xWNOZjsVqtkNEBZFim3Sp33TrJTl8VnuxOOM7nPMQuG0LC9jj3hZPf/Pyg==
+"@notabug/gun-scope@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@notabug/gun-scope/-/gun-scope-0.7.0.tgz#86ae01a4fc19dc1980536f686f48e7aca0c44460"
+  integrity sha512-2P26ZftT+/sNIHJNywzjT8n1lc/PFAtb0zY8UG+SCVezvqdSAtjYHupnf9LXQd7CQD1aQ8Y57OokrLaml9LbBA==
   dependencies:
     ramda "^0.26.1"
     zalgo-promise "1.0.28"
 
-"@notabug/gun-suppressor-sear@^0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@notabug/gun-suppressor-sear/-/gun-suppressor-sear-0.2.2.tgz#d854757af8322433c0bdd7f3af2ab2ea8bb5ad42"
-  integrity sha512-2kk+GL6oE6r/cwIoRfANMe9t5ur+RnQxX8koalTrBWduijDd/nKP0nk5Sq9vFt1BS4yVt8S0eaImrEUCLyYyag==
+"@notabug/gun-suppressor-sear@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@notabug/gun-suppressor-sear/-/gun-suppressor-sear-0.3.1.tgz#bc1efcd9a2f67638dd80d96901e2a3bc42b96c54"
+  integrity sha512-MEko/WE12BYqPjEhzDc0QGyZPCyUPhCl6ZnFw38tFwGzXZDTVQ0rVYWcAGyakycZlz8/v/ewks4rdfMgmMcTBg==
   dependencies:
-    "@notabug/gun-suppressor" "^0.1.0"
-    ajv "^6.6.2"
+    "@notabug/gun-suppressor" "^0.2.2"
     ramda "^0.26.1"
     route-parser "^0.0.5"
 
-"@notabug/gun-suppressor@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@notabug/gun-suppressor/-/gun-suppressor-0.1.0.tgz#d3e4e9bb44b1058a0b56a201117b24cee80de7e7"
-  integrity sha512-p2sPTl+cvxxWGlKSFg5B8TEbDMd6jbtD8XHBKB8SCBZSjdwH/E9VG/opeM+0luF90kYoHKsAlUY2eP7NtVoyUw==
-
-"@notabug/gun-suppressor@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@notabug/gun-suppressor/-/gun-suppressor-0.2.0.tgz#b950b98c712b95658db87dae3eca66dc7df05431"
-  integrity sha512-MHhuWyBphjnVU4dHGXA4/7NE6ZPTA6v6Yzuri+9vMYdnmXk3/PNXGbITsLUvdGR3z4CswftxOfCm2N9LltkS6Q==
+"@notabug/gun-suppressor@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@notabug/gun-suppressor/-/gun-suppressor-0.2.2.tgz#43e0f02ebcb484c3102cf21b32c493293eb68c3d"
+  integrity sha512-HbL34YuRNnvpN8hcOvMXX7VfHvEcsm6X5cGml9rs63Z4xaWFfGIEKY321wIDOXIcMLOhUWRFfpRrG3QY1NSGGA==
   dependencies:
     ajv "^6.10.0"
     ramda "^0.26.1"
@@ -1122,7 +1116,7 @@ aggregate-error@^2.0.0:
     clean-stack "^2.0.0"
     indent-string "^3.0.0"
 
-ajv@^6.10.0, ajv@^6.5.5, ajv@^6.6.2:
+ajv@^6.10.0, ajv@^6.5.5:
   version "6.10.0"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.10.0.tgz#90d0d54439da587cd7e843bfb7045f50bd22bdf1"
   integrity sha512-nffhOpkymDECQyR0mnsUtoCE8RlX38G0rYP+wgLWFyZuUyuuojSSvi/+euOiQBIn63whYwYVIIH1TvE3tu4OEg==
