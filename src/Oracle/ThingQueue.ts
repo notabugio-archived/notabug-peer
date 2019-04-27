@@ -1,3 +1,4 @@
+import * as R from 'ramda';
 import { ListingSpec } from '../Listing';
 import { ListingSpecType } from '../types';
 
@@ -15,7 +16,7 @@ export class ThingQueue {
     this.newIds = [];
     this.updatedIds = [];
     this.processingId = '';
-    this.scopeOpts = scopeOpts;
+    this.scopeOpts = R.mergeLeft(scopeOpts || {}, { onlyOnce: true });
   }
 
   length() {
