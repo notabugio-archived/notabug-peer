@@ -6,6 +6,7 @@ export class ThingQueue {
   newIds: string[];
   updatedIds: string[];
   peer: any;
+  user: { pub: string; alias: string };
   spec: ListingSpecType;
   scopeOpts: any;
   processingId: string;
@@ -13,6 +14,7 @@ export class ThingQueue {
   constructor(peer: any, config = '', scopeOpts = {}) {
     this.spec = ListingSpec.fromSource(config);
     this.peer = peer;
+    this.user = peer.isLoggedIn();
     this.newIds = [];
     this.updatedIds = [];
     this.processingId = '';

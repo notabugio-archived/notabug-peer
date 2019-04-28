@@ -131,7 +131,7 @@ class IndexerQueue extends ThingQueue {
       await Promise.all(
         listingMap.map(async item => {
           const [listingPath, updatedItems]: [string, [string, number][]] = item;
-          const soul = ListingNode.soulFromPath(Config.indexer, listingPath);
+          const soul = ListingNode.soulFromPath(this.user.pub, listingPath);
           const existing = await scope.get(soul).then();
           const diff = await ListingNode.diff(existing, updatedItems, []);
           if (!diff) return;

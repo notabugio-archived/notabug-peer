@@ -36,9 +36,11 @@ class TabulatorQueue extends ThingQueue {
   async processNext() {
     if (this.processingId) return;
     const thingId = (this.processingId = this.dequeue());
-    const tabulator = this.spec.tabulator;
     if (!thingId) return;
-    const countsSoul = Schema.ThingVoteCounts.route.reverse({ thingId, tabulator });
+    const countsSoul = Schema.ThingVoteCounts.route.reverse({
+      thingId,
+      tabulator: this.user.pub
+    });
 
     try {
       const scope = this.peer.newScope(this.scopeOpts);
