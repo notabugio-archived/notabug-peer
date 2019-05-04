@@ -68,6 +68,8 @@ export type GunPromiseCb = (node: GunNodeType) => any;
 export interface GunChain {
   off: () => void;
   on: (cb: GunChainCb) => void;
+  once: (cb: GunChainCb) => void;
+  not: (cb: GunChainCb) => GunChain;
   get: (soul: string) => GunChain;
   then: (cb?: GunPromiseCb) => Promise<GunNodeType>;
 }

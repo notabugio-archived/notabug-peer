@@ -4,6 +4,7 @@ import { Thing } from './Thing';
 import { Authentication } from './Authentication';
 import { Indexer } from './Oracle/Indexer';
 import { Tabulator } from './Oracle/Tabulator';
+import { Synchronizer } from './Oracle/Synchronizer';
 import { Oracle } from './Oracle/Oracle';
 
 function init(Gun: any, config: any = {}) {
@@ -52,6 +53,8 @@ function init(Gun: any, config: any = {}) {
     peer.oracle().use(new Indexer.Queue(peer, '', scopeOpts));
   peer.tabulate = (scopeOpts: any = { timeout: 5000 }) =>
     peer.oracle().use(new Tabulator.Queue(peer, '', scopeOpts));
+  peer.synchronize = (scopeOpts: any = { timeout: 5000 }) =>
+    peer.oracle().use(new Synchronizer.Queue(peer, '', scopeOpts));
   return peer;
 }
 
