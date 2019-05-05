@@ -103,35 +103,40 @@ const thingDataHashMatches = (_schema: any, data: any) => {
   return thingId && thingId === objHash(record);
 };
 
-const isVoteValid = (argon2: any, schema: any, prefix: string, vote: string) => {
-  const { algorithm = 'argon2d', config = {} } = schema || {};
+const isVoteValid = async (argon2: any, schema: any, prefix: string, vote: string) => {
+  try {
+    const { algorithm = 'argon2d', config = {} } = schema || {};
 
-  // const nonce = Buffer.hasOwnProperty('from') ? Buffer.from(vote, 'hex') : new Buffer(vote, 'hex');
-  const nonce = Buffer.from(vote, 'hex');
-  // const salt = Buffer.hasOwnProperty('from') ? Buffer.from(nonce, 'hex') : new Buffer(nonce, 'hex');
-  const salt = nonce;
+    // const nonce = Buffer.hasOwnProperty('from') ? Buffer.from(vote, 'hex') : new Buffer(vote, 'hex');
+    const nonce = Buffer.from(vote, 'hex');
+    // const salt = Buffer.hasOwnProperty('from') ? Buffer.from(nonce, 'hex') : new Buffer(nonce, 'hex');
+    const salt = nonce;
 
-  const hash = argon2.hash(prefix, {
-    salt,
-    hashLength: config.hashLength,
-    timeCost: config.timeCost,
-    memoryCost: config.memoryCost,
-    parallelism: config.parallelism,
-    raw: true,
-    type: argon2[algorithm]
-  });
-  let off = 0;
-  let i;
+    const hash = await argon2.hash(prefix, {
+      salt,
+      hashLength: config.hashLength,
+      timeCost: config.timeCost,
+      memoryCost: config.memoryCost,
+      parallelism: config.parallelism,
+      raw: true,
+      type: argon2[algorithm]
+    });
+    let off = 0;
+    let i;
 
-  for (i = 0; i <= config.complexity - 8; i += 8, off++) {
-    if (hash[off] !== 0) return false;
+    for (i = 0; i <= config.complexity - 8; i += 8, off++) {
+      if (hash[off] !== 0) return false;
+    }
+    const mask = 0xff << (8 + i - config.complexity);
+
+    return (hash[off] & mask) === 0;
+  } catch (e) {
+    console.error('Vote rejected', e.stack || e);
+    return false;
   }
-  const mask = 0xff << (8 + i - config.complexity);
-
-  return (hash[off] & mask) === 0;
 };
 
-const keysAreProofsOfWork = (schema: any, data: any) => {
+const keysAreProofsOfWork = async (schema: any, data: any) => {
   const argon2 = require('argon2');
 
   if (!argon2) return true; // in browser don't bother for now
@@ -142,12 +147,17 @@ const keysAreProofsOfWork = (schema: any, data: any) => {
     throw new Error('Only argon2 supported for vote hashes');
   }
 
-  R.without(['_'], R.keysIn(data)).forEach(vote => {
-    if (!isVoteValid(argon2, schema, prefix, vote)) {
+  const keys = R.without(['_'], R.keysIn(data));
+
+  for (let i = 0; i < keys.length; i++) {
+    const vote = keys[i];
+
+    if (!(await isVoteValid(argon2, schema, prefix, vote))) {
       console.log('invalid vote', prefix, vote);
       delete data[vote];
     }
-  });
+  }
+
   return true;
 };
 
@@ -199,7 +209,8 @@ const initAjv = (Gun: any) =>
       });
       ajv.addKeyword('keysAreProofsOfWork', {
         validate: keysAreProofsOfWork,
-        modifying: true
+        modifying: true,
+        async: true
       });
       ajv.addKeyword('deleteNonNumericKeys', {
         validate: deleteNonNumericKeys,
