@@ -220,6 +220,7 @@ const getFilteredRows = async (
     limit
       ? (R.slice(0, limit) as (rows: ListingNodeRow[]) => ListingNodeRow[])
       : (R.identity as (rows: ListingNodeRow[]) => ListingNodeRow[]),
+    R.uniqBy(R.nth(ListingNode.POS_ID)),
     R.sortBy(R.nth(ListingNode.POS_VAL) as (row: ListingNodeRow) => number) as (
       row: ListingNodeRow[]
     ) => ListingNodeRow[],
