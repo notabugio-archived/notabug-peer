@@ -157,28 +157,6 @@ const submit = R.curry((peer, data) => {
 
   const thing = put(peer, { ...data, timestamp, kind: 'submission' });
 
-  if (user) {
-    const thingsSoul = Schema.AuthorThings.route.reverse({
-      authorId: user.pub
-    });
-    const submissionsSoul = Schema.AuthorSubmissions.route.reverse({
-      authorId: user.pub
-    });
-    const things = peer.gun.get(thingsSoul);
-    const submissions = peer.gun.get(submissionsSoul);
-
-    peer.gun
-      .user()
-      .get('things')
-      .put(things);
-    peer.gun
-      .user()
-      .get('submissions')
-      .put(submissions);
-    things.set(thing);
-    submissions.set(thing);
-  }
-
   return thing;
 });
 
@@ -193,28 +171,6 @@ const comment = R.curry((peer, data) => {
 
   const thing = put(peer, { ...data, kind: 'comment' });
 
-  if (user) {
-    const thingsSoul = Schema.AuthorThings.route.reverse({
-      authorId: user.pub
-    });
-    const commentsSoul = Schema.AuthorComments.route.reverse({
-      authorId: user.pub
-    });
-    const things = peer.gun.get(thingsSoul);
-    const comments = peer.gun.get(commentsSoul);
-
-    peer.gun
-      .user()
-      .get('things')()
-      .put(things);
-    peer.gun
-      .user()
-      .get('comments')
-      .put(comments);
-    things.set(thing);
-    comments.set(thing);
-  }
-
   return thing;
 });
 
@@ -228,19 +184,6 @@ const chat = R.curry((peer, data) => {
   }
 
   const thing = put(peer, { ...data, kind: 'chatmsg' });
-
-  if (user) {
-    const thingsSoul = Schema.AuthorThings.route.reverse({
-      authorId: user.pub
-    });
-    const things = peer.gun.get(thingsSoul);
-
-    peer.gun
-      .user()
-      .get('things')
-      .put(things);
-    things.set(thing);
-  }
 
   return thing;
 });
