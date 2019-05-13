@@ -214,7 +214,7 @@ const getFilteredRows = (
     );
 
   const fetchNextBatch = (): Promise<ListingNodeRow[]> => {
-    if (filtered.length > count || !rows.length) {
+    if (filtered.length > limit || !rows.length) {
       return resolve(
         R.compose(
           limit
