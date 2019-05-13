@@ -1,6 +1,6 @@
 {
   "name": "@notabug/peer",
-  "version": "0.24.0",
+  "version": "0.24.1",
   "description": "",
   "keywords": [],
   "main": "dist/@notabug/peer.umd.js",
@@ -122,7 +122,7 @@
     "typescript": "^3.4.3"
   },
   "dependencies": {
-    "@notabug/gun-scope": "^0.9.1",
+    "@notabug/gun-scope": "^0.10.0",
     "@notabug/gun-suppressor": "^0.2.2",
     "@notabug/gun-suppressor-sear": "^0.3.1",
     "argon2": "^0.21.0",

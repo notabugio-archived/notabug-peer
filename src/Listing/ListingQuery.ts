@@ -1,5 +1,6 @@
 import * as R from 'ramda';
 import memoize from 'fast-memoize';
+import { resolve, all } from '@notabug/gun-scope';
 import { Query } from '../Query';
 import { ListingSpecType, ListingNodeRow, GunScope, ListingNodeType } from '../types';
 import { ListingNode } from './ListingNode';
@@ -77,7 +78,7 @@ export class ListingQuery {
   }
 
   unfilteredRows(scope: GunScope): Promise<ListingNodeRow[]> {
-    if (!this.type) return Promise.resolve([]);
+    if (!this.type) return resolve([]);
     return this.space(scope)
       .then((spec: ListingSpecType) => {
         const paths = R.pathOr([], ['dataSource', 'listingPaths'], spec);
@@ -94,9 +95,8 @@ export class ListingQuery {
             )
           );
         }
-        return Promise.all<ListingNodeRow[]>(this.listings.map(l => l.unfilteredRows(scope))).then(
-          this.combineSourceRows
-        );
+        return all<ListingNodeRow[]>(this.listings.map(l => l.unfilteredRows(scope))).then(this
+          .combineSourceRows as (inp: any) => ListingNodeRow[]);
       })
       .then((rows: ListingNodeRow[]) => {
         this.sourced = R.indexBy(R.nth(ListingNode.POS_ID) as (row: any) => string, rows);
@@ -106,11 +106,37 @@ export class ListingQuery {
 
   _setChecked(id: string, checked: boolean) {
     this.checked[id] = checked;
-    return checked;
+    return resolve(checked);
   }
 
+  checkId(scope: GunScope, id: string) {
+    if (this.checked[id]) return Promise.resolve(true);
+    if (this.spec.isIdSticky(id)) return this._setChecked(id, true);
+    if (!(id in this.sourced)) return this._setChecked(id, false);
+    const filterFn = ListingFilter.thingFilter(scope, this.spec);
+
+    return filterFn(id).then((isPresent: any) => {
+      if (!isPresent) return this._setChecked(id, false);
+      const listings = this.listings.slice();
+      if (!listings.length) return this._setChecked(id, true);
+
+      let idx = 0;
+      const checkNext = (): Promise<boolean> => {
+        const listing = listings[idx];
+        idx++;
+        if (!listing) return this._setChecked(id, false);
+        return listing.checkId(scope, id).then(subCheck => {
+          if (subCheck) return this._setChecked(id, true);
+          return checkNext();
+        });
+      };
+      return checkNext();
+    });
+  }
+
+  /*
   async checkId(scope: GunScope, id: string): Promise<boolean> {
-    if (this.checked[id]) return true;
+    if (this.checked[id]) return Promise.resolve(true);
 
     if (this.spec.isIdSticky(id)) return this._setChecked(id, true);
     if (!(id in this.sourced)) return this._setChecked(id, false);
@@ -127,6 +153,7 @@ export class ListingQuery {
 
     return this._setChecked(id, false);
   }
+  */
 
   ids(scope: GunScope, opts = {}) {
     return this.unfilteredRows(scope).then(rows => {

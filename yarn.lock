@@ -798,10 +798,10 @@
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.3.tgz#2b5a3ab3f918cca48a8c754c08168e3f03eba61b"
   integrity sha512-shAmDyaQC4H92APFoIaVDHCx5bStIocgvbwQyxPRrbUY20V1EYTbSDchWbuwlMG3V17cprZhA6+78JfB+3DTPw==
 
-"@notabug/gun-scope@^0.9.1":
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/@notabug/gun-scope/-/gun-scope-0.9.1.tgz#860bed371fb5dc0bb570989277c3b3ce899cfde6"
-  integrity sha512-MfB+8DtLxvt32SDY2CJtm7hpN+K+Sjc4JLs640wRNjJRj2niiKMaOMf5lnuOo1tcFPjhEheDjsiwVucJUHZrZg==
+"@notabug/gun-scope@^0.10.0":
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/@notabug/gun-scope/-/gun-scope-0.10.0.tgz#f578d054e157eaefd1f84032f5e20680259250fe"
+  integrity sha512-Yg5EwCBS5KVEDNFwRxbiX1tDs5XboM5ZSAUcfJU+pNaW6Hg2Z5SWA+yCS40POlCE1OjO2u5Qk13TzaCmkr5OCA==
   dependencies:
     ramda "^0.26.1"
     zalgo-promise "1.0.28"

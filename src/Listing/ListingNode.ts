@@ -1,5 +1,5 @@
 import * as R from 'ramda';
-import { query, resolve } from '@notabug/gun-scope';
+import { query, resolve, all } from '@notabug/gun-scope';
 import { Constants } from '../Constants';
 import { Config } from '../Config';
 import { Schema } from '../Schema';
@@ -234,10 +234,10 @@ const unionRows = R.compose(
     [] as ListingNodeRow[]
   ),
   R.map(rows)
-);
+) as (input: any) => ListingNodeRow[];
 
 const rowsFromSouls = query<ListingNodeRow[]>((scope: GunScope, souls: string[]) =>
-  Promise.all(R.map(scope.get, souls)).then(unionRows)
+  all(R.map(scope.get, souls)).then(unionRows)
 );
 
 const read = query((scope: GunScope, path: string, opts: { indexer?: string }) => {

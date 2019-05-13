@@ -159,7 +159,7 @@ interface GetRowsParams {
   filterFn: FilterFnType;
 }
 
-const getFilteredRows = async (
+const getFilteredRows = (
   scope: GunScope,
   spec: ListingSpecType,
   sortedRows: ListingNodeRow[],
@@ -178,54 +178,60 @@ const getFilteredRows = async (
   const data: any[] = [];
   const fetchBatch = (size = 30) =>
     all(
-      R.map(async row => {
-        let inListing = true;
-
+      R.map(row => {
         if (!row[ListingNode.POS_ID]) {
           console.log('blankRow', row);
-          return;
+          return resolve(null);
         }
 
-        if (filterFn) inListing = await filterFn((row[ListingNode.POS_ID] as string) || '');
-        if (inListing) {
+        return (filterFn
+          ? filterFn((row[ListingNode.POS_ID] as string) || '')
+          : resolve(true)
+        ).then((inListing: boolean) => {
+          if (!inListing) return;
           if (spec.uniqueByContent) {
-            const itemData = await Query.thingData(scope, row[ListingNode.POS_ID]);
-            const url = ThingDataNode.url(itemData);
-
-            if (
-              url &&
-              R.find(
-                R.compose(
-                  R.equals(url),
-                  ThingDataNode.url
-                ),
-                data
-              )
-            ) {
-              return;
-            }
-            data.push(itemData);
+            return Query.thingData(scope, row[ListingNode.POS_ID]).then(itemData => {
+              const url = ThingDataNode.url(itemData);
+              if (
+                url &&
+                R.find(
+                  R.compose(
+                    R.equals(url),
+                    ThingDataNode.url
+                  ),
+                  data
+                )
+              ) {
+                return;
+              }
+              data.push(itemData);
+              filtered.push(row);
+            });
           }
           filtered.push(row);
-        }
+        });
       }, rows.splice(count, size))
     );
 
-  while (rows.length > count) {
-    const res = await fetchBatch();
-    if (limit && filtered.length >= limit) break;
-  }
+  const fetchNextBatch = (): Promise<ListingNodeRow[]> => {
+    if (filtered.length > count || !rows.length) {
+      return resolve(
+        R.compose(
+          limit
+            ? (R.slice(0, limit) as (rows: ListingNodeRow[]) => ListingNodeRow[])
+            : (R.identity as (rows: ListingNodeRow[]) => ListingNodeRow[]),
+          R.uniqBy(R.nth(ListingNode.POS_ID)),
+          R.sortBy(R.nth(ListingNode.POS_VAL) as (row: ListingNodeRow) => number) as (
+            row: ListingNodeRow[]
+          ) => ListingNodeRow[],
+          R.always(filtered) as () => ListingNodeRow[]
+        )()
+      );
+    }
 
-  return R.compose(
-    limit
-      ? (R.slice(0, limit) as (rows: ListingNodeRow[]) => ListingNodeRow[])
-      : (R.identity as (rows: ListingNodeRow[]) => ListingNodeRow[]),
-    R.uniqBy(R.nth(ListingNode.POS_ID)),
-    R.sortBy(R.nth(ListingNode.POS_VAL) as (row: ListingNodeRow) => number) as (
-      row: ListingNodeRow[]
-    ) => ListingNodeRow[],
-    R.always(filtered) as () => ListingNodeRow[]
-  )();
+    return fetchBatch().then(fetchNextBatch);
+  };
+  return fetchNextBatch();
 };
 
 const getFilteredIds: (
