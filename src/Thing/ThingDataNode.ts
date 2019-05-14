@@ -21,7 +21,7 @@ const domain = R.compose(
   url as (node: GunNodeType) => string
 );
 const authorId = R.propOr('', 'authorId');
-const opId = R.propOr('', 'opId');
+const opId = R.propOr('', 'opId') as (node: GunNodeType) => string;
 const replyToId = R.propOr('', 'replyToId');
 
 export const ThingDataNode = {

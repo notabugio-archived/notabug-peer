@@ -4,6 +4,7 @@ import { Config } from '../Config';
 import { GunNode } from '../GunNode';
 import { Schema } from '../Schema';
 import { Query } from '../Query';
+import { ThingDataNode } from '../Thing';
 import { CommentCommand } from '../CommentCommand';
 import { ThingQueue } from './ThingQueue';
 import { ThingVoteCountsType } from '../types';
@@ -44,10 +45,20 @@ class TabulatorQueue extends ThingQueue {
 
     try {
       const scope = this.peer.newScope(this.scopeOpts);
-      const existingCounts = await scope.get(countsSoul).then();
+      const [existingCounts, data] = await all([
+        scope.get(countsSoul).then(),
+        scope
+          .get(Schema.Thing.route.reverse({ thingId }))
+          .get('data')
+          .then()
+      ]);
+      const opId = ThingDataNode.opId(data);
+      const replyToId = ThingDataNode.replyToId(data);
+
       const updatedCounts = await tabulate(scope, thingId);
       const diff = GunNode.diff(existingCounts, updatedCounts);
       if (R.keysIn(diff).length) this.peer.gun.get(countsSoul).put(diff);
+      if (replyToId && replyToId !== thingId) this.enqueue(opId);
     } catch (e) {
       console.error('Tabulator error', thingId, e.stack || e);
     }
@@ -70,6 +81,7 @@ class TabulatorQueue extends ThingQueue {
         const age = now - latest;
         if (age > Config.oracleMaxStaleness) return [];
         const thingMatch = Schema.Thing.route.match(soul);
+        const thingDataMatch = Schema.ThingDataSigned.route.match(soul);
         const votesUpMatch = Schema.ThingVotesUp.route.match(soul);
         const votesDownMatch = Schema.ThingVotesDown.route.match(soul);
         const allCommentsMatch = Schema.ThingAllComments.route.match(soul);
@@ -77,10 +89,18 @@ class TabulatorQueue extends ThingQueue {
         const thingId: string = R.propOr(
           '',
           'thingId',
-          thingMatch || votesUpMatch || votesDownMatch || allCommentsMatch || commentsMatch
+          thingMatch ||
+            thingDataMatch ||
+            votesUpMatch ||
+            votesDownMatch ||
+            allCommentsMatch ||
+            commentsMatch
         );
 
-        return [thingId, !(votesUpMatch || votesDownMatch || allCommentsMatch || commentsMatch)];
+        return [
+          thingId,
+          !(votesUpMatch || thingDataMatch || votesDownMatch || allCommentsMatch || commentsMatch)
+        ];
       }),
       R.keysIn,
       R.propOr({}, 'put')
