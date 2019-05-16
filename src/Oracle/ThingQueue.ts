@@ -47,7 +47,7 @@ export class ThingQueue {
   getShouldDefer(id: string) {
     const now = new Date().getTime();
     const last: number = R.propOr(0, id, this.recent);
-    if (now - last > THROTTLE) return true;
+    if (now - last < THROTTLE) return true;
     this.recent[id] = now;
     return false;
   }
