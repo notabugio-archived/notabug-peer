@@ -120,6 +120,7 @@ class IndexerQueue extends ThingQueue {
     const id = (this.processingId = this.dequeue());
     if (!id) return;
     if (this.getShouldDefer(id)) {
+      this.processingId = '';
       this.enqueue(id);
       return;
     }

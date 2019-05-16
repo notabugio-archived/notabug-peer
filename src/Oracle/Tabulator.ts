@@ -39,6 +39,7 @@ class TabulatorQueue extends ThingQueue {
     const thingId = (this.processingId = this.dequeue());
     if (!thingId) return;
     if (this.getShouldDefer(thingId)) {
+      this.processingId = '';
       this.enqueue(thingId);
       return;
     }
