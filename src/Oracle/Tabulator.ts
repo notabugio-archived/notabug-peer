@@ -38,6 +38,11 @@ class TabulatorQueue extends ThingQueue {
     if (this.processingId) return;
     const thingId = (this.processingId = this.dequeue());
     if (!thingId) return;
+    if (this.getShouldDefer(thingId)) {
+      this.enqueue(thingId);
+      return;
+    }
+
     const countsSoul = Schema.ThingVoteCounts.route.reverse({
       thingId,
       tabulator: this.user.pub
