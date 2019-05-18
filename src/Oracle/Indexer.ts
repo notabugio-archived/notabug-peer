@@ -119,13 +119,6 @@ class IndexerQueue extends ThingQueue {
     if (this.processingId) return;
     const id = (this.processingId = this.dequeue());
     if (!id) return;
-    /*
-    if (this.getShouldDefer(id)) {
-      this.processingId = '';
-      this.enqueue(id);
-      return;
-    }
-    */
 
     const startedAt = new Date().getTime();
 

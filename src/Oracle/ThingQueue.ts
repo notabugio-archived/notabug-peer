@@ -60,7 +60,24 @@ export class ThingQueue {
   }
 
   dequeue() {
-    return this.newIds.pop() || this.updatedIds.pop() || '';
+    const newIds = this.newIds.slice();
+    const updatedIds = this.updatedIds.slice();
+
+    let id = '';
+    // tslint:disable-next-line: no-conditional-assignment
+    while ((id = newIds.pop() || updatedIds.pop() || '')) {
+      if (!this.getShouldDefer(id)) {
+        const newIdx = this.newIds.indexOf(id);
+        const updatedIdx = this.updatedIds.indexOf(id);
+
+        if (newIdx !== -1) this.newIds.splice(newIdx, 1);
+        if (updatedIdx !== -1) this.updatedIds.splice(updatedIdx, 1);
+        return id;
+      }
+    }
+
+    setTimeout(this.processNext.bind(this), THROTTLE);
+    return '';
   }
 
   // tslint:disable-next-line: no-empty
