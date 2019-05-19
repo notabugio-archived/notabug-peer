@@ -41,9 +41,9 @@ const tokenize = (source: string) => {
     const keys = typeof p === 'string' ? p.split(' ') : p;
 
     return getValues(keys).reduce((pairs: any[], key: string) => {
-      const val = getValue([...keys, key]);
+      const vals = getValues([...keys, key]);
 
-      return [...pairs, [key, val]];
+      return [...pairs, ...vals.map(val => [key, val])];
     }, []);
   };
 
