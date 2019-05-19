@@ -42,12 +42,11 @@ const sorts = {
       R.pathOr('0', ['votes', 'score'])
     )
   ),
-  comments: voteSort(
-    R.compose(
-      (x: string) => -1 * parseFloat(x),
-      R.pathOr('0', ['votes', 'comment'])
-    )
-  ),
+  active: voteSort(thing => {
+    const thingTimestamp = parseInt(R.propOr('', 'timestamp', thing), 10);
+    const commentsTimestamp = parseInt(R.pathOr(0, ['votes', '_', '>', 'comment'], thing), 10);
+    return -1 * (commentsTimestamp || thingTimestamp);
+  }),
   discussed: voteSort(thing => {
     const timestamp = parseInt(R.propOr('', 'timestamp', thing), 10);
     const score = parseInt(R.pathOr(0, ['votes', 'comment'], thing), 10);
