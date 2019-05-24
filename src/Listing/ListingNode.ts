@@ -185,7 +185,8 @@ async function diff(
   const missing = maxSize ? allSorted.slice(maxSize, allSorted.length) : [];
   const added = R.filter(row => row[POS_IDX] === null, sorted);
 
-  toReplace = toReplace.concat(R.filter(row => row[POS_IDX] !== null, missing)).reverse();
+  toReplace.push(...R.filter(row => row[POS_IDX] !== null, missing));
+  toReplace.reverse();
 
   for (let i = 0; i < sorted.length; i++) {
     const id = sorted[i][POS_ID];
@@ -230,7 +231,10 @@ const unionRows = R.compose(
   R.uniqBy(R.nth(POS_ID)),
   sortRows,
   R.reduce(
-    R.concat as (a: ListingNodeRow[], b: ListingNodeRow[]) => ListingNodeRow[],
+    (res: ListingNodeRow[], rows: ListingNodeRow[]) => {
+      res.push(...rows);
+      return res;
+    },
     [] as ListingNodeRow[]
   ),
   R.map(rows)
