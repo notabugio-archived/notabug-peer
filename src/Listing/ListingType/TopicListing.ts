@@ -6,7 +6,7 @@ import { Path } from '../Path';
 import { ListingSpec } from '../ListingSpec';
 
 const path = '/t/:topic/:sort';
-const tabs = ['hot', 'new', 'discussed', 'controversial', 'top', 'firehose'];
+const tabs = ['hot', 'new', 'active', 'discussed', 'controversial', 'top', 'firehose'];
 
 const getSource = query<string>(
   (scope: GunScope, { topic, sort }: { topic: string; sort: string }) => {

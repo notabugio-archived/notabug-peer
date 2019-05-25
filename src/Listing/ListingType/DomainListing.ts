@@ -5,7 +5,7 @@ import { Path } from '../Path';
 import { ListingSpec } from '../ListingSpec';
 
 const path = '/domain/:domain/:sort';
-const tabs = ['hot', 'new', 'discussed', 'controversial', 'top'];
+const tabs = ['hot', 'new', 'active', 'discussed', 'controversial', 'top'];
 
 const getSource = query<string>((scope, { domain, sort }) => {
   const domains = Path.splitTopics(domain);
