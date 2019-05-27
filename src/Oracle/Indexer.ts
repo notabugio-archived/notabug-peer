@@ -136,7 +136,7 @@ class IndexerQueue extends ThingQueue {
           const diff = await ListingNode.diff(existing, updatedItems, []);
           if (!diff) return;
           console.log('writing', soul, diff);
-          this.peer.gun.get(soul).put(diff);
+          return new Promise(ok => this.peer.gun.get(soul).put(diff, ok));
         })
       );
     } catch (e) {

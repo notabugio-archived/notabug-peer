@@ -58,7 +58,9 @@ class TabulatorQueue extends ThingQueue {
 
       const updatedCounts = await tabulate(scope, thingId);
       const diff = GunNode.diff(existingCounts, updatedCounts);
-      if (R.keysIn(diff).length) this.peer.gun.get(countsSoul).put(diff);
+      if (R.keysIn(diff).length) {
+        await new Promise(ok => this.peer.gun.get(countsSoul).put(diff, ok));
+      }
       if (replyToId && replyToId !== thingId) this.enqueue(opId);
     } catch (e) {
       console.error('Tabulator error', thingId, e.stack || e);

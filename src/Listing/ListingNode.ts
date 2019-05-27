@@ -91,9 +91,9 @@ async function diffSingle(
   updatedItem: SortDataRow,
   { maxSize = 1000 } = {}
 ) {
-  let highestKey = -1;
-  let highestValueKey = null;
-  let highestValue = null;
+  let highestIndex = -1;
+  let highestValueKey = '';
+  let highestValue: Number | null = null;
   let key: string;
   const [updateId, updateValue] = updatedItem;
 
@@ -106,22 +106,22 @@ async function diffSingle(
     const [idx, id = null, value] = row;
     if (id === updateId) {
       if (updateValue === value) return null;
-      return { [`${idx}`]: updatedItem.join(',') };
+      return { [key]: updatedItem.join(',') };
     }
 
-    if (highestValue === null || (value !== null && value > highestValue)) {
+    if (!highestValueKey || highestValue === null || (value && value > highestValue)) {
       highestValue = value;
-      highestValueKey = idx;
+      highestValueKey = key;
     }
-    if (idx !== null && idx > highestKey) highestKey = idx;
+    if (idx !== null && idx > highestIndex) highestIndex = idx;
   }
 
-  if (!maxSize || highestKey + 1 < maxSize) {
-    return { [`${highestKey + 1}`]: updatedItem.join(',') };
+  if (!maxSize || highestIndex + 1 < maxSize) {
+    return { [`${highestIndex + 1}`]: updatedItem.join(',') };
   }
 
-  if (highestValue === null || updateValue < highestValue) {
-    return { [`${highestValueKey}`]: updatedItem.join(',') };
+  if (highestValueKey && (highestValue === null || updateValue < highestValue)) {
+    return { [highestValueKey]: updatedItem.join(',') };
   }
 
   return null;
@@ -136,6 +136,7 @@ async function diff(
   if (updatedItems.length === 1 && !removeIds.length) {
     return diffSingle(node, updatedItems[0], { maxSize });
   }
+  console.log('diff multi', updatedItems);
   const removed = R.indexBy(R.identity, removeIds);
   const byId = {} as { [id: string]: ListingNodeRow };
   const changes: ListingNodeType = {};
