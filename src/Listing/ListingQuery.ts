@@ -72,8 +72,15 @@ export class ListingQuery {
   sidebar(scope: GunScope) {
     return this.space(scope).then((spec: ListingSpecType) => {
       const { fromPageAuthor = '', fromPageName = '' } = spec || {};
-      if (!fromPageAuthor || !fromPageName) return null;
-      return Query.wikiPage(scope, fromPageAuthor, `${fromPageName}:sidebar`);
+      const promises = [];
+      if (spec.profileId) {
+        promises.push(Query.wikiPage(scope, spec.profileId, 'profile'));
+      }
+      if (fromPageAuthor && fromPageName) {
+        promises.push(Query.wikiPage(scope, fromPageAuthor, `${fromPageName}:sidebar`));
+      }
+      if (!promises.length) return;
+      return Promise.all(promises);
     });
   }
 
