@@ -137,7 +137,10 @@ const definitions = {
     }
   },
 
-  timestamp: { type: ['number', 'string'] },
+  timestamp: {
+    type: ['number', 'string'],
+    maxLength: 14
+  },
   thingKind: {
     type: 'string',
     maxLength: Constants.MAX_THING_KIND_SIZE
