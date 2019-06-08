@@ -64,7 +64,8 @@ const fromSource = (source: string, ownerId = '', spaceName = '') => {
       topics: getValues('ban topic'),
       anon: !!isPresent('require signed'),
       signed: !!isPresent('require anon'),
-      tags: getPairs('can remove')
+      tags: getPairs('can remove'),
+      type: getValues('ban type')
     }
   };
 

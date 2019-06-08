@@ -77,10 +77,20 @@ const fromDefinition = (definition: ListingDefinitionType) => {
   if (filters.allow.kinds.length) {
     addFilter((kind: string) => !!isPresent(['kind', kind]), R.path(['data', 'kind']));
   }
+
   if (filters.allow.type === 'commands') {
     addFilter(
       R.compose(
         R.test(Constants.COMMAND_RE),
+        R.pathOr('', ['data', 'body'])
+      )
+    );
+  }
+
+  if (isPresent('ban type commands')) {
+    addFilter(
+      R.compose(
+        R.complement(R.test(Constants.COMMAND_RE)),
         R.pathOr('', ['data', 'body'])
       )
     );

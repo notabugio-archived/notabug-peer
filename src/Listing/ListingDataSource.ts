@@ -27,7 +27,8 @@ const needsData = (definition: ListingDefinitionType) =>
     'ban domain',
     'ban topic',
     'ban author',
-    'ban alias'
+    'ban alias',
+    'ban type'
   ]);
 
 const listingSource = (definition: ListingDefinitionType) => {
