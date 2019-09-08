@@ -127,6 +127,8 @@ class IndexerQueue extends ThingQueue {
       const description = await describeThingId(scope, id);
       const listingMap: any[] = descriptionToListingMap(description);
 
+      const putData: any = {};
+
       // tslint:disable-next-line: await-promise
       await Promise.all(
         listingMap.map(async item => {
@@ -135,10 +137,23 @@ class IndexerQueue extends ThingQueue {
           const existing = await scope.get(soul).then();
           const diff = await ListingNode.diff(existing, updatedItems, []);
           if (!diff) return;
-          console.log('writing', soul, diff);
-          return new Promise(ok => this.peer.gun.get(soul).put(diff, ok));
+          putData[listingPath] = {
+            _: {
+              '#': soul
+            },
+            ...diff
+          };
         })
       );
+
+      if (Object.keys(putData).length) {
+        const listingsSoul = Schema.ThingListingsMeta.route.reverse({
+          thingId: id,
+          tabulator: this.user.pub
+        });
+        console.log('writing', listingsSoul, putData);
+        await new Promise(ok => this.peer.gun.get(listingsSoul).put(putData, ok));
+      }
     } catch (e) {
       console.error('Indexer error', e.stack || e);
     }

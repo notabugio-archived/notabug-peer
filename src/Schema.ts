@@ -335,6 +335,19 @@ const definitions = {
     }
   },
 
+  ThingListingsMeta: {
+    title: 'Thing Listings Meta',
+    description: 'All listings the thing has appeared in',
+    soul: {
+      pattern: `${Constants.PREFIX}/things/:thingId/listings@~:tabulator.`,
+      properties: {
+        thingId: { $ref: 'schema.json#/definitions/thingId' },
+        tabulator: { $ref: 'schema.json#/definitions/seaAuthorId' }
+      }
+    },
+    additionalProperties: true
+  },
+
   ListingData: {
     $async: true,
     title: 'Listing Node Data',
@@ -552,6 +565,7 @@ export const Schema = {
   ThingData: defsWithRoutes.ThingData,
   ThingDataSigned: defsWithRoutes.ThingDataSigned,
   ThingVoteCounts: defsWithRoutes.ThingVoteCounts,
+  ThingListingsMeta: defsWithRoutes.ThingListingsMeta,
   TopicListing: defsWithRoutes.TopicListing,
   DomainListing: defsWithRoutes.DomainListing,
   ThingCommentsListing: defsWithRoutes.ThingCommentsListing,
