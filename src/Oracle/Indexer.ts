@@ -167,8 +167,6 @@ class IndexerQueue extends ThingQueue {
     const endedAt = new Date().getTime();
     console.log('indexed', (endedAt - startedAt) / 1000, this.length(), id);
     this.processingId = '';
-    // tslint:disable-next-line: no-floating-promises
-    this.processNext();
   }
 
   onPut(msg: any) {

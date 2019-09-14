@@ -67,8 +67,6 @@ class TabulatorQueue extends ThingQueue {
     }
 
     this.processingId = '';
-    // tslint:disable-next-line: no-floating-promises
-    this.processNext();
   }
 
   onPut(msg: any) {

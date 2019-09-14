@@ -56,7 +56,7 @@ export class ThingQueue {
     if (this.contains(id)) return;
     (isNew ? this.newIds : this.updatedIds).splice(0, 0, id);
     // tslint:disable-next-line: no-floating-promises
-    this.processNext();
+    this.processQueue();
   }
 
   dequeue() {
@@ -78,6 +78,13 @@ export class ThingQueue {
 
     setTimeout(this.processNext.bind(this), THROTTLE);
     return '';
+  }
+
+  async processQueue() {
+    if (this.processingId) return;
+    while (this.newIds.length || this.updatedIds.length) {
+      await this.processNext();
+    }
   }
 
   // tslint:disable-next-line: no-empty

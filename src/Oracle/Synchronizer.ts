@@ -60,8 +60,6 @@ class SynchronizerQueue extends ThingQueue {
     console.log('fetched', thingId, this.length());
 
     this.processingId = '';
-    // tslint:disable-next-line: no-floating-promises
-    this.processNext();
   }
 }
 
