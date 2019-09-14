@@ -143,17 +143,23 @@ class IndexerQueue extends ThingQueue {
             },
             ...diff
           };
+
+          return new Promise(ok => this.peer.gun.get(soul).put(diff, ok));
         })
       );
 
+      /*
       if (Object.keys(putData).length) {
         const listingsSoul = Schema.ThingListingsMeta.route.reverse({
           thingId: id,
           tabulator: this.user.pub
         });
-        console.log('writing', listingsSoul, putData);
-        await new Promise(ok => this.peer.gun.get(listingsSoul).put(putData, ok));
+        console.log("writing", listingsSoul, putData);
+        await new Promise(ok =>
+          this.peer.gun.get(listingsSoul).put(putData, ok)
+        );
       }
+      */
     } catch (e) {
       console.error('Indexer error', e.stack || e);
     }

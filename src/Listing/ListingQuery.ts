@@ -141,27 +141,6 @@ export class ListingQuery {
     });
   }
 
-  /*
-  async checkId(scope: GunScope, id: string): Promise<boolean> {
-    if (this.checked[id]) return Promise.resolve(true);
-
-    if (this.spec.isIdSticky(id)) return this._setChecked(id, true);
-    if (!(id in this.sourced)) return this._setChecked(id, false);
-    const filterFn = ListingFilter.thingFilter(scope, this.spec);
-    if (!(await filterFn(id))) return this._setChecked(id, false);
-
-    const listings = this.listings.slice();
-    if (!listings.length) return this._setChecked(id, true);
-    for (let i = 0; i < listings.length; i++) {
-      if (await listings[i].checkId(scope, id)) {
-        return this._setChecked(id, true);
-      }
-    }
-
-    return this._setChecked(id, false);
-  }
-  */
-
   ids(scope: GunScope, opts = {}) {
     return this.unfilteredRows(scope).then(rows => {
       const stickyRows: ListingNodeRow[] = R.map(id => [-1, id, -Infinity], this.spec.stickyIds);
