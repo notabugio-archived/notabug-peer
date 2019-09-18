@@ -10,10 +10,18 @@ export class Oracle {
     const onPut = this.onPut.bind(this);
     this.features = [];
     this.peer = peer;
-    this.peer.gun.on('put', function(this: any, msg: any) {
-      this.to.next(msg);
-      onPut(msg);
-    });
+    if (this.peer.gun.graph) {
+      console.log('using chaingun');
+      this.peer.gun.graph.graphData.on((put: any) => {
+        onPut({ put });
+      });
+    } else {
+      console.log('not using chaingun');
+      this.peer.gun.on('put', function(this: any, msg: any) {
+        this.to.next(msg);
+        onPut(msg);
+      });
+    }
   }
 
   use(feature: OracleFeature) {

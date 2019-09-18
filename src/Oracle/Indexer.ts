@@ -121,9 +121,8 @@ class IndexerQueue extends ThingQueue {
     if (!id) return;
 
     const startedAt = new Date().getTime();
-
+    const scope = this.peer.newScope(this.scopeOpts);
     try {
-      const scope = this.peer.newScope(this.scopeOpts);
       const description = await describeThingId(scope, id);
       const listingMap: any[] = descriptionToListingMap(description);
 
@@ -143,25 +142,20 @@ class IndexerQueue extends ThingQueue {
             },
             ...diff
           };
-
-          return new Promise(ok => this.peer.gun.get(soul).put(diff, ok));
         })
       );
 
-      /*
       if (Object.keys(putData).length) {
         const listingsSoul = Schema.ThingListingsMeta.route.reverse({
           thingId: id,
           tabulator: this.user.pub
         });
-        console.log("writing", listingsSoul, putData);
-        await new Promise(ok =>
-          this.peer.gun.get(listingsSoul).put(putData, ok)
-        );
+        await new Promise(ok => this.peer.gun.get(listingsSoul).put(putData, ok));
       }
-      */
     } catch (e) {
       console.error('Indexer error', e.stack || e);
+    } finally {
+      scope.off();
     }
 
     const endedAt = new Date().getTime();
@@ -174,6 +168,7 @@ class IndexerQueue extends ThingQueue {
       R.map(R.tap(([id, isNew]: [string, boolean]) => id && this.enqueue(id, isNew))),
       R.uniqBy(R.nth(0) as (i: any) => any),
       R.map((soul: string) => {
+        if (R.prop('@', msg)) return [];
         const meta = R.pathOr({}, ['put', soul, '_', '>'], msg);
         const latest = R.values(meta)
           .sort()
@@ -182,7 +177,8 @@ class IndexerQueue extends ThingQueue {
         const age = now - latest;
         if (age > Config.oracleMaxStaleness) return [];
         const thingMatch = Schema.Thing.route.match(soul);
-        const thingDataMatch = Schema.ThingDataSigned.route.match(soul);
+        const thingDataMatch =
+          Schema.ThingDataSigned.route.match(soul) || Schema.ThingData.route.match(soul);
         const countsMatch = Schema.ThingVoteCounts.route.match(soul);
         const thingId: string = R.propOr(
           '',

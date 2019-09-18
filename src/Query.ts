@@ -117,7 +117,7 @@ const userMeta = query((scope, id) => {
   }));
 }, 'userMeta');
 
-const createScope = R.curry((nab, opts) => makeScope(R.assoc('gun', nab.gun, opts || {})));
+const createScope = R.curry((nab, opts) => makeScope({ gun: nab.gun, ...(opts || {}) }));
 
 export const Query = {
   thingMeta,

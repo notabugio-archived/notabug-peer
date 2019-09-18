@@ -66,6 +66,8 @@ class TabulatorQueue extends ThingQueue {
       console.error('Tabulator error', thingId, e.stack || e);
     }
 
+    console.log('tabulated', this.processingId);
+
     this.processingId = '';
   }
 
@@ -75,33 +77,24 @@ class TabulatorQueue extends ThingQueue {
       R.uniqBy(R.nth(0) as (i: any) => any),
       R.map((soul: string) => {
         const meta = R.pathOr({}, ['put', soul, '_', '>'], msg);
+        if (R.prop('@', msg)) return [];
         const latest = R.values(meta)
           .sort()
           .pop();
         const now = new Date().getTime();
         const age = now - latest;
         if (age > Config.oracleMaxStaleness) return [];
-        const thingMatch = Schema.Thing.route.match(soul);
         const thingDataMatch = Schema.ThingDataSigned.route.match(soul);
         const votesUpMatch = Schema.ThingVotesUp.route.match(soul);
         const votesDownMatch = Schema.ThingVotesDown.route.match(soul);
         const allCommentsMatch = Schema.ThingAllComments.route.match(soul);
-        const commentsMatch = Schema.ThingComments.route.match(soul);
         const thingId: string = R.propOr(
           '',
           'thingId',
-          thingMatch ||
-            thingDataMatch ||
-            votesUpMatch ||
-            votesDownMatch ||
-            allCommentsMatch ||
-            commentsMatch
+          thingDataMatch || votesUpMatch || votesDownMatch || allCommentsMatch
         );
 
-        return [
-          thingId,
-          !(votesUpMatch || thingDataMatch || votesDownMatch || allCommentsMatch || commentsMatch)
-        ];
+        return [thingId, !(votesUpMatch || votesDownMatch || allCommentsMatch)];
       }),
       R.keysIn,
       R.propOr({}, 'put')

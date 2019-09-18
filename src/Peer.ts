@@ -25,7 +25,7 @@ function init(Gun: any, config: any = {}) {
     if (!disableValidation) Gun.on('opt', Validation.gunWireInput(peer));
     if (cfg.storeFn) cfg.store = cfg.storeFn(cfg); // for indexeddb
     peer.Gun = Gun;
-    peer.gun = Gun(cfg);
+    peer.gun = new Gun(cfg);
     if (cfg.localStorage) peer.gun.on('localStorage:error', (a: any) => a.retry({}));
     if (leech) {
       const sendLeech = () => peer.gun._.on('out', { leech: true });
