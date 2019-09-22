@@ -11,12 +11,12 @@ export class Oracle {
     this.features = [];
     this.peer = peer;
     if (this.peer.gun.graph) {
-      console.log('using chaingun');
-      this.peer.gun.graph.graphData.on((put: any) => {
-        onPut({ put });
+      this.peer.gun.graph.graphData.on((put: any, replyToId?: string) => {
+        const putMsg: any = { put };
+        if (replyToId) putMsg['@'] = replyToId;
+        onPut(putMsg);
       });
     } else {
-      console.log('not using chaingun');
       this.peer.gun.on('put', function(this: any, msg: any) {
         this.to.next(msg);
         onPut(msg);

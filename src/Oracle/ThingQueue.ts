@@ -53,10 +53,10 @@ export class ThingQueue {
   }
 
   enqueue(id: string, isNew = false) {
-    console.log('enqueue', id);
     if (this.contains(id)) return;
     (isNew ? this.newIds : this.updatedIds).splice(0, 0, id);
     // tslint:disable-next-line: no-floating-promises
+    console.log('enqueue', id);
     this.processQueue();
   }
 
@@ -88,7 +88,11 @@ export class ThingQueue {
         updatedIds: this.updatedIds,
         processingId: this.processingId
       });
-      await this.processNext();
+      try {
+        await this.processNext();
+      } finally {
+        this.processingId = '';
+      }
     }
   }
 

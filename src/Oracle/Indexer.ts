@@ -128,7 +128,6 @@ class IndexerQueue extends ThingQueue {
 
       const putData: any = {};
 
-      // tslint:disable-next-line: await-promise
       await Promise.all(
         listingMap.map(async item => {
           const [listingPath, updatedItems]: [string, [string, number][]] = item;
