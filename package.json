@@ -1,14 +1,12 @@
 {
   "name": "@notabug/peer",
-  "version": "0.32.1",
+  "version": "0.32.2",
   "description": "",
   "keywords": [],
   "main": "dist/@notabug/peer.umd.js",
   "module": "dist/@notabug/peer.es5.js",
   "typings": "dist/types/@notabug/peer.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "author": "go1dfish",
   "repository": {
     "type": "git",
@@ -36,10 +34,7 @@
     "travis-deploy-once": "travis-deploy-once"
   },
   "lint-staged": {
-    "{src,test}/**/*.ts": [
-      "prettier --write",
-      "git add"
-    ]
+    "{src,test}/**/*.ts": ["prettier --write", "git add"]
   },
   "config": {
     "commitizen": {
@@ -52,15 +47,8 @@
     },
     "testEnvironment": "node",
     "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js"
-    ],
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/test/"
-    ],
+    "moduleFileExtensions": ["ts", "tsx", "js"],
+    "coveragePathIgnorePatterns": ["/node_modules/", "/test/"],
     "coverageThreshold": {
       "global": {
         "branches": 90,
@@ -69,18 +57,14 @@
         "statements": 95
       }
     },
-    "collectCoverageFrom": [
-      "src/*.{js,ts}"
-    ]
+    "collectCoverageFrom": ["src/*.{js,ts}"]
   },
   "prettier": {
     "singleQuote": true,
     "semi": true
   },
   "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
+    "extends": ["@commitlint/config-conventional"]
   },
   "devDependencies": {
     "@commitlint/cli": "^7.1.2",

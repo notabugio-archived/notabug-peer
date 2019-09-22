@@ -22,6 +22,12 @@ const index = R.curry((peer, thingId, data) => {
 
     allcomments.set(thing);
   }
+
+  if (data.replyToId) {
+    const comments = peer.gun.get(Schema.ThingComments.route.reverse({ thingId: data.replyToId }));
+
+    comments.set(thing);
+  }
 });
 
 const put = R.curry((peer, data) => {
