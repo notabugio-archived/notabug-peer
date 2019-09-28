@@ -31,7 +31,6 @@ const tabulate = query(async (scope, thingId) => {
     if (R.keys(commandMap).length) result.commands = JSON.stringify(commandMap);
   }
 
-  console.log('tabulated', thingId, { result, thingData });
   return result;
 });
 

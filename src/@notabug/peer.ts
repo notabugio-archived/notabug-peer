@@ -2,6 +2,7 @@ import { Peer } from '../Peer';
 export { Config } from '../Config';
 export { Constants } from '../Constants';
 export { CommentCommand } from '../CommentCommand';
+export { Oracle } from '../Oracle/Oracle';
 export { Indexer } from '../Oracle/Indexer';
 export { Listing, SpaceSpec } from '../Listing';
 export { Page } from '../Page';

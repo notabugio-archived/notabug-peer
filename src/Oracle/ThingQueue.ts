@@ -15,6 +15,7 @@ export class ThingQueue {
   scopeOpts: any;
   processingId: string;
   recent: { [soul: string]: number };
+  isProcessing: boolean;
 
   constructor(peer: any, config = '', scopeOpts = {}) {
     this.spec = ListingSpec.fromSource(config);
@@ -24,6 +25,7 @@ export class ThingQueue {
     this.updatedIds = [];
     this.processingId = '';
     this.recent = {};
+    this.isProcessing = false;
     this.scopeOpts = R.mergeLeft(scopeOpts || {}, { onlyOnce: true });
     setInterval(this.cleanupRecent.bind(this), CLEANUP_INTERVAL);
   }
@@ -55,6 +57,7 @@ export class ThingQueue {
   enqueue(id: string, isNew = false) {
     if (this.contains(id)) return;
     (isNew ? this.newIds : this.updatedIds).splice(0, 0, id);
+
     // tslint:disable-next-line: no-floating-promises
     this.processQueue();
   }
@@ -81,6 +84,8 @@ export class ThingQueue {
   }
 
   async processQueue() {
+    if (this.isProcessing) return;
+    this.isProcessing = true;
     while ((this.newIds.length || this.updatedIds.length) && !this.processingId) {
       try {
         await this.processNext();
@@ -88,6 +93,7 @@ export class ThingQueue {
         this.processingId = '';
       }
     }
+    this.isProcessing = false;
   }
 
   // tslint:disable-next-line: no-empty
