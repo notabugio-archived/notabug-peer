@@ -1,11 +1,86 @@
 import * as R from 'ramda';
 import Route from 'route-parser';
 import { SchemaNodeTypeMap } from './types';
-import { AUTH_SCHEMA } from '@notabug/gun-suppressor-sear';
 import { Constants } from './Constants';
 
+const MAX_AUTHOR_ALIAS_SIZE = 512;
+const MAX_AUTHOR_ID_SIZE = 128; // ???
+const authorPattern = '~:authorId';
+
+const SEA_AUTH_SCHEMA = {
+  seaAlias: { type: 'string', maxLength: MAX_AUTHOR_ALIAS_SIZE },
+  SEAAlias: {
+    title: 'Gun SEA Alias',
+    $async: true,
+    soul: {
+      pattern: '~@:alias',
+      properties: {
+        alias: { $ref: 'schema.json#/definitions/seaAlias' }
+      },
+      required: ['alias']
+    },
+    additionalProperties: {
+      edgeMatchesKey: true,
+      anyOf: [{ $ref: '#/definitions/SEAAuthorEdge' }]
+    }
+  },
+  seaAuthorId: { type: 'string', maxLength: MAX_AUTHOR_ID_SIZE },
+  seaAuthObj: {
+    oneOf: [
+      {
+        type: 'object',
+        properties: {
+          ek: {
+            type: 'object',
+            properties: {
+              ct: { type: 'string' },
+              iv: { type: 'string' },
+              s: { type: 'string' }
+            }
+          },
+          s: { type: 'string' }
+        }
+      },
+      {
+        type: 'string'
+      }
+    ]
+  },
+  SEAAuthor: {
+    title: 'Gun SEA Author',
+    $async: true,
+    properties: {
+      pub: { $ref: '#/definitions/seaAuthorId' },
+      epub: { sea: { type: 'string' } },
+      alias: { sea: { $ref: 'schema.json#/definitions/seaAlias' } },
+      auth: {
+        sea: { $ref: 'schema.json#/definitions/seaAuthObj' }
+      }
+    },
+    additionalProperties: {
+      sea: {
+        anyOf: [
+          { $ref: 'schema.json#/definitions/GunEdge' },
+          { $ref: 'schema.json#/definitions/seaAuthObj' },
+          { type: 'null' },
+          { type: 'string' },
+          { type: 'number' },
+          { type: 'boolean' }
+        ]
+      }
+    },
+    soul: {
+      pattern: authorPattern,
+      properties: {
+        authorId: { $ref: 'schema.json#/definitions/seaAuthorId' }
+      },
+      required: ['authorId']
+    }
+  }
+};
+
 const definitions = {
-  ...AUTH_SCHEMA,
+  ...SEA_AUTH_SCHEMA,
   topicName: {
     type: 'string',
     minLength: 1,
@@ -545,7 +620,8 @@ const routes: RouteMap = R.keysIn(definitions).reduce((result: any, name: string
 
 const defsWithRoutes: SchemaNodeTypeMap = R.compose(
   R.reduce(
-    (res, [name, route]) => R.assoc(name, R.assoc('route', route, R.prop(name, definitions)), res),
+    (res, [name, route]) =>
+      R.assoc(name, R.assoc('route', route, R.propOr('', name, definitions)), res),
     {}
   ),
   R.toPairs as (map: RouteMap) => [string, any][]

@@ -806,24 +806,6 @@
     ramda "^0.26.1"
     zalgo-promise "1.0.28"
 
-"@notabug/gun-suppressor-sear@^0.3.1":
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/@notabug/gun-suppressor-sear/-/gun-suppressor-sear-0.3.1.tgz#bc1efcd9a2f67638dd80d96901e2a3bc42b96c54"
-  integrity sha512-MEko/WE12BYqPjEhzDc0QGyZPCyUPhCl6ZnFw38tFwGzXZDTVQ0rVYWcAGyakycZlz8/v/ewks4rdfMgmMcTBg==
-  dependencies:
-    "@notabug/gun-suppressor" "^0.2.2"
-    ramda "^0.26.1"
-    route-parser "^0.0.5"
-
-"@notabug/gun-suppressor@^0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@notabug/gun-suppressor/-/gun-suppressor-0.2.2.tgz#43e0f02ebcb484c3102cf21b32c493293eb68c3d"
-  integrity sha512-HbL34YuRNnvpN8hcOvMXX7VfHvEcsm6X5cGml9rs63Z4xaWFfGIEKY321wIDOXIcMLOhUWRFfpRrG3QY1NSGGA==
-  dependencies:
-    ajv "^6.10.0"
-    ramda "^0.26.1"
-    route-parser "^0.0.5"
-
 "@octokit/endpoint@^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@octokit/endpoint/-/endpoint-4.0.0.tgz#97032a6690ef1cf9576ab1b1582c0ac837e3b5b6"
@@ -1116,7 +1098,7 @@ aggregate-error@^2.0.0:
     clean-stack "^2.0.0"
     indent-string "^3.0.0"
 
-ajv@^6.10.0, ajv@^6.5.5:
+ajv@^6.5.5:
   version "6.10.0"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.10.0.tgz#90d0d54439da587cd7e843bfb7045f50bd22bdf1"
   integrity sha512-nffhOpkymDECQyR0mnsUtoCE8RlX38G0rYP+wgLWFyZuUyuuojSSvi/+euOiQBIn63whYwYVIIH1TvE3tu4OEg==
@@ -7372,7 +7354,7 @@ rollup@^0.67.0:
     "@types/estree" "0.0.39"
     "@types/node" "*"
 
-route-parser@0.0.5, route-parser@^0.0.5:
+route-parser@0.0.5:
   version "0.0.5"
   resolved "https://registry.yarnpkg.com/route-parser/-/route-parser-0.0.5.tgz#7d1d09d335e49094031ea16991a4a79b01bbe1f4"
   integrity sha1-fR0J0zXkkJQDHqFpkaSnmwG74fQ=

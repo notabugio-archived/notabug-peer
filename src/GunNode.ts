@@ -16,7 +16,7 @@ const latest = R.compose(
 
 const edges = R.compose(
   R.map(R.propOr('', '#')),
-  R.values
+  R.values as any
 );
 
 const diff = (existing: GunNodeType, updated: GunNodeType) => {

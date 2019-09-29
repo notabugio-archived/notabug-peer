@@ -1,24 +1,16 @@
-import { Validation } from './Validation';
 import { Query } from './Query';
 import { Thing } from './Thing';
 import { Authentication } from './Authentication';
 
 function init(Gun: any, config: any = {}) {
-  const {
-    leech = false,
-    disableValidation = false,
-    noGun = false,
-    localStorage = false,
-    persist = false,
-    ...rest
-  } = config || {};
+  const { leech = false, noGun = false, localStorage = false, persist = false, ...rest } =
+    config || {};
   const peer: any = { config };
 
   if (!noGun) {
     const cfg = { localStorage: !!localStorage, radisk: !!persist, ...rest };
 
     if (persist) cfg.localStorage = false;
-    if (!disableValidation) Gun.on('opt', Validation.gunWireInput(peer));
     if (cfg.storeFn) cfg.store = cfg.storeFn(cfg); // for indexeddb
     peer.Gun = Gun;
     peer.gun = new Gun(cfg);
