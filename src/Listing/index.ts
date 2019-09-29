@@ -19,6 +19,7 @@ export const Listing = {
   ListingNode,
   ListingSpec,
   ListingQuery,
+  ListingSort,
   isValidSort: ListingSort.isValidSort,
   idsToSouls: ListingNode.idsToSouls,
   get: ListingNode.get,
