@@ -43,7 +43,7 @@ const itemKeys = R.compose(
 );
 
 function rows(node: ListingNodeType): ListingNodeRow[] {
-  const keys = R.keysIn(node);
+  const keys = R.sortBy(key => -1 * node._[key], R.keysIn(node._['>']));
   const result: ListingNodeRow[] = [];
 
   for (let i = 0; i < keys.length; i++) {
@@ -53,7 +53,7 @@ function rows(node: ListingNodeType): ListingNodeRow[] {
     result.push(getRow(node, key));
   }
 
-  return result;
+  return R.uniqBy(R.nth(0), result);
 }
 
 const ids = R.compose(
