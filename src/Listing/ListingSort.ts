@@ -32,6 +32,7 @@ const sorts = {
   new: timeSort(
     R.compose(
       R.multiply(-1),
+      ts => Math.min(ts, new Date().getTime()),
       parseInt,
       R.propOr(0, 'timestamp')
     )
