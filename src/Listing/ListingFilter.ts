@@ -115,7 +115,45 @@ const fromDefinition = (definition: ListingDefinitionType) => {
   if (filters.deny.topics.length) {
     addFilter((topic: string) => !isPresent(['ban', 'topic', topic]), R.path(['data', 'topic']));
   }
-  if (filters.deny.anon) addFilter(R.path(['data', 'authorId']));
+
+  if (filters.deny.anon) {
+    if (voteFilters.upsMin !== null) {
+      addVoteFilter(
+        R.anyPass([
+          R.compose(
+            (id: any) => !!id,
+            R.path(['data', 'authorId'])
+          ),
+          R.compose(
+            votes => votes >= voteFilters.upsMin,
+            intPath(['votes', 'up'])
+          )
+        ])
+      );
+    } else {
+      addFilter(R.path(['data', 'authorId']));
+    }
+  } else {
+    if (voteFilters.upsMin !== null) {
+      addVoteFilter(R.lte(voteFilters.upsMin), intPath(['votes', 'up']));
+    }
+    if (voteFilters.upsMax !== null) {
+      addVoteFilter(R.gte(voteFilters.upsMax), intPath(['votes', 'up']));
+    }
+    if (voteFilters.downsMin !== null) {
+      addVoteFilter(R.lte(voteFilters.downsMin), intPath(['votes', 'down']));
+    }
+    if (voteFilters.downsMax !== null) {
+      addVoteFilter(R.gte(voteFilters.downsMax), intPath(['votes', 'down']));
+    }
+    if (voteFilters.scoreMin !== null) {
+      addVoteFilter(R.lte(voteFilters.scoreMin), intPath(['votes', 'score']));
+    }
+    if (voteFilters.scoreMax !== null) {
+      addVoteFilter(R.gte(voteFilters.scoreMax), intPath(['votes', 'score']));
+    }
+  }
+
   if (filters.deny.signed) {
     addFilter(
       R.compose(
@@ -123,25 +161,6 @@ const fromDefinition = (definition: ListingDefinitionType) => {
         R.pathOr('', ['data', 'authorId'])
       )
     );
-  }
-
-  if (voteFilters.upsMin !== null) {
-    addVoteFilter(R.lte(voteFilters.upsMin), intPath(['votes', 'up']));
-  }
-  if (voteFilters.upsMax !== null) {
-    addVoteFilter(R.gte(voteFilters.upsMax), intPath(['votes', 'up']));
-  }
-  if (voteFilters.downsMin !== null) {
-    addVoteFilter(R.lte(voteFilters.downsMin), intPath(['votes', 'down']));
-  }
-  if (voteFilters.downsMax !== null) {
-    addVoteFilter(R.gte(voteFilters.downsMax), intPath(['votes', 'down']));
-  }
-  if (voteFilters.scoreMin !== null) {
-    addVoteFilter(R.lte(voteFilters.scoreMin), intPath(['votes', 'score']));
-  }
-  if (voteFilters.scoreMax !== null) {
-    addVoteFilter(R.gte(voteFilters.scoreMax), intPath(['votes', 'score']));
   }
 
   if (filters.deny.tags.length) {
