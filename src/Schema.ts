@@ -133,6 +133,19 @@ const definitions = {
     properties: {}
   },
 
+  URL: {
+    title: 'URL',
+    description: 'All things for a given URL',
+    soul: {
+      pattern: `${Constants.PREFIX}/urls/\*url`, // eslint-disable-line no-useless-escape
+      properties: {
+        url: { $ref: 'schema.json#/definitions/url' }
+      },
+      required: ['url']
+    },
+    properties: {}
+  },
+
   ThingAllComments: {
     title: 'Thing All Comments',
     description: 'All comments for a given submission',
