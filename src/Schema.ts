@@ -106,6 +106,19 @@ const definitions = {
     }
   },
 
+  Domain: {
+    title: 'Domain',
+    description: 'All things in a domain',
+    soul: {
+      pattern: `${Constants.PREFIX}/domains/:domainName`,
+      properties: {
+        domainName: { $ref: 'schema.json#/definitions/domainName' }
+      },
+      required: ['domainName']
+    },
+    properties: {}
+  },
+
   Topic: {
     title: 'Topic',
     description: 'Deprecated: All things in a topic',
