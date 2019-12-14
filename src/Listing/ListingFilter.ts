@@ -59,6 +59,8 @@ const fromDefinition = (definition: ListingDefinitionType) => {
       R.compose(
         R.identical('all'),
         R.last as (strs: string[]) => string,
+        R.split('.'),
+        R.last as (strs: string[]) => string,
         R.split(':')
       ),
       filters.allow.topics as string[]

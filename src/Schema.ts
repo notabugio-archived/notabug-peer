@@ -87,93 +87,13 @@ const definitions = {
     maxLength: Constants.MAX_TOPIC_SIZE
   },
 
-  TopicDay: {
-    title: 'Topic Day',
-    description: 'A single day of things in a topic',
-    soul: {
-      pattern: `${Constants.PREFIX}/topics/:topicName/days/:year/:month/:day`,
-      properties: {
-        topicName: { $ref: 'schema.json#/definitions/topicName' },
-        year: { type: 'number', minimum: 2018, maximum: 2100 },
-        month: { type: 'number', minimum: 1, maximum: 12 },
-        day: { type: 'number', minimum: 1, maximum: 31 }
-      },
-      required: ['topicName', 'year', 'month', 'day']
-    },
-    propsFromSoul: { name: 'topicName' },
-    properties: {
-      name: {
-        description: 'Deprecated as unnecessary',
-        type: 'string'
-      }
-    },
-    additionalProperties: {
-      edgeMatchesKey: true,
-      anyOf: [{ $ref: '#/definitions/ThingEdge' }, { $ref: '#/definitions/TopicEdge' }]
-    }
-  },
-
-  Topic: {
-    title: 'Topic',
-    description: 'All things in a topic',
-    soul: {
-      pattern: `${Constants.PREFIX}/topics/:topicName`,
-      properties: {
-        topicName: { $ref: 'schema.json#/definitions/topicName' }
-      },
-      required: ['topicName']
-    },
-    propsFromSoul: { name: 'topicName' },
-    properties: {
-      name: {
-        description: 'Deprecated as unnecessary',
-        type: 'string'
-      }
-    },
-    additionalProperties: {
-      edgeMatchesKey: true,
-      anyOf: [{ $ref: '#/definitions/ThingEdge' }, { $ref: '#/definitions/TopicEdge' }]
-    }
-  },
-
   domainName: {
     type: 'string',
     minLength: 1,
     maxLength: Constants.MAX_DOMAIN_SIZE
   },
 
-  Domain: {
-    title: 'Domain',
-    description: 'All things in a domain',
-    soul: {
-      pattern: `${Constants.PREFIX}/domains/:domainName`,
-      properties: {
-        domainName: { $ref: 'schema.json#/definitions/domainName' }
-      },
-      required: ['domainName']
-    },
-    additionalProperties: {
-      edgeMatchesKey: true,
-      anyOf: [{ $ref: '#/definitions/ThingEdge' }]
-    }
-  },
-
   url: { type: ['null', 'string'], maxLength: Constants.MAX_URL_SIZE },
-  URL: {
-    title: 'URL',
-    description: 'All things for a given URL',
-    soul: {
-      pattern: `${Constants.PREFIX}/urls/\*url`, // eslint-disable-line no-useless-escape
-      properties: {
-        url: { $ref: 'schema.json#/definitions/url' }
-      },
-      required: ['url']
-    },
-    additionalProperties: {
-      edgeMatchesKey: true,
-      anyOf: [{ $ref: '#/definitions/ThingEdge' }]
-    }
-  },
 
   thingId: {
     type: 'string',
@@ -184,6 +104,20 @@ const definitions = {
     properties: {
       thingId: { '#ref': '#definitions/thingId' }
     }
+  },
+
+  Topic: {
+    title: 'Topic',
+    description: 'Deprecated: All things in a topic',
+    soul: {
+      pattern: `${Constants.PREFIX}/topics/:topicName`,
+      properties: {
+        topicName: { $ref: 'schema.json#/definitions/topicName' }
+      },
+      required: ['topicName']
+    },
+    propsFromSoul: { name: 'topicName' },
+    properties: {}
   },
 
   ThingAllComments: {
@@ -216,6 +150,7 @@ const definitions = {
     type: ['number', 'string'],
     maxLength: 14
   },
+
   thingKind: {
     type: 'string',
     maxLength: Constants.MAX_THING_KIND_SIZE
@@ -558,49 +493,19 @@ const definitions = {
     }
   },
 
-  AuthorComments: {
-    title: "Author's Comments",
-    description: 'All of an authors comments should be linked here',
+  AuthorThingList: {
+    title: 'Author Saved Things',
+    description: 'List of things',
     soul: {
-      pattern: `${Constants.PREFIX}/comments~:authorId.`,
+      pattern: `${Constants.PREFIX}/lists/:name~:authorId.`,
       properties: {
+        name: { $ref: 'schema.json#/definitions/topicName' },
         authorId: { $ref: 'schema.json#/definitions/seaAuthorId' }
       },
-      required: ['authorId']
+      required: ['authorId', 'name']
     },
     additionalProperties: {
       sea: {
-        edgeMatchesKey: true,
-        anyOf: [{ $ref: 'schema.json#/definitions/ThingEdge' }]
-      }
-    }
-  },
-
-  AuthorSubmissions: {
-    title: "Author's Submissions",
-    description: "All of an author's submissions should be linked here",
-    soul: {
-      pattern: `${Constants.PREFIX}/submissions~:authorId.`,
-      properties: {
-        authorId: { $ref: 'schema.json#/definitions/seaAuthorId' }
-      },
-      required: ['authorId']
-    }
-  },
-
-  AuthorThings: {
-    title: "Author's Things",
-    description: "All of an author's things should be linked here",
-    soul: {
-      pattern: `${Constants.PREFIX}/things~:authorId.`,
-      properties: {
-        authorId: { $ref: 'schema.json#/definitions/seaAuthorId' }
-      },
-      required: ['authorId']
-    },
-    additionalProperties: {
-      sea: {
-        edgeMatchesKey: true,
         anyOf: [{ $ref: 'schema.json#/definitions/ThingEdge' }]
       }
     }
@@ -629,10 +534,6 @@ const defsWithRoutes: SchemaNodeTypeMap = R.compose(
 
 export const Schema = {
   SEAAuthor: defsWithRoutes.SEAAuthor,
-  TopicDay: defsWithRoutes.TopicDay,
-  Topic: defsWithRoutes.Topic,
-  Domain: defsWithRoutes.Domain,
-  URL: defsWithRoutes.URL,
   ThingAllComments: defsWithRoutes.ThingAllComments,
   ThingComments: defsWithRoutes.ThingComments,
   Thing: defsWithRoutes.Thing,
@@ -643,15 +544,14 @@ export const Schema = {
   ThingVoteCounts: defsWithRoutes.ThingVoteCounts,
   ThingListingsMeta: defsWithRoutes.ThingListingsMeta,
   TopicListing: defsWithRoutes.TopicListing,
+  Topic: defsWithRoutes.Topic,
   DomainListing: defsWithRoutes.DomainListing,
   ThingCommentsListing: defsWithRoutes.ThingCommentsListing,
   AuthorRepliesListing: defsWithRoutes.AuthorRepliesListing,
   AuthorProfileListing: defsWithRoutes.AuthorProfileListing,
   SpaceListing: defsWithRoutes.SpaceListing,
-  AuthorComments: defsWithRoutes.AuthorComments,
-  AuthorSubmissions: defsWithRoutes.AuthorSubmissions,
-  AuthorThings: defsWithRoutes.AuthorThings,
   AuthorPages: defsWithRoutes.AuthorPages,
+  AuthorThingList: defsWithRoutes.AuthorThingList,
   definitions,
   routes
 };

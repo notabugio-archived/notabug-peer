@@ -1,7 +1,7 @@
 import * as R from 'ramda';
 import objHash from 'object-hash';
 import { Schema } from '../Schema';
-import { ThingDataNodeType, ThingNode, GunChain } from '../types';
+import { ThingNode } from '../types';
 
 export { ThingSet } from './ThingSet';
 export { ThingDataNode } from './ThingDataNode';
@@ -77,15 +77,17 @@ const put = R.curry((peer, data) => {
     comments: { '#': Schema.ThingComments.route.reverse({ thingId }) as string }
   };
 
-  if (topic)
+  if (topic) {
     metaData.topic = {
       '#': Schema.Topic.route.reverse({ topicName: topic }) as string
     };
+  }
   if (authorId) metaData.author = { '#': `~${authorId}` };
-  if (opId)
+  if (opId) {
     metaData.op = {
       '#': Schema.Thing.route.reverse({ thingId: opId }) as string
     };
+  }
   if (replyToId) {
     metaData.replyTo = {
       '#': Schema.Thing.route.reverse({ thingId: replyToId }) as string
