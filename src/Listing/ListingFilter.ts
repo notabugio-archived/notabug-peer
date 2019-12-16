@@ -115,7 +115,11 @@ const fromDefinition = (definition: ListingDefinitionType) => {
     );
   }
   if (filters.deny.topics.length) {
-    addFilter((topic: string) => !isPresent(['ban', 'topic', topic]), R.path(['data', 'topic']));
+    addFilter(
+      (topic: string) => !isPresent(['ban', 'topic', topic]),
+      R.toLower,
+      R.path(['data', 'topic'])
+    );
   }
 
   if (filters.deny.anon) {
