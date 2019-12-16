@@ -108,6 +108,10 @@ export class ListingQuery {
       .then((rows: ListingNodeRow[]) => {
         this.sourced = R.indexBy(R.nth(ListingNode.POS_ID) as (row: any) => string, rows);
         return rows;
+      })
+      .catch((err: any) => {
+        console.error(err.stack);
+        throw err;
       });
   }
 

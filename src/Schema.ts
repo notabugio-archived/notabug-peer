@@ -514,7 +514,7 @@ const definitions = {
     },
     additionalProperties: {
       sea: {
-        anyOf: [{ $ref: 'schema.json#/definitions/ThingEdge' }]
+        anyOf: [{ $ref: 'schema.json#/definitions/ThingEdge' }, null]
       }
     }
   },
@@ -532,7 +532,7 @@ const definitions = {
     },
     additionalProperties: {
       sea: {
-        anyOf: [{ $ref: 'schema.json#/definitions/ThingEdge' }]
+        anyOf: [{ $ref: 'schema.json#/definitions/ThingEdge' }, null]
       }
     }
   }
