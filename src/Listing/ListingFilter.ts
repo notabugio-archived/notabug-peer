@@ -174,8 +174,8 @@ const fromDefinition = (definition: ListingDefinitionType) => {
       R.complement(
         R.allPass([
           R.compose(
-            x => !!x,
-            ThingDataNode.body
+            x => !x,
+            ThingDataNode.url
           ),
           R.compose(
             R.identical('submission'),
