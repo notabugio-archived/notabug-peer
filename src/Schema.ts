@@ -146,6 +146,7 @@ const definitions = {
     properties: {}
   },
 
+  // TODO: deprecate this
   ThingAllComments: {
     title: 'Thing All Comments',
     description: 'All comments for a given submission',
@@ -159,6 +160,7 @@ const definitions = {
     }
   },
 
+  // TODO: deprecate this
   ThingComments: {
     title: 'Thing Comments',
     description: 'Direct replies to a thing',
@@ -371,6 +373,7 @@ const definitions = {
     }
   },
 
+  // TODO: deprecate this
   ThingListingsMeta: {
     title: 'Thing Listings Meta',
     description: 'All listings the thing has appeared in',
@@ -489,6 +492,7 @@ const definitions = {
     allOf: [{ $ref: '#/definitions/ListingData' }]
   },
 
+  // TODO: remove this and Page.spaceListing
   SpaceListing: {
     soul: {
       pattern: `${Constants.PREFIX}/user/:authorId/spaces/:name/:sort@~:indexer.`,

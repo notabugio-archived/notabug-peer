@@ -169,6 +169,24 @@ const fromDefinition = (definition: ListingDefinitionType) => {
     );
   }
 
+  if (filters.deny.selfposts) {
+    addFilter(
+      R.complement(
+        R.allPass([
+          R.compose(
+            x => !!x,
+            ThingDataNode.body
+          ),
+          R.compose(
+            R.identical('submission'),
+            ThingDataNode.kind
+          )
+        ])
+      ),
+      R.prop('data')
+    );
+  }
+
   if (filters.deny.tags.length) {
     addVoteFilter((thing: CombinedThingType) => {
       const cmds = R.path(['votes', 'commands'], thing) || {};
