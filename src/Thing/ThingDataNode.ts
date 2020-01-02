@@ -4,13 +4,21 @@ import { GunNodeType } from '../types';
 import { Constants } from '../Constants';
 
 const kind = R.propOr('submission', 'kind');
-const body = R.propOr('', 'body');
+const body = R.compose(
+  body => `${body || ''}`,
+  R.propOr('', 'body') as (node: GunNodeType) => string
+);
 const isCommand = R.compose(
   R.test(Constants.COMMAND_RE),
   body
 );
 const url = R.propOr('', 'url');
-const topic = R.propOr('', 'topic') as (node: GunNodeType) => string;
+
+const topic = R.compose(
+  topic => `${topic || ''}`,
+  R.propOr('', 'topic')
+) as (node: GunNodeType) => string;
+
 const domain = R.compose(
   urlStr => {
     if (!urlStr) return '';
