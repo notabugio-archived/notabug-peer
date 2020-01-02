@@ -67,7 +67,8 @@ const fromDefinition = (definition: ListingDefinitionType) => {
     )
   ) {
     addFilter((item: CombinedThingType) => {
-      let topic = R.pathOr('', ['data', 'topic'], item).toLowerCase();
+      const dataNode = R.prop('data', item);
+      let topic = ThingDataNode.topic(dataNode).toLowerCase();
       const kind = R.pathOr('', ['data', 'kind'], item);
 
       if (kind === 'chatmsg') topic = `chat:${topic}`;
@@ -118,7 +119,8 @@ const fromDefinition = (definition: ListingDefinitionType) => {
     addFilter(
       (topic: string) => !isPresent(['ban', 'topic', topic]),
       R.toLower,
-      R.path(['data', 'topic'])
+      ThingDataNode.topic,
+      R.prop('data')
     );
   }
 
